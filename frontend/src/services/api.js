@@ -5,14 +5,19 @@
 import axios from "axios";
 import toast from "react-hot-toast";
 
-const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:5002/api";
+// Use environment variable or fallback to production URL
+const API_BASE =
+  process.env.REACT_APP_API_URL || "https://wheelz-api.onrender.com/api";
+
+console.log("API Base URL:", API_BASE); // This helps debug
 
 const api = axios.create({
   baseURL: API_BASE,
-  timeout: 15000,
+  timeout: 30000, // Increased timeout for mobile networks
   headers: { "Content-Type": "application/json" },
 });
 
+// Attach JWT token to every request
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("wheelz_token");
@@ -22,9 +27,11 @@ api.interceptors.request.use(
   (error) => Promise.reject(error),
 );
 
+// Global response error handler
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    console.error("API Error:", error.config?.url, error.message);
     const message =
       error.response?.data?.message || error.message || "Something went wrong";
     if (error.response?.status === 401) {
@@ -38,6 +45,7 @@ api.interceptors.response.use(
   },
 );
 
+// ─── Auth ─────────────────────────────────────────────────────────────────────
 export const authAPI = {
   register: (data) => api.post("/auth/register", data),
   login: (data) => api.post("/auth/login", data),
@@ -46,6 +54,7 @@ export const authAPI = {
   changePassword: (data) => api.put("/auth/change-password", data),
 };
 
+// ─── Vehicles ─────────────────────────────────────────────────────────────────
 export const vehicleAPI = {
   getAll: (params) => api.get("/vehicles", { params }),
   getOne: (id) => api.get(`/vehicles/${id}`),
@@ -57,6 +66,7 @@ export const vehicleAPI = {
   getCategoryStats: () => api.get("/vehicles/stats/categories"),
 };
 
+// ─── Bookings ─────────────────────────────────────────────────────────────────
 export const bookingAPI = {
   create: (data) => api.post("/bookings", data),
   getAll: (params) => api.get("/bookings", { params }),
@@ -66,6 +76,7 @@ export const bookingAPI = {
   getMyStats: () => api.get("/bookings/my-stats"),
 };
 
+// ─── Payments ─────────────────────────────────────────────────────────────────
 export const paymentAPI = {
   createIntent: (bookingId) =>
     api.post("/payments/create-intent", { bookingId }),
@@ -73,6 +84,7 @@ export const paymentAPI = {
     api.post("/payments/confirm", { bookingId, paymentMethod: method }),
 };
 
+// ─── AI ───────────────────────────────────────────────────────────────────────
 export const aiAPI = {
   chat: (message, history) =>
     api.post("/ai/chat", { message, conversationHistory: history }),
@@ -83,6 +95,7 @@ export const aiAPI = {
     api.put(`/ai/fraud-alerts/${id}/resolve`, data),
 };
 
+// ─── Admin ────────────────────────────────────────────────────────────────────
 export const adminAPI = {
   getDashboard: () => api.get("/admin/dashboard"),
   getAllUsers: (params) => api.get("/admin/users", { params }),
@@ -90,11 +103,13 @@ export const adminAPI = {
   getRevenueBreakdown: () => api.get("/admin/revenue/breakdown"),
 };
 
+// ─── Reviews ──────────────────────────────────────────────────────────────────
 export const reviewAPI = {
   getByVehicle: (vehicleId) => api.get(`/reviews/vehicle/${vehicleId}`),
   create: (data) => api.post("/reviews", data),
 };
 
+// ─── Wishlist ─────────────────────────────────────────────────────────────────
 export const wishlistAPI = {
   get: () => api.get("/wishlist"),
   toggle: (vehicleId) => api.post(`/wishlist/${vehicleId}`),
