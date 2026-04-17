@@ -6,9 +6,11 @@ import axios from "axios";
 import toast from "react-hot-toast";
 
 // Use environment variable or fallback to production URL
+// const API_BASE =
+// process.env.REACT_APP_API_URL || "https://wheelz-api.onrender.com/api";
+// const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:5002/api";
 const API_BASE =
-  process.env.REACT_APP_API_URL || "https://wheelz-api.onrender.com/api";
-
+  process.env.REACT_APP_API_URL || "https://wheelz-ldq2.onrender.com/api";
 console.log("API Base URL:", API_BASE); // This helps debug
 
 const api = axios.create({
