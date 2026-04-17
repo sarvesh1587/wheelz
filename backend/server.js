@@ -14,10 +14,39 @@ require("dotenv").config();
 const app = express();
 
 // ─── Security Middleware ────────────────────────────────────────────────────
+// app.use(helmet());
+// app.use(
+//   cors({
+//     origin: true,
+//     credentials: true,
+//   }),
+// );
+// ─── Security Middleware ────────────────────────────────────────────────────
 app.use(helmet());
+
+// Configure CORS for production
+const allowedOrigins = [
+  "http://localhost:3000",
+  "http://localhost:3001",
+  "https://wheelz-sand.vercel.app",
+  "https://wheelz.vercel.app",
+  "https://wheelz-git-main.vercel.app",
+  process.env.FRONTEND_URL,
+].filter(Boolean);
+
 app.use(
   cors({
-    origin: true,
+    origin: function (origin, callback) {
+      // Allow requests with no origin (like mobile apps, curl)
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin) || origin?.includes("vercel.app")) {
+        callback(null, true);
+      } else {
+        console.log("CORS blocked origin:", origin);
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
   }),
 );
