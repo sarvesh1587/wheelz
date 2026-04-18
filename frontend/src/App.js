@@ -1,4 +1,7 @@
 import React, { Suspense, lazy } from "react";
+import About from "./pages/About";
+import Contact from "./pages/Contact";
+import Offers from "./pages/Offers";
 import {
   BrowserRouter as Router,
   Routes,
@@ -136,6 +139,10 @@ function AppRoutes() {
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password/:token" element={<ResetPassword />} />
             <Route path="*" element={<NotFound />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/offers" element={<Offers />} />
+            <Route path="/support" element={<Contact />} />
           </Routes>
         </Suspense>
       </main>
