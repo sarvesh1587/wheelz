@@ -1,10 +1,4 @@
 import React, { Suspense, lazy } from "react";
-import LoadingSpinner, {
-  Footer,
-  StarRating,
-} from "./components/common/LoadingSpinner";
-import ForgotPassword from "./pages/ForgotPassword";
-import ResetPassword from "./pages/ResetPassword";
 import {
   BrowserRouter as Router,
   Routes,
@@ -15,10 +9,13 @@ import { Toaster } from "react-hot-toast";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { ThemeProvider } from "./context/ThemeContext";
 import Navbar from "./components/common/Navbar";
-import Footer from "./components/common/LoadingSpinner";
+import Footer from "./components/common/Footer"; // Create this file
 import LoadingSpinner from "./components/common/LoadingSpinner";
 import ChatBot from "./components/common/ChatBot";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 
+// Lazy load pages
 const Home = lazy(() => import("./pages/Home"));
 const Vehicles = lazy(() => import("./pages/Vehicles"));
 const VehicleDetail = lazy(() => import("./pages/VehicleDetail"));
@@ -56,9 +53,9 @@ const PublicRoute = ({ children }) => {
 
 function AppRoutes() {
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 transition-colors duration-300">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 transition-colors duration-300 flex flex-col">
       <Navbar />
-      <main className="min-h-[calc(100vh-80px)]">
+      <main className="flex-grow">
         <Suspense fallback={<LoadingSpinner />}>
           <Routes>
             <Route path="/" element={<Home />} />
@@ -136,9 +133,9 @@ function AppRoutes() {
                 </AdminRoute>
               }
             />
-            <Route path="*" element={<NotFound />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password/:token" element={<ResetPassword />} />
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
       </main>
