@@ -1,11 +1,19 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function Footer() {
+  const navigate = useNavigate();
+
+  const handleNavigation = (path) => {
+    navigate(path);
+    window.scrollTo(0, 0);
+  };
+
   return (
-    <footer className="bg-gray-900 text-gray-400">
+    <footer className="bg-gray-900 text-gray-400 mt-auto">
       <div className="max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+          {/* Brand Section */}
           <div className="md:col-span-2">
             <div className="flex items-center gap-2 mb-4">
               <div className="w-9 h-9 bg-amber-500 rounded-xl flex items-center justify-center font-bold text-gray-900 text-lg">
@@ -17,25 +25,16 @@ export default function Footer() {
               Premium car and bike rentals across India. Travel smarter, arrive
               in style.
             </p>
-            <div className="flex gap-3 mt-4">
-              <span className="w-8 h-8 rounded-lg bg-gray-800 flex items-center justify-center text-xs hover:bg-amber-500 hover:text-gray-900 cursor-pointer transition-colors">
-                F
-              </span>
-              <span className="w-8 h-8 rounded-lg bg-gray-800 flex items-center justify-center text-xs hover:bg-amber-500 hover:text-gray-900 cursor-pointer transition-colors">
-                T
-              </span>
-              <span className="w-8 h-8 rounded-lg bg-gray-800 flex items-center justify-center text-xs hover:bg-amber-500 hover:text-gray-900 cursor-pointer transition-colors">
-                I
-              </span>
-            </div>
           </div>
+
+          {/* Quick Links */}
           <div>
             <h4 className="text-white font-semibold mb-3">Quick Links</h4>
             <ul className="space-y-2 text-sm">
               <li>
                 <Link
                   to="/vehicles?category=car"
-                  className="hover:text-amber-400 transition-colors"
+                  className="hover:text-amber-400 transition-colors block"
                 >
                   Browse Cars
                 </Link>
@@ -43,57 +42,88 @@ export default function Footer() {
               <li>
                 <Link
                   to="/vehicles?category=bike"
-                  className="hover:text-amber-400 transition-colors"
+                  className="hover:text-amber-400 transition-colors block"
                 >
                   Browse Bikes
                 </Link>
               </li>
               <li>
-                <Link to="/" className="hover:text-amber-400 transition-colors">
+                <button
+                  onClick={() => {
+                    navigate("/");
+                    setTimeout(() => {
+                      document
+                        .getElementById("how-it-works")
+                        ?.scrollIntoView({ behavior: "smooth" });
+                    }, 100);
+                  }}
+                  className="hover:text-amber-400 transition-colors"
+                >
                   How it Works
-                </Link>
+                </button>
               </li>
               <li>
-                <Link to="/" className="hover:text-amber-400 transition-colors">
-                  FAQs
-                </Link>
+                <button
+                  onClick={() => navigate("/vehicles")}
+                  className="hover:text-amber-400 transition-colors"
+                >
+                  All Vehicles
+                </button>
               </li>
             </ul>
           </div>
+
+          {/* Support */}
           <div>
             <h4 className="text-white font-semibold mb-3">Support</h4>
             <ul className="space-y-2 text-sm">
               <li>
-                <span className="hover:text-amber-400 cursor-pointer transition-colors">
+                <button
+                  onClick={() =>
+                    (window.location.href = "mailto:support@wheelz.com")
+                  }
+                  className="hover:text-amber-400 transition-colors"
+                >
                   24/7 Support
-                </span>
+                </button>
               </li>
               <li>
-                <span className="hover:text-amber-400 cursor-pointer transition-colors">
+                <button
+                  onClick={() => navigate("/")}
+                  className="hover:text-amber-400 transition-colors"
+                >
                   Cancellation Policy
-                </span>
+                </button>
               </li>
               <li>
-                <span className="hover:text-amber-400 cursor-pointer transition-colors">
+                <button
+                  onClick={() => navigate("/")}
+                  className="hover:text-amber-400 transition-colors"
+                >
                   Terms of Service
-                </span>
+                </button>
               </li>
               <li>
-                <span className="hover:text-amber-400 cursor-pointer transition-colors">
+                <button
+                  onClick={() => navigate("/")}
+                  className="hover:text-amber-400 transition-colors"
+                >
                   Privacy Policy
-                </span>
+                </button>
               </li>
             </ul>
           </div>
         </div>
+
+        {/* Bottom Bar */}
         <div className="border-t border-gray-800 mt-10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-sm">
             © {new Date().getFullYear()} Wheelz. All rights reserved.
           </p>
-          <p className="text-sm flex items-center gap-1.5">
-            Powered by{" "}
-            <span className="text-amber-400 font-medium">Claude AI</span>
-          </p>
+          <div className="flex gap-4">
+            <span className="text-xs text-gray-500">Secure Payments</span>
+            <span className="text-xs text-gray-500">Razorpay</span>
+          </div>
         </div>
       </div>
     </footer>
