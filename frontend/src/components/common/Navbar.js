@@ -14,11 +14,8 @@ import {
   TruckIcon,
   ArrowRightOnRectangleIcon,
   HomeIcon,
-  CarIcon,
-  MotorcycleIcon,
   InformationCircleIcon,
   PhoneIcon,
-  ShieldCheckIcon,
   GiftIcon,
   StarIcon,
 } from "@heroicons/react/24/outline";
@@ -51,8 +48,8 @@ export default function Navbar() {
   // Navigation links for all users
   const mainNavLinks = [
     { to: "/", label: "Home", icon: HomeIcon },
-    { to: "/vehicles?category=car", label: "Cars", icon: CarIcon },
-    { to: "/vehicles?category=bike", label: "Bikes", icon: MotorcycleIcon },
+    { to: "/vehicles?category=car", label: "Cars", icon: TruckIcon },
+    { to: "/vehicles?category=bike", label: "Bikes", icon: TruckIcon },
     { to: "/vehicles", label: "All Vehicles", icon: TruckIcon },
     { to: "/about", label: "About Us", icon: InformationCircleIcon },
     { to: "/contact", label: "Contact", icon: PhoneIcon },
@@ -158,9 +155,6 @@ export default function Navbar() {
                     className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors relative"
                   >
                     <HeartIcon className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-                    <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-                      0
-                    </span>
                   </Link>
                 )}
 
@@ -187,11 +181,6 @@ export default function Navbar() {
                         <p className="text-xs text-gray-500 truncate">
                           {user?.email}
                         </p>
-                        {user?.role === "admin" && (
-                          <span className="inline-block mt-1 text-xs bg-amber-500/20 text-amber-600 px-2 py-0.5 rounded-full">
-                            Admin
-                          </span>
-                        )}
                       </div>
 
                       <div className="py-1">
@@ -206,30 +195,15 @@ export default function Navbar() {
                           className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
                         >
                           <UserCircleIcon className="w-4 h-4" /> Profile
-                          Settings
                         </Link>
                         {!isAdmin && (
-                          <>
-                            <Link
-                              to="/wishlist"
-                              className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
-                            >
-                              <HeartIcon className="w-4 h-4" /> My Wishlist
-                            </Link>
-                            <Link
-                              to="/reviews"
-                              className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
-                            >
-                              <StarIcon className="w-4 h-4" /> My Reviews
-                            </Link>
-                          </>
+                          <Link
+                            to="/wishlist"
+                            className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                          >
+                            <HeartIcon className="w-4 h-4" /> My Wishlist
+                          </Link>
                         )}
-                        <Link
-                          to="/support"
-                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
-                        >
-                          <PhoneIcon className="w-4 h-4" /> Support
-                        </Link>
                       </div>
 
                       <div className="border-t border-gray-100 dark:border-gray-700 mt-1 pt-1">
@@ -257,7 +231,7 @@ export default function Navbar() {
                   to="/register"
                   className="px-4 py-2 bg-amber-500 text-gray-900 font-semibold text-sm rounded-xl hover:bg-amber-400 transition-colors"
                 >
-                  Sign Up Free
+                  Sign Up
                 </Link>
               </div>
             )}
@@ -300,7 +274,7 @@ export default function Navbar() {
                 Special Offers
               </Link>
               <Link
-                to="/support"
+                to="/contact"
                 className="flex items-center gap-3 px-4 py-3 text-gray-700 dark:text-gray-300"
               >
                 <PhoneIcon className="w-5 h-5" />
