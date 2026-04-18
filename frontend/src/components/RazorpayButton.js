@@ -7,6 +7,10 @@ const RazorpayButton = ({ bookingId, amount, onSuccess, onCancel }) => {
 
   const loadRazorpayScript = () => {
     return new Promise((resolve) => {
+      if (window.Razorpay) {
+        resolve(true);
+        return;
+      }
       const script = document.createElement("script");
       script.src = "https://checkout.razorpay.com/v1/checkout.js";
       script.onload = () => resolve(true);
@@ -17,6 +21,7 @@ const RazorpayButton = ({ bookingId, amount, onSuccess, onCancel }) => {
 
   const handlePayment = async () => {
     setLoading(true);
+    console.log("Starting payment for booking:", bookingId);
 
     const isScriptLoaded = await loadRazorpayScript();
     if (!isScriptLoaded) {
@@ -26,8 +31,12 @@ const RazorpayButton = ({ bookingId, amount, onSuccess, onCancel }) => {
     }
 
     try {
+      console.log("Creating order for amount:", amount);
+
       // Create order on backend
       const orderRes = await paymentAPI.createOrder(bookingId);
+      console.log("Order response:", orderRes.data);
+
       const { orderId, amount: orderAmount, keyId } = orderRes.data;
 
       const options = {
@@ -35,25 +44,31 @@ const RazorpayButton = ({ bookingId, amount, onSuccess, onCancel }) => {
         amount: orderAmount,
         currency: "INR",
         name: "Wheelz",
-        description: `Booking #${bookingId.slice(-6)}`,
+        description: `Booking Payment`,
         order_id: orderId,
         handler: async (response) => {
-          // Verify payment
-          const verifyRes = await paymentAPI.verifyPayment({
-            bookingId,
-            razorpayOrderId: response.razorpay_order_id,
-            razorpayPaymentId: response.razorpay_payment_id,
-            razorpaySignature: response.razorpay_signature,
-          });
+          console.log("Payment response:", response);
+          try {
+            const verifyRes = await paymentAPI.verifyPayment({
+              bookingId,
+              razorpayOrderId: response.razorpay_order_id,
+              razorpayPaymentId: response.razorpay_payment_id,
+              razorpaySignature: response.razorpay_signature,
+            });
 
-          if (verifyRes.data.success) {
-            toast.success("Payment successful!");
-            onSuccess();
+            if (verifyRes.data.success) {
+              toast.success("Payment successful!");
+              onSuccess();
+            }
+          } catch (err) {
+            console.error("Verification error:", err);
+            toast.error("Payment verification failed");
           }
         },
         prefill: {
           name: "Customer",
           email: "customer@example.com",
+          contact: "9999999999",
         },
         theme: {
           color: "#f59e0b",
@@ -62,16 +77,23 @@ const RazorpayButton = ({ bookingId, amount, onSuccess, onCancel }) => {
           ondismiss: () => {
             setLoading(false);
             toast.error("Payment cancelled");
+            onCancel();
           },
         },
       };
 
       const razorpay = new window.Razorpay(options);
+      razorpay.on("payment.failed", (response) => {
+        console.error("Payment failed:", response.error);
+        toast.error("Payment failed: " + response.error.description);
+        setLoading(false);
+      });
       razorpay.open();
     } catch (err) {
-      console.error("Payment error:", err);
-      toast.error("Failed to initialize payment");
-    } finally {
+      console.error("Payment initialization error:", err);
+      toast.error(
+        err.response?.data?.message || "Failed to initialize payment",
+      );
       setLoading(false);
     }
   };
@@ -86,7 +108,7 @@ const RazorpayButton = ({ bookingId, amount, onSuccess, onCancel }) => {
         {loading ? (
           <>
             <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-            Loading...
+            Initializing...
           </>
         ) : (
           `Pay ₹${amount.toLocaleString()} via Razorpay`
