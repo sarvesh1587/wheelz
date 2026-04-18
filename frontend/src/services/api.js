@@ -79,13 +79,16 @@ export const bookingAPI = {
 };
 
 // ─── Payments ─────────────────────────────────────────────────────────────────
+// export const paymentAPI = {
+//   createIntent: (bookingId) =>
+//     api.post("/payments/create-intent", { bookingId }),
+//   confirm: (bookingId, method) =>
+//     api.post("/payments/confirm", { bookingId, paymentMethod: method }),
+// };
 export const paymentAPI = {
-  createIntent: (bookingId) =>
-    api.post("/payments/create-intent", { bookingId }),
-  confirm: (bookingId, method) =>
-    api.post("/payments/confirm", { bookingId, paymentMethod: method }),
+  createOrder: (bookingId) => api.post("/payments/create-order", { bookingId }),
+  verifyPayment: (data) => api.post("/payments/verify", data),
 };
-
 // ─── AI ───────────────────────────────────────────────────────────────────────
 export const aiAPI = {
   chat: (message, history) =>
