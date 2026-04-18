@@ -9,8 +9,8 @@ import toast from "react-hot-toast";
 // const API_BASE =
 // process.env.REACT_APP_API_URL || "https://wheelz-api.onrender.com/api";
 // const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:5002/api";
-// const API_BASE =
-//   process.env.REACT_APP_API_URL || "https://wheelz-ldq2.onrender.com/api";
+const API_BASE =
+  process.env.REACT_APP_API_URL || "https://wheelz-ldq2.onrender.com/api";
 // console.log("API Base URL:", API_BASE); // This helps debug
 const API_BASE = "http://localhost:5002/api";
 const api = axios.create({
