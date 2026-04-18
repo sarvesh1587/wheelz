@@ -1,6 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 
+// Loading Spinner Component
 export default function LoadingSpinner({ fullScreen = true }) {
   if (fullScreen) {
     return (
@@ -17,11 +18,12 @@ export default function LoadingSpinner({ fullScreen = true }) {
   }
   return (
     <div className="flex items-center justify-center py-8">
-      <div className="w-8 h-8 border-3 border-amber-500 border-t-transparent rounded-full animate-spin" />
+      <div className="w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin" />
     </div>
   );
 }
 
+// Footer Component - No spinning!
 export function Footer() {
   return (
     <footer className="bg-gray-900 text-gray-400 mt-auto">
@@ -39,51 +41,71 @@ export function Footer() {
               in style.
             </p>
             <div className="flex gap-3 mt-4">
-              {["Facebook", "Twitter", "Instagram"].map((s) => (
-                <span
-                  key={s}
-                  className="w-8 h-8 rounded-lg bg-gray-800 flex items-center justify-center text-xs hover:bg-amber-500 hover:text-gray-900 cursor-pointer transition-colors"
-                >
-                  {s[0]}
-                </span>
-              ))}
+              <span className="w-8 h-8 rounded-lg bg-gray-800 flex items-center justify-center text-xs hover:bg-amber-500 hover:text-gray-900 cursor-pointer transition-colors">
+                F
+              </span>
+              <span className="w-8 h-8 rounded-lg bg-gray-800 flex items-center justify-center text-xs hover:bg-amber-500 hover:text-gray-900 cursor-pointer transition-colors">
+                T
+              </span>
+              <span className="w-8 h-8 rounded-lg bg-gray-800 flex items-center justify-center text-xs hover:bg-amber-500 hover:text-gray-900 cursor-pointer transition-colors">
+                I
+              </span>
             </div>
           </div>
           <div>
             <h4 className="text-white font-semibold mb-3">Quick Links</h4>
             <ul className="space-y-2 text-sm">
-              {[
-                ["Browse Cars", "/vehicles?category=car"],
-                ["Browse Bikes", "/vehicles?category=bike"],
-                ["How it Works", "/"],
-                ["FAQs", "/"],
-              ].map(([label, to]) => (
-                <li key={label}>
-                  <Link
-                    to={to}
-                    className="hover:text-amber-400 transition-colors"
-                  >
-                    {label}
-                  </Link>
-                </li>
-              ))}
+              <li>
+                <Link
+                  to="/vehicles?category=car"
+                  className="hover:text-amber-400 transition-colors"
+                >
+                  Browse Cars
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/vehicles?category=bike"
+                  className="hover:text-amber-400 transition-colors"
+                >
+                  Browse Bikes
+                </Link>
+              </li>
+              <li>
+                <Link to="/" className="hover:text-amber-400 transition-colors">
+                  How it Works
+                </Link>
+              </li>
+              <li>
+                <Link to="/" className="hover:text-amber-400 transition-colors">
+                  FAQs
+                </Link>
+              </li>
             </ul>
           </div>
           <div>
             <h4 className="text-white font-semibold mb-3">Support</h4>
             <ul className="space-y-2 text-sm">
-              {[
-                "24/7 Support",
-                "Cancellation Policy",
-                "Terms of Service",
-                "Privacy Policy",
-              ].map((item) => (
-                <li key={item}>
-                  <span className="hover:text-amber-400 cursor-pointer transition-colors">
-                    {item}
-                  </span>
-                </li>
-              ))}
+              <li>
+                <span className="hover:text-amber-400 cursor-pointer transition-colors">
+                  24/7 Support
+                </span>
+              </li>
+              <li>
+                <span className="hover:text-amber-400 cursor-pointer transition-colors">
+                  Cancellation Policy
+                </span>
+              </li>
+              <li>
+                <span className="hover:text-amber-400 cursor-pointer transition-colors">
+                  Terms of Service
+                </span>
+              </li>
+              <li>
+                <span className="hover:text-amber-400 cursor-pointer transition-colors">
+                  Privacy Policy
+                </span>
+              </li>
             </ul>
           </div>
         </div>
@@ -101,6 +123,7 @@ export function Footer() {
   );
 }
 
+// Star Rating Component
 export function StarRating({ rating, count, size = "sm" }) {
   const stars = [1, 2, 3, 4, 5];
   const sizeClass = size === "lg" ? "w-5 h-5" : "w-4 h-4";
@@ -110,7 +133,7 @@ export function StarRating({ rating, count, size = "sm" }) {
         {stars.map((s) => (
           <svg
             key={s}
-            className={`${sizeClass} ${s <= Math.round(rating) ? "text-amber-400" : "text-gray-300"}`}
+            className={`${sizeClass} ${s <= Math.round(rating) ? "text-amber-400" : "text-gray-300 dark:text-gray-600"}`}
             fill="currentColor"
             viewBox="0 0 20 20"
           >

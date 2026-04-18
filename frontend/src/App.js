@@ -1,4 +1,8 @@
 import React, { Suspense, lazy } from "react";
+import LoadingSpinner, {
+  Footer,
+  StarRating,
+} from "./components/common/LoadingSpinner";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import {
