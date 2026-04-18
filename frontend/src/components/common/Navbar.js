@@ -17,7 +17,6 @@ import {
   InformationCircleIcon,
   PhoneIcon,
   GiftIcon,
-  StarIcon,
 } from "@heroicons/react/24/outline";
 
 export default function Navbar() {
@@ -43,6 +42,28 @@ export default function Navbar() {
   const handleLogout = () => {
     logout();
     navigate("/");
+  };
+
+  // Check if a link is active
+  const isActive = (path) => {
+    if (path === "/") {
+      return location.pathname === "/";
+    }
+    if (path.includes("category=car")) {
+      return (
+        location.pathname === "/vehicles" && location.search === "?category=car"
+      );
+    }
+    if (path.includes("category=bike")) {
+      return (
+        location.pathname === "/vehicles" &&
+        location.search === "?category=bike"
+      );
+    }
+    if (path === "/vehicles") {
+      return location.pathname === "/vehicles" && !location.search;
+    }
+    return location.pathname === path;
   };
 
   // Navigation links for all users
@@ -81,7 +102,7 @@ export default function Navbar() {
 
   const navLinks = getNavLinks();
 
-  // Handle navigation with category filter
+  // Handle navigation
   const handleNavigation = (path) => {
     navigate(path);
   };
@@ -117,14 +138,9 @@ export default function Navbar() {
                 key={link.to}
                 onClick={() => handleNavigation(link.to)}
                 className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-2 ${
-                  location.pathname === "/vehicles" &&
-                  link.to.includes("category") &&
-                  location.search === link.to.split("?")[1]
-                    ? "bg-amber-500/10 text-amber-500"
-                    : location.pathname === link.to &&
-                        !link.to.includes("category")
-                      ? "bg-amber-500/10 text-amber-500"
-                      : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-amber-500"
+                  isActive(link.to)
+                    ? "bg-amber-500 text-white"
+                    : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-amber-500"
                 }`}
               >
                 {link.icon && <link.icon className="w-4 h-4" />}
@@ -280,7 +296,11 @@ export default function Navbar() {
                   handleNavigation(link.to);
                   setMenuOpen(false);
                 }}
-                className="flex items-center gap-3 w-full px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg text-left"
+                className={`flex items-center gap-3 w-full px-4 py-3 rounded-lg text-left ${
+                  isActive(link.to)
+                    ? "bg-amber-500 text-white"
+                    : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+                }`}
               >
                 {link.icon && <link.icon className="w-5 h-5" />}
                 <span className="font-medium">{link.label}</span>
