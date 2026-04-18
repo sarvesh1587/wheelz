@@ -59,7 +59,6 @@ export default function Navbar() {
   const adminLinks = [
     { to: "/admin", label: "Dashboard", icon: ChartBarIcon },
     { to: "/admin/vehicles", label: "Manage Vehicles", icon: TruckIcon },
-    { to: "/admin/users", label: "Users", icon: UserCircleIcon },
   ];
 
   // Customer specific links
@@ -82,6 +81,11 @@ export default function Navbar() {
 
   const navLinks = getNavLinks();
 
+  // Handle navigation with category filter
+  const handleNavigation = (path) => {
+    navigate(path);
+  };
+
   return (
     <nav
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
@@ -93,7 +97,11 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 group">
+          <Link
+            to="/"
+            className="flex items-center gap-2 group"
+            onClick={() => window.scrollTo(0, 0)}
+          >
             <div className="w-9 h-9 bg-amber-500 rounded-xl flex items-center justify-center font-bold text-gray-900 text-lg group-hover:scale-110 transition-transform">
               W
             </div>
@@ -105,20 +113,23 @@ export default function Navbar() {
           {/* Desktop Navigation Links */}
           <div className="hidden md:flex items-center gap-1 lg:gap-2">
             {navLinks.map((link) => (
-              <Link
+              <button
                 key={link.to}
-                to={link.to}
+                onClick={() => handleNavigation(link.to)}
                 className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-2 ${
-                  location.pathname === link.to ||
-                  (link.to.includes("category") &&
-                    location.search.includes(link.to.split("?")[1]))
+                  location.pathname === "/vehicles" &&
+                  link.to.includes("category") &&
+                  location.search === link.to.split("?")[1]
                     ? "bg-amber-500/10 text-amber-500"
-                    : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-amber-500"
+                    : location.pathname === link.to &&
+                        !link.to.includes("category")
+                      ? "bg-amber-500/10 text-amber-500"
+                      : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-amber-500"
                 }`}
               >
                 {link.icon && <link.icon className="w-4 h-4" />}
                 {link.label}
-              </Link>
+              </button>
             ))}
           </div>
 
@@ -138,24 +149,24 @@ export default function Navbar() {
             </button>
 
             {/* Special Offers Badge */}
-            <Link
-              to="/offers"
+            <button
+              onClick={() => handleNavigation("/offers")}
               className="hidden lg:flex items-center gap-1 px-3 py-1.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-semibold rounded-full"
             >
               <GiftIcon className="w-3 h-3" />
               Offers
-            </Link>
+            </button>
 
             {isAuthenticated ? (
               <>
                 {/* Wishlist Icon */}
                 {!isAdmin && (
-                  <Link
-                    to="/wishlist"
+                  <button
+                    onClick={() => handleNavigation("/wishlist")}
                     className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors relative"
                   >
                     <HeartIcon className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-                  </Link>
+                  </button>
                 )}
 
                 {/* Profile Dropdown */}
@@ -184,25 +195,34 @@ export default function Navbar() {
                       </div>
 
                       <div className="py-1">
-                        <Link
-                          to="/dashboard"
-                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                        <button
+                          onClick={() => {
+                            handleNavigation("/dashboard");
+                            setProfileOpen(false);
+                          }}
+                          className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 text-left"
                         >
                           <CalendarDaysIcon className="w-4 h-4" /> My Bookings
-                        </Link>
-                        <Link
-                          to="/profile"
-                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                        </button>
+                        <button
+                          onClick={() => {
+                            handleNavigation("/profile");
+                            setProfileOpen(false);
+                          }}
+                          className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 text-left"
                         >
                           <UserCircleIcon className="w-4 h-4" /> Profile
-                        </Link>
+                        </button>
                         {!isAdmin && (
-                          <Link
-                            to="/wishlist"
-                            className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                          <button
+                            onClick={() => {
+                              handleNavigation("/wishlist");
+                              setProfileOpen(false);
+                            }}
+                            className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 text-left"
                           >
                             <HeartIcon className="w-4 h-4" /> My Wishlist
-                          </Link>
+                          </button>
                         )}
                       </div>
 
@@ -221,18 +241,18 @@ export default function Navbar() {
               </>
             ) : (
               <div className="hidden md:flex items-center gap-2">
-                <Link
-                  to="/login"
+                <button
+                  onClick={() => handleNavigation("/login")}
                   className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-amber-500 transition-colors"
                 >
                   Login
-                </Link>
-                <Link
-                  to="/register"
+                </button>
+                <button
+                  onClick={() => handleNavigation("/register")}
                   className="px-4 py-2 bg-amber-500 text-gray-900 font-semibold text-sm rounded-xl hover:bg-amber-400 transition-colors"
                 >
                   Sign Up
-                </Link>
+                </button>
               </div>
             )}
 
@@ -254,55 +274,72 @@ export default function Navbar() {
         {menuOpen && (
           <div className="md:hidden bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800 py-4 animate-slide-up max-h-[80vh] overflow-y-auto">
             {navLinks.map((link) => (
-              <Link
+              <button
                 key={link.to}
-                to={link.to}
-                className="flex items-center gap-3 px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg"
-                onClick={() => setMenuOpen(false)}
+                onClick={() => {
+                  handleNavigation(link.to);
+                  setMenuOpen(false);
+                }}
+                className="flex items-center gap-3 w-full px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg text-left"
               >
                 {link.icon && <link.icon className="w-5 h-5" />}
                 <span className="font-medium">{link.label}</span>
-              </Link>
+              </button>
             ))}
 
             <div className="border-t border-gray-100 dark:border-gray-800 mt-2 pt-2">
-              <Link
-                to="/offers"
-                className="flex items-center gap-3 px-4 py-3 text-amber-500 font-medium"
+              <button
+                onClick={() => {
+                  handleNavigation("/offers");
+                  setMenuOpen(false);
+                }}
+                className="flex items-center gap-3 w-full px-4 py-3 text-amber-500 font-medium"
               >
                 <GiftIcon className="w-5 h-5" />
                 Special Offers
-              </Link>
-              <Link
-                to="/contact"
-                className="flex items-center gap-3 px-4 py-3 text-gray-700 dark:text-gray-300"
+              </button>
+              <button
+                onClick={() => {
+                  handleNavigation("/contact");
+                  setMenuOpen(false);
+                }}
+                className="flex items-center gap-3 w-full px-4 py-3 text-gray-700 dark:text-gray-300"
               >
                 <PhoneIcon className="w-5 h-5" />
                 Support
-              </Link>
-              <Link
-                to="/about"
-                className="flex items-center gap-3 px-4 py-3 text-gray-700 dark:text-gray-300"
+              </button>
+              <button
+                onClick={() => {
+                  handleNavigation("/about");
+                  setMenuOpen(false);
+                }}
+                className="flex items-center gap-3 w-full px-4 py-3 text-gray-700 dark:text-gray-300"
               >
                 <InformationCircleIcon className="w-5 h-5" />
                 About Us
-              </Link>
+              </button>
             </div>
 
             {!isAuthenticated && (
               <div className="flex gap-2 px-4 pt-4 border-t border-gray-100 dark:border-gray-800 mt-2">
-                <Link
-                  to="/login"
+                <button
+                  onClick={() => {
+                    handleNavigation("/login");
+                    setMenuOpen(false);
+                  }}
                   className="flex-1 text-center py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl font-medium text-sm"
                 >
                   Login
-                </Link>
-                <Link
-                  to="/register"
+                </button>
+                <button
+                  onClick={() => {
+                    handleNavigation("/register");
+                    setMenuOpen(false);
+                  }}
                   className="flex-1 text-center py-2.5 bg-amber-500 text-gray-900 rounded-xl font-semibold text-sm"
                 >
                   Sign Up
-                </Link>
+                </button>
               </div>
             )}
           </div>
