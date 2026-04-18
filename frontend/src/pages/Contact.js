@@ -42,7 +42,7 @@ export default function Contact() {
           <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
             Phone
           </h3>
-          <p className="text-gray-600 dark:text-gray-400">+91 98765 43210</p>
+          <p className="text-gray-600 dark:text-gray-400">+91 6307800255</p>
           <p className="text-gray-500 text-sm">Mon-Sat, 9AM-9PM</p>
         </div>
         <div className="text-center p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm">
@@ -50,7 +50,9 @@ export default function Contact() {
           <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
             Email
           </h3>
-          <p className="text-gray-600 dark:text-gray-400">support@wheelz.com</p>
+          <p className="text-gray-600 dark:text-gray-400">
+            hm2300439@gmail.com
+          </p>
           <p className="text-gray-500 text-sm">24/7 Response</p>
         </div>
         <div className="text-center p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm">
@@ -58,7 +60,7 @@ export default function Contact() {
           <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
             Office
           </h3>
-          <p className="text-gray-600 dark:text-gray-400">Bangalore, India</p>
+          <p className="text-gray-600 dark:text-gray-400">Ajmera,pune</p>
           <p className="text-gray-500 text-sm">Visit by appointment</p>
         </div>
       </div>
