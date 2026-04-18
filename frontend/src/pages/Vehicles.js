@@ -34,6 +34,7 @@ export default function Vehicles() {
   const [nlQuery, setNlQuery] = useState("");
   const [aiSearching, setAiSearching] = useState(false);
 
+  // Initialize filters from URL params
   const [filters, setFilters] = useState({
     category: searchParams.get("category") || "",
     city: searchParams.get("city") || "",
@@ -50,14 +51,18 @@ export default function Vehicles() {
     try {
       const params = {};
       Object.entries(filters).forEach(([k, v]) => {
-        if (v) params[k] = v;
+        if (v && v !== "") params[k] = v;
       });
       params.limit = 12;
+
+      console.log("Fetching vehicles with params:", params); // Debug log
+
       const res = await vehicleAPI.getAll(params);
       setVehicles(res.data.vehicles);
       setTotal(res.data.total);
       setPages(res.data.pages);
-    } catch {
+    } catch (err) {
+      console.error("Error fetching vehicles:", err);
     } finally {
       setLoading(false);
     }
@@ -67,12 +72,27 @@ export default function Vehicles() {
     fetchVehicles();
   }, [fetchVehicles]);
 
+  // Update filters when URL changes
+  useEffect(() => {
+    const newFilters = {
+      category: searchParams.get("category") || "",
+      city: searchParams.get("city") || "",
+      fuelType: searchParams.get("fuelType") || "",
+      minPrice: searchParams.get("minPrice") || "",
+      maxPrice: searchParams.get("maxPrice") || "",
+      sort: searchParams.get("sort") || "",
+      page: parseInt(searchParams.get("page") || "1"),
+      search: searchParams.get("search") || "",
+    };
+    setFilters(newFilters);
+  }, [searchParams]);
+
   const updateFilter = (key, value) => {
     const next = { ...filters, [key]: value, page: 1 };
     setFilters(next);
     const params = {};
     Object.entries(next).forEach(([k, v]) => {
-      if (v && v !== "1") params[k] = v;
+      if (v && v !== "") params[k] = v;
     });
     setSearchParams(params);
   };
@@ -109,7 +129,8 @@ export default function Vehicles() {
         page: 1,
       };
       setFilters(next);
-    } catch {
+    } catch (err) {
+      console.error("AI search error:", err);
     } finally {
       setAiSearching(false);
     }
@@ -123,15 +144,18 @@ export default function Vehicles() {
     filters.maxPrice,
   ].filter(Boolean).length;
 
+  // Get title based on category filter
+  const getTitle = () => {
+    if (filters.category === "car") return "🚗 Cars";
+    if (filters.category === "bike") return "🏍️ Bikes";
+    return "All Vehicles";
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8 pt-24">
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-1">
-          {filters.category === "car"
-            ? "🚗 Cars"
-            : filters.category === "bike"
-              ? "🏍️ Bikes"
-              : "All Vehicles"}
+          {getTitle()}
         </h1>
         <p className="text-gray-500 dark:text-gray-400">
           {loading
@@ -140,6 +164,7 @@ export default function Vehicles() {
         </p>
       </div>
 
+      {/* AI Smart Search Bar */}
       <form onSubmit={handleAISearch} className="flex gap-2 mb-6">
         <div className="flex-1 flex items-center gap-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4">
           <SparklesIcon className="w-5 h-5 text-amber-500 flex-shrink-0" />
@@ -165,23 +190,43 @@ export default function Vehicles() {
         </button>
       </form>
 
+      {/* Filter Bar */}
       <div className="flex flex-wrap items-center gap-3 mb-8">
+        {/* Category Buttons */}
         <div className="flex bg-gray-100 dark:bg-gray-800 rounded-xl p-1">
-          {["", "car", "bike"].map((cat) => (
-            <button
-              key={cat}
-              onClick={() => updateFilter("category", cat)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                filters.category === cat
-                  ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm"
-                  : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
-              }`}
-            >
-              {cat === "" ? "All" : cat === "car" ? "🚗 Cars" : "🏍️ Bikes"}
-            </button>
-          ))}
+          <button
+            onClick={() => updateFilter("category", "")}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              filters.category === ""
+                ? "bg-amber-500 text-white shadow-sm"
+                : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+            }`}
+          >
+            All
+          </button>
+          <button
+            onClick={() => updateFilter("category", "car")}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              filters.category === "car"
+                ? "bg-amber-500 text-white shadow-sm"
+                : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+            }`}
+          >
+            🚗 Cars
+          </button>
+          <button
+            onClick={() => updateFilter("category", "bike")}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              filters.category === "bike"
+                ? "bg-amber-500 text-white shadow-sm"
+                : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+            }`}
+          >
+            🏍️ Bikes
+          </button>
         </div>
 
+        {/* City Filter */}
         <select
           value={filters.city}
           onChange={(e) => updateFilter("city", e.target.value)}
@@ -194,6 +239,7 @@ export default function Vehicles() {
           ))}
         </select>
 
+        {/* Fuel Type Filter */}
         <select
           value={filters.fuelType}
           onChange={(e) => updateFilter("fuelType", e.target.value)}
@@ -208,6 +254,7 @@ export default function Vehicles() {
           ))}
         </select>
 
+        {/* Price Range */}
         <div className="flex items-center gap-1">
           <input
             type="number"
@@ -226,6 +273,7 @@ export default function Vehicles() {
           />
         </div>
 
+        {/* Sort */}
         <select
           value={filters.sort}
           onChange={(e) => updateFilter("sort", e.target.value)}
@@ -238,6 +286,7 @@ export default function Vehicles() {
           ))}
         </select>
 
+        {/* Clear Filters */}
         {activeFilterCount > 0 && (
           <button
             onClick={clearFilters}
@@ -249,6 +298,7 @@ export default function Vehicles() {
         )}
       </div>
 
+      {/* Vehicles Grid */}
       {loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {[...Array(12)].map((_, i) => (
@@ -286,15 +336,16 @@ export default function Vehicles() {
         </div>
       )}
 
+      {/* Pagination */}
       {pages > 1 && (
         <div className="flex items-center justify-center gap-2 mt-10">
-          {[...Array(pages)].map((_, i) => (
+          {[...Array(Math.min(pages, 5))].map((_, i) => (
             <button
               key={i}
               onClick={() => updateFilter("page", i + 1)}
               className={`w-10 h-10 rounded-xl text-sm font-medium transition-colors ${
                 filters.page === i + 1
-                  ? "bg-amber-500 text-gray-900"
+                  ? "bg-amber-500 text-white"
                   : "bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-amber-400"
               }`}
             >
