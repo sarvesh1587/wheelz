@@ -19,7 +19,7 @@ export default function About() {
     { number: "500+", label: "Vehicles", icon: ShieldCheckIcon },
     { number: "15+", label: "Cities", icon: GlobeAltIcon },
     { number: "50K+", label: "Happy Customers", icon: UsersIcon },
-    { number: "4.8", label: "Customer Rating", icon: StarIcon },
+    { number: "4.2", label: "Customer Rating", icon: StarIcon },
   ];
 
   const values = [
@@ -56,7 +56,7 @@ export default function About() {
       year: "2024",
       title: "Company Founded",
       description:
-        "Wheelz started with a vision to revolutionize vehicle rentals in India",
+        "wheelz started with a vision to revolutionize vehicle rentals in India",
     },
     {
       year: "2024",
@@ -69,7 +69,7 @@ export default function About() {
       description: "Launched operations in 15 major Indian cities",
     },
     {
-      year: "2025",
+      year: "2026",
       title: "AI Integration",
       description: "Introduced AI-powered chatbot and smart search",
     },
@@ -101,15 +101,15 @@ export default function About() {
             <div className="space-y-4 text-gray-600 dark:text-gray-400 leading-relaxed">
               <p>
                 Founded in 2024,{" "}
-                <span className="text-amber-500 font-semibold">Wheelz</span> was
+                <span className="text-amber-500 font-semibold">wheelz</span> was
                 born from a simple idea: making quality vehicle rentals
                 accessible, affordable, and hassle-free for everyone in India.
               </p>
               <p>
-                What started as a small operation in Bangalore has now grown
-                into a trusted platform serving thousands of customers across
-                15+ major cities. We've helped over 50,000 happy renters find
-                their perfect ride, from economy cars to luxury SUVs and premium
+                What started as a small operation in Pune has now grown into a
+                trusted platform serving thousands of customers across 15+ major
+                cities. We've helped over 50,000 happy renters find their
+                perfect ride, from economy cars to luxury SUVs and premium
                 bikes.
               </p>
               <p>
