@@ -16,6 +16,9 @@ const UserSchema = new mongoose.Schema(
       trim: true,
       maxlength: [50, "Name cannot exceed 50 characters"],
     },
+    // Add these fields to your UserSchema
+    passwordResetToken: String,
+    passwordResetExpires: Date,
     email: {
       type: String,
       required: [true, "Email is required"],
@@ -107,6 +110,20 @@ UserSchema.methods.getSignedJwtToken = function () {
     { expiresIn: process.env.JWT_EXPIRE || "30d" },
   );
 };
+// Add this method to UserSchema
+UserSchema.methods.createPasswordResetToken = function () {
+  const crypto = require("crypto");
+  const resetToken = crypto.randomBytes(32).toString("hex");
+
+  this.passwordResetToken = crypto
+    .createHash("sha256")
+    .update(resetToken)
+    .digest("hex");
+
+  this.passwordResetExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
+
+  return resetToken;
+};
 
 UserSchema.virtual("bookings", {
   ref: "Booking",
@@ -114,5 +131,18 @@ UserSchema.virtual("bookings", {
   foreignField: "user",
   count: true,
 });
+// Add this method to UserSchema
+UserSchema.methods.createPasswordResetToken = function () {
+  const crypto = require("crypto");
+  const resetToken = crypto.randomBytes(32).toString("hex");
 
+  this.passwordResetToken = crypto
+    .createHash("sha256")
+    .update(resetToken)
+    .digest("hex");
+
+  this.passwordResetExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
+
+  return resetToken;
+};
 module.exports = mongoose.model("User", UserSchema);

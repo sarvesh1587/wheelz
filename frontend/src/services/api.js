@@ -9,10 +9,10 @@ import toast from "react-hot-toast";
 // const API_BASE =
 // process.env.REACT_APP_API_URL || "https://wheelz-api.onrender.com/api";
 // const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:5002/api";
-const API_BASE =
-  process.env.REACT_APP_API_URL || "https://wheelz-ldq2.onrender.com/api";
-console.log("API Base URL:", API_BASE); // This helps debug
-
+// const API_BASE =
+//   process.env.REACT_APP_API_URL || "https://wheelz-ldq2.onrender.com/api";
+// console.log("API Base URL:", API_BASE); // This helps debug
+const API_BASE = "http://localhost:5002/api";
 const api = axios.create({
   baseURL: API_BASE,
   timeout: 30000, // Increased timeout for mobile networks
@@ -54,6 +54,9 @@ export const authAPI = {
   getMe: () => api.get("/auth/me"),
   updateProfile: (data) => api.put("/auth/profile", data),
   changePassword: (data) => api.put("/auth/change-password", data),
+  forgotPassword: (data) => api.post("/auth/forgot-password", data),
+  resetPassword: (token, data) =>
+    api.post(`/auth/reset-password/${token}`, data),
 };
 
 // ─── Vehicles ─────────────────────────────────────────────────────────────────

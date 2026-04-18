@@ -1,4 +1,6 @@
 import React, { Suspense, lazy } from "react";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import {
   BrowserRouter as Router,
   Routes,
@@ -131,6 +133,8 @@ function AppRoutes() {
               }
             />
             <Route path="*" element={<NotFound />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password/:token" element={<ResetPassword />} />
           </Routes>
         </Suspense>
       </main>

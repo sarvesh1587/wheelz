@@ -93,13 +93,15 @@ export default function Login() {
             </div>
           </div>
 
-          <div className="text-right">
-            <Link
-              to="/forgot-password"
-              className="text-sm text-amber-500 hover:text-amber-600"
-            >
-              Forgot password?
-            </Link>
+          <div className="flex items-center justify-between">
+            <div className="text-right">
+              <Link
+                to="/forgot-password"
+                className="text-sm text-amber-500 hover:text-amber-600"
+              >
+                Forgot password?
+              </Link>
+            </div>
           </div>
 
           <button
@@ -130,7 +132,7 @@ export default function Login() {
             Demo Credentials:
           </p>
           <div className="flex flex-col gap-1 text-xs text-center text-gray-600 dark:text-gray-400">
-            <p>Admin: admin@wheelz.com / admin123</p>
+            {/* <p>Admin: admin@wheelz.com / admin123</p> */}
             <p>User: arjun@example.com / user1234</p>
           </div>
         </div>
