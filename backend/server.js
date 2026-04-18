@@ -23,33 +23,45 @@ const app = express();
 // );
 // ─── Security Middleware ────────────────────────────────────────────────────
 app.use(helmet());
+// ─── Security Middleware ────────────────────────────────────────────────────
+app.use(helmet());
 
-// Configure CORS for production
-const allowedOrigins = [
-  "http://localhost:3000",
-  "http://localhost:3001",
-  "https://wheelz-sand.vercel.app",
-  "https://wheelz.vercel.app",
-  "https://wheelz-git-main.vercel.app",
-  process.env.FRONTEND_URL,
-].filter(Boolean);
-
+// Simplified CORS - Allow all origins (for testing)
 app.use(
   cors({
-    origin: function (origin, callback) {
-      // Allow requests with no origin (like mobile apps, curl)
-      if (!origin) return callback(null, true);
-
-      if (allowedOrigins.includes(origin) || origin?.includes("vercel.app")) {
-        callback(null, true);
-      } else {
-        console.log("CORS blocked origin:", origin);
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
+    origin: true, // Allows any origin
     credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   }),
 );
+
+// Configure CORS for production
+// const allowedOrigins = [
+//   "http://localhost:3000",
+//   "http://localhost:3001",
+//   "https://wheelz-sand.vercel.app",
+//   "https://wheelz.vercel.app",
+//   "https://wheelz-git-main.vercel.app",
+//   process.env.FRONTEND_URL,
+// ].filter(Boolean);
+
+// app.use(
+//   cors({
+//     origin: function (origin, callback) {
+//       // Allow requests with no origin (like mobile apps, curl)
+//       if (!origin) return callback(null, true);
+
+//       if (allowedOrigins.includes(origin) || origin?.includes("vercel.app")) {
+//         callback(null, true);
+//       } else {
+//         console.log("CORS blocked origin:", origin);
+//         callback(new Error("Not allowed by CORS"));
+//       }
+//     },
+//     credentials: true,
+//   }),
+// );
 
 // Rate limiting - 100 requests per 15 min per IP
 const limiter = rateLimit({
