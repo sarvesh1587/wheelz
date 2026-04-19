@@ -29,19 +29,34 @@ const ReviewSection = () => {
   const fetchAllReviews = async () => {
     setLoading(true);
     try {
-      // Fetch all vehicles first to get their reviews
+      // Fetch all vehicles to get their reviews
       const vehiclesRes = await fetch(
         `${process.env.REACT_APP_API_URL || "https://wheelz-ldq2.onrender.com/api"}/vehicles?limit=50`,
       );
       const vehiclesData = await vehiclesRes.json();
 
+      console.log("Vehicles fetched:", vehiclesData.vehicles?.length);
+
       let allReviews = [];
-      for (const vehicle of vehiclesData.vehicles) {
-        const reviewsRes = await reviewAPI.getByVehicle(vehicle._id);
-        if (reviewsRes.data.reviews) {
-          allReviews = [...allReviews, ...reviewsRes.data.reviews];
+      for (const vehicle of vehiclesData.vehicles || []) {
+        try {
+          const reviewsRes = await reviewAPI.getByVehicle(vehicle._id);
+          console.log(
+            `Reviews for ${vehicle.name}:`,
+            reviewsRes.data.reviews?.length || 0,
+          );
+          if (reviewsRes.data.reviews && reviewsRes.data.reviews.length > 0) {
+            allReviews = [...allReviews, ...reviewsRes.data.reviews];
+          }
+        } catch (err) {
+          console.error(
+            `Error fetching reviews for vehicle ${vehicle._id}:`,
+            err,
+          );
         }
       }
+
+      console.log("Total reviews found:", allReviews.length);
 
       // Sort by date (newest first)
       allReviews.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
@@ -91,11 +106,12 @@ const ReviewSection = () => {
       "bg-orange-500",
       "bg-teal-500",
     ];
-    const index = email?.length % colors.length || 0;
+    const index = (email?.length || 0) % colors.length;
     return colors[index];
   };
 
   const formatDate = (dateString) => {
+    if (!dateString) return "Recently";
     const date = new Date(dateString);
     return date.toLocaleDateString("en-IN", {
       year: "numeric",
@@ -127,6 +143,9 @@ const ReviewSection = () => {
         <p className="text-gray-500 dark:text-gray-400">
           Be the first to share your experience!
         </p>
+        <p className="text-sm text-gray-400 mt-2">
+          Complete a booking and leave a review
+        </p>
       </div>
     );
   }
@@ -146,86 +165,90 @@ const ReviewSection = () => {
         </div>
 
         {/* Stats Section */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 mb-12">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* Left - Rating Summary */}
-            <div className="text-center md:text-left">
-              <div className="flex flex-col items-center md:flex-row md:items-center gap-6">
-                <div>
-                  <div className="text-6xl font-bold text-amber-500">
-                    {stats.averageRating.toFixed(1)}
-                  </div>
-                  <div className="flex items-center justify-center md:justify-start gap-1 mt-2">
-                    {[1, 2, 3, 4, 5].map((star) =>
-                      star <= Math.round(stats.averageRating) ? (
-                        <StarIcon
-                          key={star}
-                          className="w-5 h-5 text-amber-400"
-                        />
-                      ) : (
-                        <StarOutline
-                          key={star}
-                          className="w-5 h-5 text-gray-300"
-                        />
-                      ),
-                    )}
-                  </div>
-                  <p className="text-sm text-gray-500 mt-1">
-                    Based on {stats.totalReviews} reviews
-                  </p>
-                </div>
-                <div className="flex-1 w-full">
-                  {[5, 4, 3, 2, 1].map((star) => (
-                    <div key={star} className="flex items-center gap-2 mb-2">
-                      <span className="text-sm w-8">{star} ★</span>
-                      <div className="flex-1 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-amber-500 rounded-full"
-                          style={{
-                            width: `${(stats.ratingDistribution[star] / stats.totalReviews) * 100}%`,
-                          }}
-                        />
-                      </div>
-                      <span className="text-xs text-gray-500 w-12">
-                        {stats.ratingDistribution[star]}
-                      </span>
+        {stats.totalReviews > 0 && (
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 mb-12">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="text-center md:text-left">
+                <div className="flex flex-col items-center md:flex-row md:items-center gap-6">
+                  <div>
+                    <div className="text-6xl font-bold text-amber-500">
+                      {stats.averageRating.toFixed(1)}
                     </div>
-                  ))}
+                    <div className="flex items-center justify-center md:justify-start gap-1 mt-2">
+                      {[1, 2, 3, 4, 5].map((star) =>
+                        star <= Math.round(stats.averageRating) ? (
+                          <StarIcon
+                            key={star}
+                            className="w-5 h-5 text-amber-400"
+                          />
+                        ) : (
+                          <StarOutline
+                            key={star}
+                            className="w-5 h-5 text-gray-300"
+                          />
+                        ),
+                      )}
+                    </div>
+                    <p className="text-sm text-gray-500 mt-1">
+                      Based on {stats.totalReviews} reviews
+                    </p>
+                  </div>
+                  <div className="flex-1 w-full">
+                    {[5, 4, 3, 2, 1].map((star) => (
+                      <div key={star} className="flex items-center gap-2 mb-2">
+                        <span className="text-sm w-8">{star} ★</span>
+                        <div className="flex-1 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-amber-500 rounded-full"
+                            style={{
+                              width: `${(stats.ratingDistribution[star] / stats.totalReviews) * 100}%`,
+                            }}
+                          />
+                        </div>
+                        <span className="text-xs text-gray-500 w-12">
+                          {stats.ratingDistribution[star]}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Right - Trust Badges */}
-            <div className="border-t md:border-t-0 md:border-l border-gray-200 dark:border-gray-700 pt-6 md:pt-0 md:pl-8">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                    500+
+              <div className="border-t md:border-t-0 md:border-l border-gray-200 dark:border-gray-700 pt-6 md:pt-0 md:pl-8">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-gray-900 dark:text-white">
+                      500+
+                    </div>
+                    <div className="text-sm text-gray-500">Happy Customers</div>
                   </div>
-                  <div className="text-sm text-gray-500">Happy Customers</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                    15+
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-gray-900 dark:text-white">
+                      15+
+                    </div>
+                    <div className="text-sm text-gray-500">Cities Served</div>
                   </div>
-                  <div className="text-sm text-gray-500">Cities Served</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                    98%
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-gray-900 dark:text-white">
+                      98%
+                    </div>
+                    <div className="text-sm text-gray-500">
+                      Satisfaction Rate
+                    </div>
                   </div>
-                  <div className="text-sm text-gray-500">Satisfaction Rate</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                    24/7
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-gray-900 dark:text-white">
+                      24/7
+                    </div>
+                    <div className="text-sm text-gray-500">
+                      Customer Support
+                    </div>
                   </div>
-                  <div className="text-sm text-gray-500">Customer Support</div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Reviews Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -233,13 +256,10 @@ const ReviewSection = () => {
             <div
               key={review._id}
               className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden transform hover:-translate-y-1"
-              style={{ animationDelay: `${index * 100}ms` }}
             >
-              {/* Review Header */}
               <div className="p-6 pb-4">
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center gap-3">
-                    {/* Avatar */}
                     <div
                       className={`w-12 h-12 rounded-full ${getRandomColor(review.user?.email)} flex items-center justify-center text-white font-bold text-lg shadow-md`}
                     >
@@ -278,7 +298,6 @@ const ReviewSection = () => {
                   )}
                 </div>
 
-                {/* Review Content */}
                 {review.title && (
                   <h5 className="text-md font-semibold text-gray-800 dark:text-gray-200 mb-2">
                     {review.title}
@@ -289,7 +308,6 @@ const ReviewSection = () => {
                     "Great experience with Wheelz! The vehicle was clean and well-maintained."}
                 </p>
 
-                {/* User Email */}
                 <div className="mt-4 pt-3 border-t border-gray-100 dark:border-gray-700">
                   <div className="flex items-center gap-2 text-xs text-gray-400">
                     <UserCircleIcon className="w-3.5 h-3.5" />
