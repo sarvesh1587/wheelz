@@ -64,14 +64,14 @@ app.use("/api/vendor", require("./routes/vendor"));
 // );
 
 // Rate limiting - 100 requests per 15 min per IP
-const limiter = rateLimit({
-  windowMs: 1 * 60 * 1000,
-  max: 300,
-  message: {
-    success: false,
-    message: "Too many requests, please try again later.",
-  },
-});
+// const limiter = rateLimit({
+//   windowMs: 1 * 60 * 1000,
+//   max: 9000,
+//   message: {
+//     success: false,
+//     message: "Too many requests, please try again later.",
+//   },
+// });
 app.use("/api/", limiter);
 
 // ─── Body Parsing ───────────────────────────────────────────────────────────
