@@ -148,6 +148,14 @@ function AppRoutes() {
             <Route path="/contact" element={<Contact />} />
             <Route path="/offers" element={<Offers />} />
             <Route path="/support" element={<Contact />} />
+            <Route
+              path="/admin"
+              element={
+                <AdminRoute>
+                  <AdminDashboard />
+                </AdminRoute>
+              }
+            />
           </Routes>
         </Suspense>
       </main>

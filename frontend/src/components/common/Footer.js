@@ -87,7 +87,6 @@ export default function Footer() {
                   24/7 Support
                 </button>
               </li>
-              // Add this in the Quick Links or Support section
               <li>
                 <Link
                   to="/contact"
@@ -96,7 +95,6 @@ export default function Footer() {
                   Contact Us
                 </Link>
               </li>
-              // In Footer.js, add these links
               <li>
                 <Link
                   to="/about"
