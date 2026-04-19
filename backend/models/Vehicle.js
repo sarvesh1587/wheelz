@@ -18,7 +18,6 @@ const VehicleSchema = new mongoose.Schema(
       required: true,
       enum: ["petrol", "diesel", "electric", "hybrid"],
     },
-    // Add this field
     vendor: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
@@ -26,11 +25,11 @@ const VehicleSchema = new mongoose.Schema(
     },
     isApproved: {
       type: Boolean,
-      default: false, // Admin needs to approve vendor vehicles
+      default: true, // Changed to true so admin vehicles don't need approval
     },
     commissionRate: {
       type: Number,
-      default: 10, // 10% platform commission
+      default: 10,
     },
     transmission: {
       type: String,
@@ -68,12 +67,15 @@ const VehicleSchema = new mongoose.Schema(
       },
     ],
 
-    // Specs
+    // Specs - Made optional with default
     specifications: {
-      mileage: String,
-      engine: String,
-      maxSpeed: String,
-      features: [String],
+      type: Object,
+      default: {
+        mileage: "",
+        engine: "",
+        maxSpeed: "",
+        features: [],
+      },
     },
 
     // Ratings

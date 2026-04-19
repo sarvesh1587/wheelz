@@ -20,6 +20,8 @@ import {
   ArrowPathIcon,
   MagnifyingGlassIcon,
   PlusIcon,
+  PhotoIcon,
+  XMarkIcon,
 } from "@heroicons/react/24/outline";
 import {
   LineChart,
@@ -62,6 +64,7 @@ export default function AdminDashboard() {
   const [showUserModal, setShowUserModal] = useState(false);
   const [showVehicleModal, setShowVehicleModal] = useState(false);
   const [showAddVehicleModal, setShowAddVehicleModal] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [newVehicle, setNewVehicle] = useState({
     name: "",
     brand: "",
@@ -75,7 +78,7 @@ export default function AdminDashboard() {
     basePrice: 1000,
     locationName: "",
     city: "",
-    images: ["https://via.placeholder.com/400x300?text=Vehicle"],
+    images: [],
   });
 
   useEffect(() => {
@@ -127,20 +130,112 @@ export default function AdminDashboard() {
     }
   };
 
+  // Image upload function
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Check file type
+    if (!file.type.startsWith("image/")) {
+      alert("Please upload an image file");
+      return;
+    }
+
+    // Check file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert("Image size should be less than 5MB");
+      return;
+    }
+
+    setUploadingImage(true);
+
+    // Convert to base64 for storage (in production, upload to Cloudinary)
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64String = reader.result;
+      setNewVehicle({
+        ...newVehicle,
+        images: [...newVehicle.images, base64String],
+      });
+      setUploadingImage(false);
+    };
+    reader.onerror = () => {
+      alert("Failed to read image");
+      setUploadingImage(false);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const removeImage = (indexToRemove) => {
+    setNewVehicle({
+      ...newVehicle,
+      images: newVehicle.images.filter((_, index) => index !== indexToRemove),
+    });
+  };
+
   const handleAddVehicle = async (e) => {
     e.preventDefault();
+
+    // Validate required fields
+    if (!newVehicle.name) {
+      alert("Vehicle name is required");
+      return;
+    }
+    if (!newVehicle.brand) {
+      alert("Brand is required");
+      return;
+    }
+    if (!newVehicle.model) {
+      alert("Model is required");
+      return;
+    }
+    if (!newVehicle.subCategory) {
+      alert("Sub Category is required");
+      return;
+    }
+    if (!newVehicle.locationName) {
+      alert("Location Name is required");
+      return;
+    }
+    if (!newVehicle.city) {
+      alert("City is required");
+      return;
+    }
+    if (newVehicle.images.length === 0) {
+      alert("At least one image is required");
+      return;
+    }
+
     try {
       const userData = JSON.parse(localStorage.getItem("wheelz_user"));
 
       const vehicleData = {
-        ...newVehicle,
+        name: newVehicle.name.trim(),
+        brand: newVehicle.brand.trim(),
+        model: newVehicle.model.trim(),
+        year: parseInt(newVehicle.year),
+        category: newVehicle.category,
+        subCategory: newVehicle.subCategory,
+        fuelType: newVehicle.fuelType,
+        transmission: newVehicle.transmission,
+        seatingCapacity: parseInt(newVehicle.seatingCapacity),
+        basePrice: parseInt(newVehicle.basePrice),
+        locationName: newVehicle.locationName.trim(),
+        city: newVehicle.city.trim(),
+        images: newVehicle.images,
         vendor: userData?._id,
         addedBy: userData?._id,
         isAvailable: true,
-        currentPrice: newVehicle.basePrice,
+        currentPrice: parseInt(newVehicle.basePrice),
+        specifications: {
+          mileage: "",
+          engine: "",
+          maxSpeed: "",
+          features: [],
+        },
       };
 
-      console.log("Adding vehicle:", vehicleData);
+      console.log("Full vehicle data being sent:", vehicleData);
 
       await vehicleAPI.create(vehicleData);
       setShowAddVehicleModal(false);
@@ -157,12 +252,12 @@ export default function AdminDashboard() {
         basePrice: 1000,
         locationName: "",
         city: "",
-        images: ["https://via.placeholder.com/400x300?text=Vehicle"],
+        images: [],
       });
       fetchAllData();
       alert("Vehicle added successfully!");
     } catch (error) {
-      console.error("Error adding vehicle:", error);
+      console.error("Error Response:", error.response?.data);
       alert(error.response?.data?.message || "Failed to add vehicle");
     }
   };
@@ -629,7 +724,10 @@ export default function AdminDashboard() {
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <img
-                            src={vehicle.images?.[0]}
+                            src={
+                              vehicle.images?.[0] ||
+                              "https://via.placeholder.com/400x300?text=No+Image"
+                            }
                             alt={vehicle.name}
                             className="w-10 h-10 rounded-lg object-cover"
                           />
@@ -746,17 +844,17 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {/* Add Vehicle Modal */}
+        {/* Add Vehicle Modal with Image Upload */}
         {showAddVehicleModal && (
           <div
             className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
             onClick={() => setShowAddVehicleModal(false)}
           >
             <div
-              className="bg-white dark:bg-gray-800 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+              className="bg-white dark:bg-gray-800 rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+              <div className="p-6 border-b border-gray-200 dark:border-gray-700 sticky top-0 bg-white dark:bg-gray-800">
                 <h2 className="text-xl font-bold">Add New Vehicle</h2>
               </div>
               <form onSubmit={handleAddVehicle} className="p-6 space-y-4">
@@ -805,7 +903,6 @@ export default function AdminDashboard() {
                     required
                   />
 
-                  {/* Category Dropdown */}
                   <select
                     value={newVehicle.category}
                     onChange={(e) =>
@@ -818,7 +915,6 @@ export default function AdminDashboard() {
                     <option value="bike">Bike</option>
                   </select>
 
-                  {/* SubCategory Dropdown - Dynamic based on category */}
                   <select
                     value={newVehicle.subCategory}
                     onChange={(e) =>
@@ -847,7 +943,6 @@ export default function AdminDashboard() {
                     )}
                   </select>
 
-                  {/* Fuel Type */}
                   <select
                     value={newVehicle.fuelType}
                     onChange={(e) =>
@@ -862,7 +957,6 @@ export default function AdminDashboard() {
                     <option value="hybrid">Hybrid</option>
                   </select>
 
-                  {/* Transmission */}
                   <select
                     value={newVehicle.transmission}
                     onChange={(e) =>
@@ -931,7 +1025,65 @@ export default function AdminDashboard() {
                     required
                   />
                 </div>
-                <div className="flex justify-end gap-3 pt-4">
+
+                {/* Image Upload Section */}
+                <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Vehicle Images
+                  </label>
+
+                  {/* Image Preview Grid */}
+                  {newVehicle.images.length > 0 && (
+                    <div className="grid grid-cols-3 gap-3 mb-3">
+                      {newVehicle.images.map((img, index) => (
+                        <div key={index} className="relative group">
+                          <img
+                            src={img}
+                            alt={`Vehicle ${index + 1}`}
+                            className="w-full h-24 object-cover rounded-lg"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeImage(index)}
+                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition"
+                          >
+                            <XMarkIcon className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Upload Button */}
+                  <div className="flex items-center gap-3">
+                    <label
+                      className={`cursor-pointer flex items-center gap-2 px-4 py-2 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl hover:border-amber-500 transition ${uploadingImage ? "opacity-50 cursor-not-allowed" : ""}`}
+                    >
+                      <PhotoIcon className="w-5 h-5 text-gray-500" />
+                      <span className="text-sm text-gray-600 dark:text-gray-400">
+                        {uploadingImage ? "Uploading..." : "Upload Image"}
+                      </span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        disabled={uploadingImage}
+                        className="hidden"
+                      />
+                    </label>
+                    <p className="text-xs text-gray-500">
+                      Max 5MB per image. Recommended: 16:9 ratio
+                    </p>
+                  </div>
+
+                  {newVehicle.images.length === 0 && (
+                    <p className="text-xs text-red-500 mt-2">
+                      At least one image is required
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
                   <button
                     type="button"
                     onClick={() => setShowAddVehicleModal(false)}
