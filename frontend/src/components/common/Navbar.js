@@ -17,7 +17,7 @@ import {
   InformationCircleIcon,
   PhoneIcon,
   GiftIcon,
-  BuildingStorefrontIcon, // New icon for Rent Your Vehicle
+  BuildingStorefrontIcon,
 } from "@heroicons/react/24/outline";
 
 export default function Navbar() {
@@ -45,7 +45,6 @@ export default function Navbar() {
     navigate("/");
   };
 
-  // Check if a link is active
   const isActive = (path) => {
     if (path === "/") {
       return location.pathname === "/";
@@ -67,7 +66,6 @@ export default function Navbar() {
     return location.pathname === path;
   };
 
-  // Navigation links for all users
   const mainNavLinks = [
     { to: "/", label: "Home", icon: HomeIcon },
     { to: "/vehicles?category=car", label: "Cars", icon: TruckIcon },
@@ -77,20 +75,17 @@ export default function Navbar() {
     { to: "/contact", label: "Contact", icon: PhoneIcon },
   ];
 
-  // Admin specific links
   const adminLinks = [
     { to: "/admin", label: "Dashboard", icon: ChartBarIcon },
     { to: "/admin/vehicles", label: "Manage Vehicles", icon: TruckIcon },
   ];
 
-  // Customer specific links
   const customerLinks = [
     { to: "/dashboard", label: "My Bookings", icon: CalendarDaysIcon },
     { to: "/wishlist", label: "Wishlist", icon: HeartIcon },
     { to: "/profile", label: "My Profile", icon: UserCircleIcon },
   ];
 
-  // Links to show in navbar based on role
   const getNavLinks = () => {
     if (isAdmin) {
       return [...mainNavLinks, ...adminLinks];
@@ -102,8 +97,6 @@ export default function Navbar() {
   };
 
   const navLinks = getNavLinks();
-
-  // Handle navigation
   const handleNavigation = (path) => {
     navigate(path);
   };
@@ -165,10 +158,10 @@ export default function Navbar() {
               )}
             </button>
 
-            {/* Rent Your Vehicle Button - NEW */}
+            {/* Rent Your Vehicle Button - FIXED: Now shows on md screens and up */}
             <button
               onClick={() => handleNavigation("/vendor/register")}
-              className="hidden lg:flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white text-sm font-semibold rounded-xl hover:from-green-600 hover:to-emerald-700 transition-all duration-300 shadow-md hover:shadow-lg"
+              className="hidden md:flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white text-sm font-semibold rounded-xl hover:from-green-600 hover:to-emerald-700 transition-all duration-300 shadow-md hover:shadow-lg"
             >
               <BuildingStorefrontIcon className="w-4 h-4" />
               Rent Your Vehicle
@@ -185,7 +178,6 @@ export default function Navbar() {
 
             {isAuthenticated ? (
               <>
-                {/* Wishlist Icon */}
                 {!isAdmin && (
                   <button
                     onClick={() => handleNavigation("/wishlist")}
