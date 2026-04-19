@@ -48,24 +48,50 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = useCallback(async (email, password) => {
-    const res = await authAPI.login({ email, password });
-    const { token, user: userData } = res.data;
-    localStorage.setItem("wheelz_token", token);
-    localStorage.setItem("wheelz_user", JSON.stringify(userData));
-    setUser(userData);
-    setWishlist(userData.wishlist || []);
-    toast.success(`Welcome back, ${userData.name.split(" ")[0]}! 👋`);
-    return userData;
+    try {
+      const res = await authAPI.login({ email, password });
+      const { token, user: userData } = res.data;
+
+      // Safety check - ensure userData exists
+      if (!userData) {
+        throw new Error("No user data received");
+      }
+
+      localStorage.setItem("wheelz_token", token);
+      localStorage.setItem("wheelz_user", JSON.stringify(userData));
+      setUser(userData);
+      setWishlist(userData.wishlist || []);
+
+      // Safe name display
+      const firstName = userData.name?.split(" ")[0] || "User";
+      toast.success(`Welcome back, ${firstName}! 👋`);
+      return userData;
+    } catch (error) {
+      console.error("Login error:", error);
+      toast.error(error.response?.data?.message || "Login failed");
+      throw error;
+    }
   }, []);
 
   const register = useCallback(async (data) => {
-    const res = await authAPI.register(data);
-    const { token, user: userData } = res.data;
-    localStorage.setItem("wheelz_token", token);
-    localStorage.setItem("wheelz_user", JSON.stringify(userData));
-    setUser(userData);
-    toast.success("Account created! Welcome to Wheelz 🚗");
-    return userData;
+    try {
+      const res = await authAPI.register(data);
+      const { token, user: userData } = res.data;
+
+      if (!userData) {
+        throw new Error("No user data received");
+      }
+
+      localStorage.setItem("wheelz_token", token);
+      localStorage.setItem("wheelz_user", JSON.stringify(userData));
+      setUser(userData);
+      toast.success("Account created! Welcome to Wheelz 🚗");
+      return userData;
+    } catch (error) {
+      console.error("Registration error:", error);
+      toast.error(error.response?.data?.message || "Registration failed");
+      throw error;
+    }
   }, []);
 
   const logout = useCallback(() => {
@@ -78,6 +104,7 @@ export const AuthProvider = ({ children }) => {
 
   const updateUser = useCallback((updates) => {
     setUser((prev) => {
+      if (!prev) return null;
       const updated = { ...prev, ...updates };
       localStorage.setItem("wheelz_user", JSON.stringify(updated));
       return updated;
@@ -97,6 +124,12 @@ export const AuthProvider = ({ children }) => {
     },
     [wishlist],
   );
+
+  // Add a loading state to prevent rendering before auth is ready
+  if (loading) {
+    // You can return a loading spinner here if needed
+    return children; // or return <LoadingSpinner />;
+  }
 
   return (
     <AuthContext.Provider
