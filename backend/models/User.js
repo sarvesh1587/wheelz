@@ -19,6 +19,35 @@ const UserSchema = new mongoose.Schema(
     // Add these fields to your UserSchema
     passwordResetToken: String,
     passwordResetExpires: Date,
+    role: {
+      type: String,
+      enum: ["customer", "vendor", "admin"],
+      default: "customer",
+    },
+    // Add these fields to UserSchema
+isVendorApproved: {
+  type: Boolean,
+  default: false
+},
+vendorDetails: {
+  businessName: String,
+  gstNumber: String,
+  businessAddress: String,
+  panNumber: String,
+  phoneNumber: String,
+  bankAccountNumber: String,
+  ifscCode: String,
+  accountHolderName: String
+},
+totalVehicles: {
+  type: Number,
+  default: 0
+},
+totalEarnings: {
+  type: Number,
+  default: 0
+},
+vendorSince: Date,
     email: {
       type: String,
       required: [true, "Email is required"],

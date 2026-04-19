@@ -17,6 +17,7 @@ import {
   InformationCircleIcon,
   PhoneIcon,
   GiftIcon,
+  BuildingStorefrontIcon, // New icon for Rent Your Vehicle
 } from "@heroicons/react/24/outline";
 
 export default function Navbar() {
@@ -164,6 +165,15 @@ export default function Navbar() {
               )}
             </button>
 
+            {/* Rent Your Vehicle Button - NEW */}
+            <button
+              onClick={() => handleNavigation("/vendor/register")}
+              className="hidden lg:flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white text-sm font-semibold rounded-xl hover:from-green-600 hover:to-emerald-700 transition-all duration-300 shadow-md hover:shadow-lg"
+            >
+              <BuildingStorefrontIcon className="w-4 h-4" />
+              Rent Your Vehicle
+            </button>
+
             {/* Special Offers Badge */}
             <button
               onClick={() => handleNavigation("/offers")}
@@ -208,6 +218,11 @@ export default function Navbar() {
                         <p className="text-xs text-gray-500 truncate">
                           {user?.email}
                         </p>
+                        {user?.role === "vendor" && (
+                          <span className="inline-block mt-1 text-xs bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 px-2 py-0.5 rounded-full">
+                            Vendor Partner
+                          </span>
+                        )}
                       </div>
 
                       <div className="py-1">
@@ -238,6 +253,18 @@ export default function Navbar() {
                             className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 text-left"
                           >
                             <HeartIcon className="w-4 h-4" /> My Wishlist
+                          </button>
+                        )}
+                        {user?.role === "vendor" && (
+                          <button
+                            onClick={() => {
+                              handleNavigation("/vendor/dashboard");
+                              setProfileOpen(false);
+                            }}
+                            className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 text-left"
+                          >
+                            <BuildingStorefrontIcon className="w-4 h-4" />{" "}
+                            Vendor Dashboard
                           </button>
                         )}
                       </div>
@@ -306,6 +333,18 @@ export default function Navbar() {
                 <span className="font-medium">{link.label}</span>
               </button>
             ))}
+
+            {/* Rent Your Vehicle - Mobile */}
+            <button
+              onClick={() => {
+                handleNavigation("/vendor/register");
+                setMenuOpen(false);
+              }}
+              className="flex items-center gap-3 w-full px-4 py-3 text-green-600 dark:text-green-400 font-medium border-t border-gray-100 dark:border-gray-800 mt-2 pt-3"
+            >
+              <BuildingStorefrontIcon className="w-5 h-5" />
+              Rent Your Vehicle
+            </button>
 
             <div className="border-t border-gray-100 dark:border-gray-800 mt-2 pt-2">
               <button

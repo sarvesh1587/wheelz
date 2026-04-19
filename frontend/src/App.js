@@ -8,6 +8,8 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
+import VendorRegister from "./pages/VendorRegister";
+import VendorPending from "./pages/VendorPending";
 import { Toaster } from "react-hot-toast";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { ThemeProvider } from "./context/ThemeContext";
@@ -72,6 +74,8 @@ function AppRoutes() {
                 </PublicRoute>
               }
             />
+            <Route path="/vendor/register" element={<VendorRegister />} />
+            <Route path="/vendor-pending" element={<VendorPending />} />
             <Route
               path="/register"
               element={

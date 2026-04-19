@@ -35,7 +35,7 @@ app.use(
     allowedHeaders: ["Content-Type", "Authorization"],
   }),
 );
-
+app.use("/api/vendor", require("./routes/vendor"));
 // Configure CORS for production
 // const allowedOrigins = [
 //   "http://localhost:3000",
