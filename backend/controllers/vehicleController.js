@@ -204,3 +204,20 @@ exports.getCategoryStats = async (req, res, next) => {
     next(err);
   }
 };
+exports.createVehicle = async (req, res, next) => {
+  try {
+    // If admin is adding vehicle, vendor can be same as admin or null
+    const vehicleData = {
+      ...req.body,
+      addedBy: req.user._id,
+      currentPrice: req.body.basePrice,
+      // If vendor is not provided, set it to the admin adding it
+      vendor: req.body.vendor || req.user._id,
+    };
+
+    const vehicle = await Vehicle.create(vehicleData);
+    res.status(201).json({ success: true, vehicle });
+  } catch (err) {
+    next(err);
+  }
+};

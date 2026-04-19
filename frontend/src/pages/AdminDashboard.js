@@ -127,10 +127,48 @@ export default function AdminDashboard() {
     }
   };
 
+  // const handleAddVehicle = async (e) => {
+  //   e.preventDefault();
+  //   try {
+  //     await vehicleAPI.create(newVehicle);
+  //     setShowAddVehicleModal(false);
+  //     setNewVehicle({
+  //       name: "",
+  //       brand: "",
+  //       model: "",
+  //       year: 2024,
+  //       category: "car",
+  //       fuelType: "petrol",
+  //       transmission: "manual",
+  //       seatingCapacity: 4,
+  //       basePrice: 1000,
+  //       locationName: "",
+  //       city: "",
+  //       images: ["https://via.placeholder.com/400x300?text=Vehicle"],
+  //     });
+  //     fetchAllData();
+  //   } catch (error) {
+  //     console.error("Error adding vehicle:", error);
+  //   }
+  // };
   const handleAddVehicle = async (e) => {
     e.preventDefault();
     try {
-      await vehicleAPI.create(newVehicle);
+      // Get current logged-in user from localStorage
+      const userData = JSON.parse(localStorage.getItem("wheelz_user"));
+
+      // Prepare vehicle data with vendor field
+      const vehicleData = {
+        ...newVehicle,
+        vendor: userData?._id, // Add current user as vendor
+        addedBy: userData?._id, // Add who added this vehicle
+        isAvailable: true,
+        currentPrice: newVehicle.basePrice,
+      };
+
+      console.log("Adding vehicle:", vehicleData); // Debug log
+
+      await vehicleAPI.create(vehicleData);
       setShowAddVehicleModal(false);
       setNewVehicle({
         name: "",
@@ -147,8 +185,10 @@ export default function AdminDashboard() {
         images: ["https://via.placeholder.com/400x300?text=Vehicle"],
       });
       fetchAllData();
+      alert("Vehicle added successfully!");
     } catch (error) {
       console.error("Error adding vehicle:", error);
+      alert(error.response?.data?.message || "Failed to add vehicle");
     }
   };
 

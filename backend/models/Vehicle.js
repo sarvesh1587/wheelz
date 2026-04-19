@@ -22,7 +22,7 @@ const VehicleSchema = new mongoose.Schema(
     vendor: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: true,
+      required: false,
     },
     isApproved: {
       type: Boolean,
