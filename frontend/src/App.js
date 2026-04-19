@@ -14,7 +14,7 @@ import { Toaster } from "react-hot-toast";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { ThemeProvider } from "./context/ThemeContext";
 import Navbar from "./components/common/Navbar";
-import Footer from "./components/common/Footer"; // Create this file
+import Footer from "./components/common/Footer";
 import LoadingSpinner from "./components/common/LoadingSpinner";
 import ChatBot from "./components/common/ChatBot";
 import ForgotPassword from "./pages/ForgotPassword";
@@ -35,28 +35,29 @@ const Profile = lazy(() => import("./pages/Profile"));
 const Wishlist = lazy(() => import("./pages/Wishlist"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
-const PrivateRoute = ({ children }) => {
-  const { isAuthenticated, loading } = useAuth();
-  if (loading) return <LoadingSpinner />;
-  return isAuthenticated ? children : <Navigate to="/login" replace />;
-};
-
-const AdminRoute = ({ children }) => {
-  const { isAuthenticated, isAdmin, loading } = useAuth();
-  if (loading) return <LoadingSpinner />;
-  if (!isAuthenticated) return <Navigate to="/login" replace />;
-  if (!isAdmin) return <Navigate to="/" replace />;
-  return children;
-};
-
-const PublicRoute = ({ children }) => {
-  const { isAuthenticated, isAdmin } = useAuth();
-  if (isAuthenticated)
-    return <Navigate to={isAdmin ? "/admin" : "/dashboard"} replace />;
-  return children;
-};
-
 function AppRoutes() {
+  // Move route guards INSIDE the component so they have access to AuthProvider
+  const PrivateRoute = ({ children }) => {
+    const { isAuthenticated, loading } = useAuth();
+    if (loading) return <LoadingSpinner />;
+    return isAuthenticated ? children : <Navigate to="/login" replace />;
+  };
+
+  const AdminRoute = ({ children }) => {
+    const { isAuthenticated, isAdmin, loading } = useAuth();
+    if (loading) return <LoadingSpinner />;
+    if (!isAuthenticated) return <Navigate to="/login" replace />;
+    if (!isAdmin) return <Navigate to="/" replace />;
+    return children;
+  };
+
+  const PublicRoute = ({ children }) => {
+    const { isAuthenticated, isAdmin } = useAuth();
+    if (isAuthenticated)
+      return <Navigate to={isAdmin ? "/admin" : "/dashboard"} replace />;
+    return children;
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 transition-colors duration-300 flex flex-col">
       <Navbar />
