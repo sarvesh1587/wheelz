@@ -68,6 +68,7 @@ export default function AdminDashboard() {
     model: "",
     year: 2024,
     category: "car",
+    subCategory: "sedan",
     fuelType: "petrol",
     transmission: "manual",
     seatingCapacity: 4,
@@ -95,7 +96,6 @@ export default function AdminDashboard() {
       setVehicles(vehiclesRes.data.vehicles || []);
       setBookings(bookingsRes.data.bookings || []);
 
-      // Filter vendors from users
       const vendorList = (usersRes.data.users || []).filter(
         (u) => u.role === "vendor",
       );
@@ -127,46 +127,20 @@ export default function AdminDashboard() {
     }
   };
 
-  // const handleAddVehicle = async (e) => {
-  //   e.preventDefault();
-  //   try {
-  //     await vehicleAPI.create(newVehicle);
-  //     setShowAddVehicleModal(false);
-  //     setNewVehicle({
-  //       name: "",
-  //       brand: "",
-  //       model: "",
-  //       year: 2024,
-  //       category: "car",
-  //       fuelType: "petrol",
-  //       transmission: "manual",
-  //       seatingCapacity: 4,
-  //       basePrice: 1000,
-  //       locationName: "",
-  //       city: "",
-  //       images: ["https://via.placeholder.com/400x300?text=Vehicle"],
-  //     });
-  //     fetchAllData();
-  //   } catch (error) {
-  //     console.error("Error adding vehicle:", error);
-  //   }
-  // };
   const handleAddVehicle = async (e) => {
     e.preventDefault();
     try {
-      // Get current logged-in user from localStorage
       const userData = JSON.parse(localStorage.getItem("wheelz_user"));
 
-      // Prepare vehicle data with vendor field
       const vehicleData = {
         ...newVehicle,
-        vendor: userData?._id, // Add current user as vendor
-        addedBy: userData?._id, // Add who added this vehicle
+        vendor: userData?._id,
+        addedBy: userData?._id,
         isAvailable: true,
         currentPrice: newVehicle.basePrice,
       };
 
-      console.log("Adding vehicle:", vehicleData); // Debug log
+      console.log("Adding vehicle:", vehicleData);
 
       await vehicleAPI.create(vehicleData);
       setShowAddVehicleModal(false);
@@ -176,6 +150,7 @@ export default function AdminDashboard() {
         model: "",
         year: 2024,
         category: "car",
+        subCategory: "sedan",
         fuelType: "petrol",
         transmission: "manual",
         seatingCapacity: 4,
@@ -332,7 +307,6 @@ export default function AdminDashboard() {
         {/* Overview Tab */}
         {activeTab === "overview" && (
           <div className="space-y-6">
-            {/* Charts Row */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm">
                 <h3 className="font-semibold text-gray-900 dark:text-white mb-4">
@@ -395,7 +369,6 @@ export default function AdminDashboard() {
               </div>
             </div>
 
-            {/* Quick Actions */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <button
                 onClick={() => setShowAddVehicleModal(true)}
@@ -831,27 +804,94 @@ export default function AdminDashboard() {
                     className="input-field"
                     required
                   />
+
+                  {/* Category Dropdown */}
                   <select
                     value={newVehicle.category}
                     onChange={(e) =>
                       setNewVehicle({ ...newVehicle, category: e.target.value })
                     }
                     className="input-field"
+                    required
                   >
                     <option value="car">Car</option>
                     <option value="bike">Bike</option>
                   </select>
+
+                  {/* SubCategory Dropdown - Dynamic based on category */}
+                  <select
+                    value={newVehicle.subCategory}
+                    onChange={(e) =>
+                      setNewVehicle({
+                        ...newVehicle,
+                        subCategory: e.target.value,
+                      })
+                    }
+                    className="input-field"
+                    required
+                  >
+                    <option value="">Select Sub Category</option>
+                    {newVehicle.category === "car" ? (
+                      <>
+                        <option value="sedan">Sedan</option>
+                        <option value="suv">SUV</option>
+                        <option value="hatchback">Hatchback</option>
+                        <option value="luxury">Luxury</option>
+                      </>
+                    ) : (
+                      <>
+                        <option value="cruiser">Cruiser</option>
+                        <option value="sports">Sports</option>
+                        <option value="scooter">Scooter</option>
+                      </>
+                    )}
+                  </select>
+
+                  {/* Fuel Type */}
                   <select
                     value={newVehicle.fuelType}
                     onChange={(e) =>
                       setNewVehicle({ ...newVehicle, fuelType: e.target.value })
                     }
                     className="input-field"
+                    required
                   >
                     <option value="petrol">Petrol</option>
                     <option value="diesel">Diesel</option>
                     <option value="electric">Electric</option>
+                    <option value="hybrid">Hybrid</option>
                   </select>
+
+                  {/* Transmission */}
+                  <select
+                    value={newVehicle.transmission}
+                    onChange={(e) =>
+                      setNewVehicle({
+                        ...newVehicle,
+                        transmission: e.target.value,
+                      })
+                    }
+                    className="input-field"
+                    required
+                  >
+                    <option value="manual">Manual</option>
+                    <option value="automatic">Automatic</option>
+                  </select>
+
+                  <input
+                    type="number"
+                    placeholder="Seating Capacity"
+                    value={newVehicle.seatingCapacity}
+                    onChange={(e) =>
+                      setNewVehicle({
+                        ...newVehicle,
+                        seatingCapacity: parseInt(e.target.value),
+                      })
+                    }
+                    className="input-field"
+                    required
+                  />
+
                   <input
                     type="number"
                     placeholder="Price per day"
@@ -865,6 +905,7 @@ export default function AdminDashboard() {
                     className="input-field"
                     required
                   />
+
                   <input
                     type="text"
                     placeholder="City"
@@ -875,6 +916,7 @@ export default function AdminDashboard() {
                     className="input-field"
                     required
                   />
+
                   <input
                     type="text"
                     placeholder="Location Name"
