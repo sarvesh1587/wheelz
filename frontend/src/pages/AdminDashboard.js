@@ -135,13 +135,11 @@ export default function AdminDashboard() {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Check file type
     if (!file.type.startsWith("image/")) {
       alert("Please upload an image file");
       return;
     }
 
-    // Check file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
       alert("Image size should be less than 5MB");
       return;
@@ -149,7 +147,6 @@ export default function AdminDashboard() {
 
     setUploadingImage(true);
 
-    // Convert to base64 for storage (in production, upload to Cloudinary)
     const reader = new FileReader();
     reader.onloadend = () => {
       const base64String = reader.result;
@@ -226,6 +223,7 @@ export default function AdminDashboard() {
         vendor: userData?._id,
         addedBy: userData?._id,
         isAvailable: true,
+        isActive: true, // IMPORTANT: This makes vehicle visible to customers
         currentPrice: parseInt(newVehicle.basePrice),
         specifications: {
           mileage: "",
@@ -255,7 +253,9 @@ export default function AdminDashboard() {
         images: [],
       });
       fetchAllData();
-      alert("Vehicle added successfully!");
+      alert(
+        "Vehicle added successfully! It will now appear on customer dashboard.",
+      );
     } catch (error) {
       console.error("Error Response:", error.response?.data);
       alert(error.response?.data?.message || "Failed to add vehicle");
@@ -1032,7 +1032,6 @@ export default function AdminDashboard() {
                     Vehicle Images
                   </label>
 
-                  {/* Image Preview Grid */}
                   {newVehicle.images.length > 0 && (
                     <div className="grid grid-cols-3 gap-3 mb-3">
                       {newVehicle.images.map((img, index) => (
@@ -1054,7 +1053,6 @@ export default function AdminDashboard() {
                     </div>
                   )}
 
-                  {/* Upload Button */}
                   <div className="flex items-center gap-3">
                     <label
                       className={`cursor-pointer flex items-center gap-2 px-4 py-2 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl hover:border-amber-500 transition ${uploadingImage ? "opacity-50 cursor-not-allowed" : ""}`}
