@@ -7,6 +7,7 @@ import {
   EyeIcon,
   EyeSlashIcon,
 } from "@heroicons/react/24/outline";
+import toast from "react-hot-toast";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -20,13 +21,26 @@ export default function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!email || !password) return;
+
+    if (!email.trim()) {
+      toast.error("Please enter your email");
+      return;
+    }
+    if (!password) {
+      toast.error("Please enter your password");
+      return;
+    }
+
     setLoading(true);
     try {
       await login(email, password);
+      toast.success("Login successful!");
       navigate(from, { replace: true });
     } catch (err) {
-      // Error handled by auth context
+      const errorMsg =
+        err.response?.data?.message ||
+        "Login failed. Please check your credentials.";
+      toast.error(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -35,6 +49,7 @@ export default function Login() {
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-20 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-950 dark:to-gray-900">
       <div className="max-w-md w-full bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 animate-fade-in">
+        {/* Logo */}
         <div className="text-center mb-8">
           <div className="w-16 h-16 bg-amber-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
             <span className="text-2xl font-bold text-gray-900">W</span>
@@ -48,6 +63,7 @@ export default function Login() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Email */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Email Address
@@ -58,13 +74,14 @@ export default function Login() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="input-field pl-10"
+                className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
                 placeholder="you@example.com"
                 required
               />
             </div>
           </div>
 
+          {/* Password */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Password
@@ -75,48 +92,52 @@ export default function Login() {
                 type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="input-field pl-10 pr-10"
+                className="w-full pl-10 pr-12 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
                 placeholder="••••••"
                 required
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
               >
                 {showPassword ? (
-                  <EyeSlashIcon className="w-5 h-5 text-gray-400" />
+                  <EyeSlashIcon className="w-5 h-5" />
                 ) : (
-                  <EyeIcon className="w-5 h-5 text-gray-400" />
+                  <EyeIcon className="w-5 h-5" />
                 )}
               </button>
             </div>
           </div>
 
-          <div className="flex items-center justify-between">
-            <div className="text-right">
-              <Link
-                to="/forgot-password"
-                className="text-sm text-amber-500 hover:text-amber-600"
-              >
-                Forgot password?
-              </Link>
-            </div>
+          {/* Forgot Password */}
+          <div className="text-right">
+            <Link
+              to="/forgot-password"
+              className="text-sm text-amber-500 hover:text-amber-600 transition-colors"
+            >
+              Forgot password?
+            </Link>
           </div>
 
+          {/* Submit Button */}
           <button
             type="submit"
             disabled={loading}
-            className="btn-primary w-full flex items-center justify-center gap-2"
+            className="w-full py-3 bg-amber-500 hover:bg-amber-400 text-gray-900 font-semibold rounded-xl transition-all duration-200 transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none shadow-lg shadow-amber-500/25"
           >
             {loading ? (
-              <div className="w-5 h-5 border-2 border-gray-900 border-t-transparent rounded-full animate-spin" />
+              <div className="flex items-center justify-center gap-2">
+                <div className="w-5 h-5 border-2 border-gray-900 border-t-transparent rounded-full animate-spin" />
+                <span>Signing in...</span>
+              </div>
             ) : (
               "Sign In"
             )}
           </button>
         </form>
 
+        {/* Sign Up Link */}
         <p className="text-center text-gray-600 dark:text-gray-400 mt-6">
           Don't have an account?{" "}
           <Link
@@ -127,13 +148,14 @@ export default function Login() {
           </Link>
         </p>
 
+        {/* Demo Credentials */}
         <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
           <p className="text-xs text-gray-500 dark:text-gray-400 text-center mb-2">
             Demo Credentials:
           </p>
           <div className="flex flex-col gap-1 text-xs text-center text-gray-600 dark:text-gray-400">
-            {/* <p>Admin: admin@wheelz.com / admin123</p> */}
-            <p>User: arjun@example.com / user1234</p>
+            <p>👑 Admin: admin@wheelz.com / admin123</p>
+            <p>👤 Customer: arjun@example.com / user1234</p>
           </div>
         </div>
       </div>
