@@ -1,9 +1,3 @@
-/**
- * User Model
- * Supports roles: customer, admin
- * Tracks fraud signals and wishlist
- */
-
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
@@ -16,38 +10,6 @@ const UserSchema = new mongoose.Schema(
       trim: true,
       maxlength: [50, "Name cannot exceed 50 characters"],
     },
-    // Add these fields to your UserSchema
-    passwordResetToken: String,
-    passwordResetExpires: Date,
-    role: {
-      type: String,
-      enum: ["customer", "vendor", "admin"],
-      default: "customer",
-    },
-    // Add these fields to UserSchema
-isVendorApproved: {
-  type: Boolean,
-  default: false
-},
-vendorDetails: {
-  businessName: String,
-  gstNumber: String,
-  businessAddress: String,
-  panNumber: String,
-  phoneNumber: String,
-  bankAccountNumber: String,
-  ifscCode: String,
-  accountHolderName: String
-},
-totalVehicles: {
-  type: Number,
-  default: 0
-},
-totalEarnings: {
-  type: Number,
-  default: 0
-},
-vendorSince: Date,
     email: {
       type: String,
       required: [true, "Email is required"],
@@ -63,7 +25,7 @@ vendorSince: Date,
     },
     role: {
       type: String,
-      enum: ["customer", "admin"],
+      enum: ["customer", "vendor", "admin"],
       default: "customer",
     },
     phone: { type: String, trim: true },
@@ -99,6 +61,27 @@ vendorSince: Date,
     cancellationCount: { type: Number, default: 0 },
     flaggedForReview: { type: Boolean, default: false },
     fraudReasons: [String],
+
+    // Vendor Specific Fields
+    isVendorApproved: {
+      type: Boolean,
+      default: false,
+    },
+    vendorDetails: {
+      businessName: { type: String, default: "" },
+      gstNumber: { type: String, default: "" },
+      businessAddress: { type: String, default: "" },
+      panNumber: { type: String, default: "" },
+      phoneNumber: { type: String, default: "" },
+      bankAccountNumber: { type: String, default: "" },
+      ifscCode: { type: String, default: "" },
+      accountHolderName: { type: String, default: "" },
+    },
+    totalVehicles: {
+      type: Number,
+      default: 0,
+    },
+    vendorSince: Date,
 
     // Notification Preferences
     notifications: {
@@ -139,7 +122,7 @@ UserSchema.methods.getSignedJwtToken = function () {
     { expiresIn: process.env.JWT_EXPIRE || "30d" },
   );
 };
-// Add this method to UserSchema
+
 UserSchema.methods.createPasswordResetToken = function () {
   const crypto = require("crypto");
   const resetToken = crypto.randomBytes(32).toString("hex");
@@ -149,7 +132,7 @@ UserSchema.methods.createPasswordResetToken = function () {
     .update(resetToken)
     .digest("hex");
 
-  this.passwordResetExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
+  this.passwordResetExpires = Date.now() + 10 * 60 * 1000;
 
   return resetToken;
 };
@@ -160,18 +143,5 @@ UserSchema.virtual("bookings", {
   foreignField: "user",
   count: true,
 });
-// Add this method to UserSchema
-UserSchema.methods.createPasswordResetToken = function () {
-  const crypto = require("crypto");
-  const resetToken = crypto.randomBytes(32).toString("hex");
 
-  this.passwordResetToken = crypto
-    .createHash("sha256")
-    .update(resetToken)
-    .digest("hex");
-
-  this.passwordResetExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
-
-  return resetToken;
-};
 module.exports = mongoose.model("User", UserSchema);

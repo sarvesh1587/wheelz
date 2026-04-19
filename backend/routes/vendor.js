@@ -1,32 +1,70 @@
 const express = require("express");
 const router = express.Router();
-const { protect, authorize } = require("../middleware/auth");
-const {
-  registerVendor,
-  approveVendor,
-  addVehicle,
-  getMyVehicles,
-  updateVehicle,
-  getPendingVehicles,
-  approveVehicle,
-  getAllVendors,
-  getVendorStats,
-} = require("../controllers/vendorController");
+const { protect } = require("../middleware/auth");
+const User = require("../models/User");
 
-// Public routes
-router.post("/register", registerVendor);
+// Vendor Registration (Public)
+router.post("/register", async (req, res) => {
+  try {
+    const {
+      name,
+      email,
+      password,
+      phone,
+      businessName,
+      gstNumber,
+      businessAddress,
+      panNumber,
+      bankAccountNumber,
+      ifscCode,
+      accountHolderName,
+    } = req.body;
 
-// Protected vendor routes
-router.use(protect);
-router.post("/vehicles", authorize("vendor"), addVehicle);
-router.get("/my-vehicles", authorize("vendor"), getMyVehicles);
-router.put("/vehicles/:vehicleId", authorize("vendor"), updateVehicle);
-router.get("/dashboard/stats", authorize("vendor"), getVendorStats);
+    // Check if user already exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: "User already exists with this email",
+        });
+    }
 
-// Admin only routes
-router.put("/approve/:vendorId", authorize("admin"), approveVendor);
-router.get("/pending-vehicles", authorize("admin"), getPendingVehicles);
-router.put("/approve-vehicle/:vehicleId", authorize("admin"), approveVehicle);
-router.get("/all-vendors", authorize("admin"), getAllVendors);
+    // Create vendor user
+    const vendor = await User.create({
+      name,
+      email,
+      password,
+      phone,
+      role: "vendor",
+      isVendorApproved: false,
+      vendorDetails: {
+        businessName,
+        gstNumber,
+        businessAddress,
+        panNumber,
+        phoneNumber: phone,
+        bankAccountNumber,
+        ifscCode,
+        accountHolderName,
+      },
+      vendorSince: new Date(),
+    });
+
+    res.status(201).json({
+      success: true,
+      message: "Vendor registration submitted for approval",
+      vendor: {
+        id: vendor._id,
+        name: vendor.name,
+        email: vendor.email,
+      },
+    });
+  } catch (error) {
+    console.error("Vendor registration error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
 
 module.exports = router;
