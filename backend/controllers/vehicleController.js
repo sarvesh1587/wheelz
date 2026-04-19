@@ -120,13 +120,44 @@ exports.getVehicle = async (req, res, next) => {
   }
 };
 
+// SINGLE createVehicle function - FIXED
 exports.createVehicle = async (req, res, next) => {
   try {
-    req.body.addedBy = req.user._id;
-    req.body.currentPrice = req.body.basePrice;
-    const vehicle = await Vehicle.create(req.body);
+    const vehicleData = {
+      name: req.body.name,
+      brand: req.body.brand,
+      model: req.body.model,
+      year: req.body.year,
+      category: req.body.category,
+      subCategory: req.body.subCategory,
+      fuelType: req.body.fuelType,
+      transmission: req.body.transmission,
+      seatingCapacity: req.body.seatingCapacity,
+      basePrice: req.body.basePrice,
+      currentPrice: req.body.basePrice,
+      locationName: req.body.locationName,
+      city: req.body.city,
+      images: req.body.images || [],
+      vendor: req.body.vendor || req.user._id,
+      addedBy: req.user._id,
+      isAvailable:
+        req.body.isAvailable !== undefined ? req.body.isAvailable : true,
+      isActive: req.body.isActive !== undefined ? req.body.isActive : true, // CRITICAL FIX
+      isApproved: true,
+      specifications: req.body.specifications || {
+        mileage: "",
+        engine: "",
+        maxSpeed: "",
+        features: [],
+      },
+    };
+
+    console.log("Creating vehicle with data:", vehicleData);
+
+    const vehicle = await Vehicle.create(vehicleData);
     res.status(201).json({ success: true, vehicle });
   } catch (err) {
+    console.error("Create vehicle error:", err);
     next(err);
   }
 };
@@ -200,23 +231,6 @@ exports.getCategoryStats = async (req, res, next) => {
       },
     ]);
     res.json({ success: true, stats });
-  } catch (err) {
-    next(err);
-  }
-};
-exports.createVehicle = async (req, res, next) => {
-  try {
-    // If admin is adding vehicle, vendor can be same as admin or null
-    const vehicleData = {
-      ...req.body,
-      addedBy: req.user._id,
-      currentPrice: req.body.basePrice,
-      // If vendor is not provided, set it to the admin adding it
-      vendor: req.body.vendor || req.user._id,
-    };
-
-    const vehicle = await Vehicle.create(vehicleData);
-    res.status(201).json({ success: true, vehicle });
   } catch (err) {
     next(err);
   }

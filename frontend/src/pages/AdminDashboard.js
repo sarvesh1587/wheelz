@@ -223,7 +223,7 @@ export default function AdminDashboard() {
         vendor: userData?._id,
         addedBy: userData?._id,
         isAvailable: true,
-        isActive: true, // IMPORTANT: This makes vehicle visible to customers
+        isActive: true,
         currentPrice: parseInt(newVehicle.basePrice),
         specifications: {
           mileage: "",
