@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { vehicleAPI, bookingAPI } from "../services/api";
+import { vehicleAPI, bookingAPI, paymentAPI } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import LoadingSpinner from "../components/common/LoadingSpinner";
 import DatePicker from "react-datepicker";
 import RazorpayButton from "../components/RazorpayButton";
+import UPIQRPayment from "../components/UPIQRPayment";
 import "react-datepicker/dist/react-datepicker.css";
 import toast from "react-hot-toast";
 
@@ -25,7 +26,8 @@ export default function Booking() {
   });
   const [createdBooking, setCreatedBooking] = useState(null);
   const [creatingBooking, setCreatingBooking] = useState(false);
-  const [step, setStep] = useState(1); // 1: Details, 2: Payment
+  const [step, setStep] = useState(1);
+  const [paymentMethod, setPaymentMethod] = useState("card"); // 'card' or 'upi_qr'
 
   useEffect(() => {
     vehicleAPI
@@ -88,7 +90,7 @@ export default function Booking() {
       });
 
       setCreatedBooking(res.data.booking);
-      setStep(2); // Move to payment step
+      setStep(2);
       toast.success("Booking created! Please complete payment.");
     } catch (err) {
       toast.error(err.response?.data?.message || "Booking failed");
@@ -291,7 +293,7 @@ export default function Booking() {
               </div>
             </>
           ) : (
-            // Payment Step - Show booking summary
+            // Payment Step - Show booking summary and payment options
             <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 dark:border-gray-700">
               <h3 className="font-semibold text-gray-900 dark:text-white mb-4">
                 Booking Summary
@@ -323,6 +325,37 @@ export default function Booking() {
                     </span>
                   </div>
                 )}
+              </div>
+
+              {/* Payment Method Selector */}
+              <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                  Select Payment Method
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod("card")}
+                    className={`py-2 px-4 rounded-xl text-sm font-medium transition-all duration-200 flex items-center justify-center gap-2 ${
+                      paymentMethod === "card"
+                        ? "bg-amber-500 text-white shadow-md"
+                        : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                    }`}
+                  >
+                    💳 Credit/Debit Card
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod("upi_qr")}
+                    className={`py-2 px-4 rounded-xl text-sm font-medium transition-all duration-200 flex items-center justify-center gap-2 ${
+                      paymentMethod === "upi_qr"
+                        ? "bg-amber-500 text-white shadow-md"
+                        : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                    }`}
+                  >
+                    📱 UPI / QR Code
+                  </button>
+                </div>
               </div>
             </div>
           )}
@@ -385,12 +418,23 @@ export default function Booking() {
               </button>
             ) : (
               createdBooking && (
-                <RazorpayButton
-                  bookingId={createdBooking._id}
-                  amount={total}
-                  onSuccess={handlePaymentSuccess}
-                  onCancel={handlePaymentCancel}
-                />
+                <div className="mt-4">
+                  {paymentMethod === "card" ? (
+                    <RazorpayButton
+                      bookingId={createdBooking._id}
+                      amount={total}
+                      onSuccess={handlePaymentSuccess}
+                      onCancel={handlePaymentCancel}
+                    />
+                  ) : (
+                    <UPIQRPayment
+                      bookingId={createdBooking._id}
+                      amount={total}
+                      onSuccess={handlePaymentSuccess}
+                      onCancel={handlePaymentCancel}
+                    />
+                  )}
+                </div>
               )
             )}
 
