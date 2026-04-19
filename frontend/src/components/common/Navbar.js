@@ -15,8 +15,6 @@ import {
   ArrowRightOnRectangleIcon,
   HomeIcon,
   InformationCircleIcon,
-  PhoneIcon,
-  GiftIcon,
   BuildingStorefrontIcon,
 } from "@heroicons/react/24/outline";
 
@@ -66,24 +64,26 @@ export default function Navbar() {
     return location.pathname === path;
   };
 
+  // Clean navbar - removed Contact and Offers
   const mainNavLinks = [
     { to: "/", label: "Home", icon: HomeIcon },
     { to: "/vehicles?category=car", label: "Cars", icon: TruckIcon },
     { to: "/vehicles?category=bike", label: "Bikes", icon: TruckIcon },
     { to: "/vehicles", label: "All Vehicles", icon: TruckIcon },
-    { to: "/about", label: "About Us", icon: InformationCircleIcon },
-    { to: "/contact", label: "Contact", icon: PhoneIcon },
+    { to: "/about", label: "About", icon: InformationCircleIcon },
   ];
 
+  // Admin specific links
   const adminLinks = [
     { to: "/admin", label: "Dashboard", icon: ChartBarIcon },
     { to: "/admin/vehicles", label: "Manage Vehicles", icon: TruckIcon },
   ];
 
+  // Customer specific links
   const customerLinks = [
     { to: "/dashboard", label: "My Bookings", icon: CalendarDaysIcon },
     { to: "/wishlist", label: "Wishlist", icon: HeartIcon },
-    { to: "/profile", label: "My Profile", icon: UserCircleIcon },
+    { to: "/profile", label: "Profile", icon: UserCircleIcon },
   ];
 
   const getNavLinks = () => {
@@ -158,22 +158,13 @@ export default function Navbar() {
               )}
             </button>
 
-            {/* Rent Your Vehicle Button - FIXED: Now shows on md screens and up */}
+            {/* Rent Your Vehicle Button */}
             <button
               onClick={() => handleNavigation("/vendor/register")}
               className="hidden md:flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white text-sm font-semibold rounded-xl hover:from-green-600 hover:to-emerald-700 transition-all duration-300 shadow-md hover:shadow-lg"
             >
               <BuildingStorefrontIcon className="w-4 h-4" />
               Rent Your Vehicle
-            </button>
-
-            {/* Special Offers Badge */}
-            <button
-              onClick={() => handleNavigation("/offers")}
-              className="hidden lg:flex items-center gap-1 px-3 py-1.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-semibold rounded-full"
-            >
-              <GiftIcon className="w-3 h-3" />
-              Offers
             </button>
 
             {isAuthenticated ? (
@@ -197,18 +188,18 @@ export default function Navbar() {
                       {user?.name?.[0]?.toUpperCase() || "U"}
                     </div>
                     <span className="text-sm font-medium text-gray-700 dark:text-gray-300 hidden lg:block">
-                      {user?.name?.split(" ")[0]}
+                      {user?.name?.split(" ")[0] || "User"}
                     </span>
                   </button>
 
-                  {profileOpen && (
+                  {profileOpen && user && (
                     <div className="absolute right-0 top-full mt-2 w-64 bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 py-2 z-50 animate-fade-in">
                       <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700">
                         <p className="font-semibold text-sm text-gray-900 dark:text-white">
-                          {user?.name}
+                          {user?.name || "User"}
                         </p>
                         <p className="text-xs text-gray-500 truncate">
-                          {user?.email}
+                          {user?.email || ""}
                         </p>
                         {user?.role === "vendor" && (
                           <span className="inline-block mt-1 text-xs bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 px-2 py-0.5 rounded-full">
@@ -339,26 +330,6 @@ export default function Navbar() {
             </button>
 
             <div className="border-t border-gray-100 dark:border-gray-800 mt-2 pt-2">
-              <button
-                onClick={() => {
-                  handleNavigation("/offers");
-                  setMenuOpen(false);
-                }}
-                className="flex items-center gap-3 w-full px-4 py-3 text-amber-500 font-medium"
-              >
-                <GiftIcon className="w-5 h-5" />
-                Special Offers
-              </button>
-              <button
-                onClick={() => {
-                  handleNavigation("/contact");
-                  setMenuOpen(false);
-                }}
-                className="flex items-center gap-3 w-full px-4 py-3 text-gray-700 dark:text-gray-300"
-              >
-                <PhoneIcon className="w-5 h-5" />
-                Support
-              </button>
               <button
                 onClick={() => {
                   handleNavigation("/about");

@@ -87,6 +87,15 @@ export default function Footer() {
                   24/7 Support
                 </button>
               </li>
+              // Add this in the Quick Links or Support section
+              <li>
+                <Link
+                  to="/contact"
+                  className="hover:text-amber-400 transition-colors"
+                >
+                  Contact Us
+                </Link>
+              </li>
               <li>
                 <button
                   onClick={() => navigate("/")}
