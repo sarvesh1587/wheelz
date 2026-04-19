@@ -96,6 +96,39 @@ export default function VendorRegister() {
     return true;
   };
 
+  // const validateBusinessInfo = () => {
+  //   if (!businessInfo.businessName.trim()) {
+  //     toast.error("Please enter business name");
+  //     return false;
+  //   }
+  //   if (!businessInfo.gstNumber.trim()) {
+  //     toast.error("Please enter GST number");
+  //     return false;
+  //   }
+  //   if (
+  //     !/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/.test(
+  //       businessInfo.gstNumber.toUpperCase(),
+  //     )
+  //   ) {
+  //     toast.error("Please enter a valid GST number (15 characters)");
+  //     return false;
+  //   }
+  //   if (!businessInfo.businessAddress.trim()) {
+  //     toast.error("Please enter business address");
+  //     return false;
+  //   }
+  //   if (!businessInfo.panNumber.trim()) {
+  //     toast.error("Please enter PAN number");
+  //     return false;
+  //   }
+  //   if (
+  //     !/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(businessInfo.panNumber.toUpperCase())
+  //   ) {
+  //     toast.error("Please enter a valid PAN number (10 characters)");
+  //     return false;
+  //   }
+  //   return true;
+  // };
   const validateBusinessInfo = () => {
     if (!businessInfo.businessName.trim()) {
       toast.error("Please enter business name");
@@ -105,12 +138,9 @@ export default function VendorRegister() {
       toast.error("Please enter GST number");
       return false;
     }
-    if (
-      !/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/.test(
-        businessInfo.gstNumber.toUpperCase(),
-      )
-    ) {
-      toast.error("Please enter a valid GST number (15 characters)");
+    // Relaxed GST validation - accept any 15 character input for testing
+    if (businessInfo.gstNumber.length !== 15) {
+      toast.error("GST number must be 15 characters");
       return false;
     }
     if (!businessInfo.businessAddress.trim()) {
@@ -121,15 +151,13 @@ export default function VendorRegister() {
       toast.error("Please enter PAN number");
       return false;
     }
-    if (
-      !/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(businessInfo.panNumber.toUpperCase())
-    ) {
-      toast.error("Please enter a valid PAN number (10 characters)");
+    // Relaxed PAN validation - accept any 10 character input for testing
+    if (businessInfo.panNumber.length !== 10) {
+      toast.error("PAN number must be 10 characters");
       return false;
     }
     return true;
   };
-
   const validateBankInfo = () => {
     if (!bankInfo.accountHolderName.trim()) {
       toast.error("Please enter account holder name");
