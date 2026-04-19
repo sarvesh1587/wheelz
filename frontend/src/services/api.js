@@ -83,6 +83,10 @@ export const bookingAPI = {
 export const paymentAPI = {
   createOrder: (bookingId) => api.post("/payments/create-order", { bookingId }),
   verifyPayment: (data) => api.post("/payments/verify", data),
+  createQRCode: (bookingId) => api.post("/payments/create-qr", { bookingId }),
+  checkQRStatus: (qrCodeId) => api.get(`/payments/qr-status/${qrCodeId}`),
+  createUPIIntent: (bookingId) =>
+    api.post("/payments/create-upi-intent", { bookingId }),
 };
 
 // ─── AI ───────────────────────────────────────────────────────────────────────
