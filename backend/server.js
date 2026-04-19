@@ -8,21 +8,10 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 const helmet = require("helmet");
 const morgan = require("morgan");
-const rateLimit = require("express-rate-limit");
 require("dotenv").config();
 
 const app = express();
 
-// ─── Security Middleware ────────────────────────────────────────────────────
-// app.use(helmet());
-// app.use(
-//   cors({
-//     origin: true,
-//     credentials: true,
-//   }),
-// );
-// ─── Security Middleware ────────────────────────────────────────────────────
-app.use(helmet());
 // ─── Security Middleware ────────────────────────────────────────────────────
 app.use(helmet());
 
@@ -35,44 +24,6 @@ app.use(
     allowedHeaders: ["Content-Type", "Authorization"],
   }),
 );
-app.use("/api/vendor", require("./routes/vendor"));
-// Configure CORS for production
-// const allowedOrigins = [
-//   "http://localhost:3000",
-//   "http://localhost:3001",
-//   "https://wheelz-sand.vercel.app",
-//   "https://wheelz.vercel.app",
-//   "https://wheelz-git-main.vercel.app",
-//   process.env.FRONTEND_URL,
-// ].filter(Boolean);
-
-// app.use(
-//   cors({
-//     origin: function (origin, callback) {
-//       // Allow requests with no origin (like mobile apps, curl)
-//       if (!origin) return callback(null, true);
-
-//       if (allowedOrigins.includes(origin) || origin?.includes("vercel.app")) {
-//         callback(null, true);
-//       } else {
-//         console.log("CORS blocked origin:", origin);
-//         callback(new Error("Not allowed by CORS"));
-//       }
-//     },
-//     credentials: true,
-//   }),
-// );
-
-// Rate limiting - 100 requests per 15 min per IP
-// const limiter = rateLimit({
-//   windowMs: 1 * 60 * 1000,
-//   max: 9000,
-//   message: {
-//     success: false,
-//     message: "Too many requests, please try again later.",
-//   },
-// });
-// app.use("/api/", limiter);
 
 // ─── Body Parsing ───────────────────────────────────────────────────────────
 app.use(express.json({ limit: "10mb" }));
@@ -87,6 +38,7 @@ if (process.env.NODE_ENV === "development") {
 app.use("/uploads", express.static("uploads"));
 
 // ─── Routes ─────────────────────────────────────────────────────────────────
+app.use("/api/vendor", require("./routes/vendor"));
 app.use("/api/auth", require("./routes/auth"));
 app.use("/api/users", require("./routes/users"));
 app.use("/api/vehicles", require("./routes/vehicles"));
