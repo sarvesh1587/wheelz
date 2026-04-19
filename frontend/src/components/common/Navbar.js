@@ -14,7 +14,6 @@ import {
   TruckIcon,
   ArrowRightOnRectangleIcon,
   HomeIcon,
-  InformationCircleIcon,
   BuildingStorefrontIcon,
 } from "@heroicons/react/24/outline";
 
@@ -64,13 +63,12 @@ export default function Navbar() {
     return location.pathname === path;
   };
 
-  // Clean navbar - removed Contact and Offers
+  // Clean navbar - Only essential items
   const mainNavLinks = [
     { to: "/", label: "Home", icon: HomeIcon },
     { to: "/vehicles?category=car", label: "Cars", icon: TruckIcon },
     { to: "/vehicles?category=bike", label: "Bikes", icon: TruckIcon },
     { to: "/vehicles", label: "All Vehicles", icon: TruckIcon },
-    { to: "/about", label: "About", icon: InformationCircleIcon },
   ];
 
   // Admin specific links
@@ -79,10 +77,9 @@ export default function Navbar() {
     { to: "/admin/vehicles", label: "Manage Vehicles", icon: TruckIcon },
   ];
 
-  // Customer specific links
+  // Customer specific links (no wishlist in navbar anymore)
   const customerLinks = [
     { to: "/dashboard", label: "My Bookings", icon: CalendarDaysIcon },
-    { to: "/wishlist", label: "Wishlist", icon: HeartIcon },
     { to: "/profile", label: "Profile", icon: UserCircleIcon },
   ];
 
@@ -169,16 +166,7 @@ export default function Navbar() {
 
             {isAuthenticated ? (
               <>
-                {!isAdmin && (
-                  <button
-                    onClick={() => handleNavigation("/wishlist")}
-                    className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors relative"
-                  >
-                    <HeartIcon className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-                  </button>
-                )}
-
-                {/* Profile Dropdown */}
+                {/* Profile Dropdown - Wishlist moved inside here */}
                 <div className="relative">
                   <button
                     onClick={() => setProfileOpen(!profileOpen)}
@@ -220,6 +208,15 @@ export default function Navbar() {
                         </button>
                         <button
                           onClick={() => {
+                            handleNavigation("/wishlist");
+                            setProfileOpen(false);
+                          }}
+                          className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 text-left"
+                        >
+                          <HeartIcon className="w-4 h-4" /> My Wishlist
+                        </button>
+                        <button
+                          onClick={() => {
                             handleNavigation("/profile");
                             setProfileOpen(false);
                           }}
@@ -227,17 +224,6 @@ export default function Navbar() {
                         >
                           <UserCircleIcon className="w-4 h-4" /> Profile
                         </button>
-                        {!isAdmin && (
-                          <button
-                            onClick={() => {
-                              handleNavigation("/wishlist");
-                              setProfileOpen(false);
-                            }}
-                            className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 text-left"
-                          >
-                            <HeartIcon className="w-4 h-4" /> My Wishlist
-                          </button>
-                        )}
                         {user?.role === "vendor" && (
                           <button
                             onClick={() => {
@@ -328,19 +314,6 @@ export default function Navbar() {
               <BuildingStorefrontIcon className="w-5 h-5" />
               Rent Your Vehicle
             </button>
-
-            <div className="border-t border-gray-100 dark:border-gray-800 mt-2 pt-2">
-              <button
-                onClick={() => {
-                  handleNavigation("/about");
-                  setMenuOpen(false);
-                }}
-                className="flex items-center gap-3 w-full px-4 py-3 text-gray-700 dark:text-gray-300"
-              >
-                <InformationCircleIcon className="w-5 h-5" />
-                About Us
-              </button>
-            </div>
 
             {!isAuthenticated && (
               <div className="flex gap-2 px-4 pt-4 border-t border-gray-100 dark:border-gray-800 mt-2">

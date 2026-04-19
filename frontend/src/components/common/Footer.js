@@ -96,6 +96,23 @@ export default function Footer() {
                   Contact Us
                 </Link>
               </li>
+              // In Footer.js, add these links
+              <li>
+                <Link
+                  to="/about"
+                  className="hover:text-amber-400 transition-colors"
+                >
+                  About Us
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/contact"
+                  className="hover:text-amber-400 transition-colors"
+                >
+                  Contact Us
+                </Link>
+              </li>
               <li>
                 <button
                   onClick={() => navigate("/")}
