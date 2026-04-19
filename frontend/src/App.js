@@ -2,6 +2,7 @@ import React, { Suspense, lazy } from "react";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Offers from "./pages/Offers";
+import AdminUsers from "./pages/AdminUsers";
 import {
   BrowserRouter as Router,
   Routes,
@@ -83,6 +84,14 @@ function AppRoutes() {
                 <PublicRoute>
                   <Register />
                 </PublicRoute>
+              }
+            />
+            <Route
+              path="/admin/users"
+              element={
+                <AdminRoute>
+                  <AdminUsers />
+                </AdminRoute>
               }
             />
             <Route
