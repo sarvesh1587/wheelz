@@ -4,6 +4,7 @@ import { vehicleAPI, aiAPI } from "../services/api";
 import VehicleCard from "../components/vehicle/VehicleCard";
 import LoadingSpinner from "../components/common/LoadingSpinner";
 import { MagnifyingGlassIcon, SparklesIcon } from "@heroicons/react/24/outline";
+import ReviewSection from "../components/ReviewSection";
 
 const STATS = [
   { label: "Vehicles", value: "500+" },
@@ -81,6 +82,7 @@ export default function Home() {
 
   return (
     <div className="animate-fade-in">
+      {/* Hero Section */}
       <section className="hero-gradient min-h-screen flex items-center justify-center relative overflow-hidden pt-16">
         <div className="absolute top-20 right-20 w-64 h-64 bg-amber-500/5 rounded-full blur-3xl" />
         <div className="absolute bottom-20 left-20 w-48 h-48 bg-amber-500/8 rounded-full blur-3xl" />
@@ -166,6 +168,7 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Featured Vehicles Section */}
       <section className="max-w-7xl mx-auto px-4 py-20 sm:px-6 lg:px-8">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
           <div>
@@ -218,6 +221,7 @@ export default function Home() {
         )}
       </section>
 
+      {/* AI Recommendations Section */}
       {recommendations.length > 0 && (
         <section className="bg-gray-100 dark:bg-gray-900/50 py-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -241,6 +245,7 @@ export default function Home() {
         </section>
       )}
 
+      {/* How Wheelz Works Section */}
       <section className="max-w-7xl mx-auto px-4 py-20 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
@@ -268,6 +273,9 @@ export default function Home() {
           ))}
         </div>
       </section>
+
+      {/* Customer Reviews Section - NEW */}
+      <ReviewSection />
     </div>
   );
 }
