@@ -1,6 +1,7 @@
 const User = require("../models/User");
 const Vehicle = require("../models/Vehicle");
 const { sendEmail } = require("../services/emailService");
+const { createNotification } = require("../utils/notificationHelper");
 
 // Vendor Registration
 exports.registerVendor = async (req, res) => {
@@ -260,3 +261,10 @@ exports.getVendorStats = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+await createNotification(
+  adminId,
+  "New Vendor Registration",
+  `${businessName} has registered as a vendor`,
+  "vendor",
+  "/admin/vendors",
+);

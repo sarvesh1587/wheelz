@@ -29,7 +29,7 @@ export default function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Sample notifications
+  // Sample notifications (can be replaced with live data from API)
   const [notifications, setNotifications] = useState([
     {
       id: 1,
