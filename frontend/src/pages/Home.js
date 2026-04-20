@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import ReviewSection from "../components/ReviewSection";
 import { useNavigate } from "react-router-dom";
 import { vehicleAPI, aiAPI } from "../services/api";
 import VehicleCard from "../components/vehicle/VehicleCard";
@@ -272,6 +273,8 @@ export default function Home() {
           ))}
         </div>
       </section>
+      {/* Customer Reviews Section */}
+      <ReviewSection />
     </div>
   );
 }
