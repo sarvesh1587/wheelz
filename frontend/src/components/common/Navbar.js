@@ -63,7 +63,7 @@ export default function Navbar() {
     return location.pathname === path;
   };
 
-  // Clean navbar - Only essential items
+  // Main navigation links for all users
   const mainNavLinks = [
     { to: "/", label: "Home", icon: HomeIcon },
     { to: "/vehicles?category=car", label: "Cars", icon: TruckIcon },
@@ -77,12 +77,13 @@ export default function Navbar() {
     { to: "/admin/vehicles", label: "Manage Vehicles", icon: TruckIcon },
   ];
 
-  // Customer specific links (no wishlist in navbar anymore)
+  // Customer specific links
   const customerLinks = [
     { to: "/dashboard", label: "My Bookings", icon: CalendarDaysIcon },
     { to: "/profile", label: "Profile", icon: UserCircleIcon },
   ];
 
+  // Get links based on user role
   const getNavLinks = () => {
     if (isAdmin) {
       return [...mainNavLinks, ...adminLinks];
@@ -94,6 +95,7 @@ export default function Navbar() {
   };
 
   const navLinks = getNavLinks();
+
   const handleNavigation = (path) => {
     navigate(path);
   };
@@ -164,9 +166,10 @@ export default function Navbar() {
               Rent Your Vehicle
             </button>
 
+            {/* Authenticated User Section */}
             {isAuthenticated ? (
               <>
-                {/* Profile Dropdown - Wishlist moved inside here */}
+                {/* Profile Dropdown */}
                 <div className="relative">
                   <button
                     onClick={() => setProfileOpen(!profileOpen)}
@@ -192,6 +195,11 @@ export default function Navbar() {
                         {user?.role === "vendor" && (
                           <span className="inline-block mt-1 text-xs bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 px-2 py-0.5 rounded-full">
                             Vendor Partner
+                          </span>
+                        )}
+                        {isAdmin && (
+                          <span className="inline-block mt-1 text-xs bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 px-2 py-0.5 rounded-full ml-1">
+                            Admin
                           </span>
                         )}
                       </div>
@@ -252,6 +260,7 @@ export default function Navbar() {
                 </div>
               </>
             ) : (
+              // Non-Authenticated User Section
               <div className="hidden md:flex items-center gap-2">
                 <button
                   onClick={() => handleNavigation("/login")}
@@ -285,6 +294,7 @@ export default function Navbar() {
         {/* Mobile Menu */}
         {menuOpen && (
           <div className="md:hidden bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800 py-4 animate-slide-up max-h-[80vh] overflow-y-auto">
+            {/* Mobile Navigation Links */}
             {navLinks.map((link) => (
               <button
                 key={link.to}
@@ -315,6 +325,7 @@ export default function Navbar() {
               Rent Your Vehicle
             </button>
 
+            {/* Mobile Auth Buttons (if not logged in) */}
             {!isAuthenticated && (
               <div className="flex gap-2 px-4 pt-4 border-t border-gray-100 dark:border-gray-800 mt-2">
                 <button

@@ -2,7 +2,6 @@ import React, { Suspense, lazy } from "react";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Offers from "./pages/Offers";
-import AdminUsers from "./pages/AdminUsers";
 import {
   BrowserRouter as Router,
   Routes,
@@ -11,6 +10,7 @@ import {
 } from "react-router-dom";
 import VendorRegister from "./pages/VendorRegister";
 import VendorPending from "./pages/VendorPending";
+import AdminHome from "./pages/AdminHome"; // ✅ IMPORT ADD KARO
 import { Toaster } from "react-hot-toast";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { ThemeProvider } from "./context/ThemeContext";
@@ -36,29 +36,28 @@ const Profile = lazy(() => import("./pages/Profile"));
 const Wishlist = lazy(() => import("./pages/Wishlist"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
+const PrivateRoute = ({ children }) => {
+  const { isAuthenticated, loading } = useAuth();
+  if (loading) return <LoadingSpinner />;
+  return isAuthenticated ? children : <Navigate to="/login" replace />;
+};
+
+const AdminRoute = ({ children }) => {
+  const { isAuthenticated, isAdmin, loading } = useAuth();
+  if (loading) return <LoadingSpinner />;
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  if (!isAdmin) return <Navigate to="/" replace />;
+  return children;
+};
+
+const PublicRoute = ({ children }) => {
+  const { isAuthenticated, isAdmin } = useAuth();
+  if (isAuthenticated)
+    return <Navigate to={isAdmin ? "/admin" : "/dashboard"} replace />;
+  return children;
+};
+
 function AppRoutes() {
-  // Move route guards INSIDE the component so they have access to AuthProvider
-  const PrivateRoute = ({ children }) => {
-    const { isAuthenticated, loading } = useAuth();
-    if (loading) return <LoadingSpinner />;
-    return isAuthenticated ? children : <Navigate to="/login" replace />;
-  };
-
-  const AdminRoute = ({ children }) => {
-    const { isAuthenticated, isAdmin, loading } = useAuth();
-    if (loading) return <LoadingSpinner />;
-    if (!isAuthenticated) return <Navigate to="/login" replace />;
-    if (!isAdmin) return <Navigate to="/" replace />;
-    return children;
-  };
-
-  const PublicRoute = ({ children }) => {
-    const { isAuthenticated, isAdmin } = useAuth();
-    if (isAuthenticated)
-      return <Navigate to={isAdmin ? "/admin" : "/dashboard"} replace />;
-    return children;
-  };
-
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 transition-colors duration-300 flex flex-col">
       <Navbar />
@@ -84,14 +83,6 @@ function AppRoutes() {
                 <PublicRoute>
                   <Register />
                 </PublicRoute>
-              }
-            />
-            <Route
-              path="/admin/users"
-              element={
-                <AdminRoute>
-                  <AdminUsers />
-                </AdminRoute>
               }
             />
             <Route
@@ -134,14 +125,17 @@ function AppRoutes() {
                 </PrivateRoute>
               }
             />
+
+            {/* ✅ ADMIN ROUTE - YAHAN ADD KIYA */}
             <Route
               path="/admin"
               element={
                 <AdminRoute>
-                  <AdminDashboard />
+                  <AdminHome />
                 </AdminRoute>
               }
             />
+
             <Route
               path="/admin/vehicles"
               element={
@@ -157,14 +151,6 @@ function AppRoutes() {
             <Route path="/contact" element={<Contact />} />
             <Route path="/offers" element={<Offers />} />
             <Route path="/support" element={<Contact />} />
-            <Route
-              path="/admin"
-              element={
-                <AdminRoute>
-                  <AdminDashboard />
-                </AdminRoute>
-              }
-            />
           </Routes>
         </Suspense>
       </main>
