@@ -2,9 +2,7 @@ import React, { Suspense, lazy } from "react";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Offers from "./pages/Offers";
-import AdminHome from "./pages/AdminHome";
 import EditVehicle from "./pages/EditVehicle";
-import AdminHomepage from "./pages/AdminHomepage";
 import {
   BrowserRouter as Router,
   Routes,
@@ -54,8 +52,13 @@ const AdminRoute = ({ children }) => {
 
 const PublicRoute = ({ children }) => {
   const { isAuthenticated, isAdmin } = useAuth();
-  if (isAuthenticated)
-    return <Navigate to={isAdmin ? "/admin" : "/dashboard"} replace />;
+  if (isAuthenticated) {
+    // ✅ Admin ko direct dashboard pe bhejo
+    if (isAdmin) {
+      return <Navigate to="/admin" replace />;
+    }
+    return <Navigate to="/dashboard" replace />;
+  }
   return children;
 };
 
@@ -66,9 +69,16 @@ function AppRoutes() {
       <main className="flex-grow">
         <Suspense fallback={<LoadingSpinner />}>
           <Routes>
+            {/* Public Routes */}
             <Route path="/" element={<Home />} />
             <Route path="/vehicles" element={<Vehicles />} />
             <Route path="/vehicles/:id" element={<VehicleDetail />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/offers" element={<Offers />} />
+            <Route path="/support" element={<Contact />} />
+
+            {/* Auth Routes */}
             <Route
               path="/login"
               element={
@@ -77,8 +87,6 @@ function AppRoutes() {
                 </PublicRoute>
               }
             />
-            <Route path="/vendor/register" element={<VendorRegister />} />
-            <Route path="/vendor-pending" element={<VendorPending />} />
             <Route
               path="/register"
               element={
@@ -87,14 +95,14 @@ function AppRoutes() {
                 </PublicRoute>
               }
             />
-            <Route
-              path="/admin/home"
-              element={
-                <AdminRoute>
-                  <AdminHomepage />
-                </AdminRoute>
-              }
-            />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password/:token" element={<ResetPassword />} />
+
+            {/* Vendor Routes */}
+            <Route path="/vendor/register" element={<VendorRegister />} />
+            <Route path="/vendor-pending" element={<VendorPending />} />
+
+            {/* Customer Routes */}
             <Route
               path="/book/:id"
               element={
@@ -135,20 +143,21 @@ function AppRoutes() {
                 </PrivateRoute>
               }
             />
-            <Route
-              path="/admin/home"
-              element={
-                <AdminRoute>
-                  <AdminHome />
-                </AdminRoute>
-              }
-            />
-            {/* ✅ ADMIN DASHBOARD - SAHI ROUTE */}
+
+            {/* ✅ Admin Routes - Sirf yeh rakh */}
             <Route
               path="/admin"
               element={
                 <AdminRoute>
                   <AdminDashboard />
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="/admin/vehicles"
+              element={
+                <AdminRoute>
+                  <AdminVehicles />
                 </AdminRoute>
               }
             />
@@ -161,21 +170,8 @@ function AppRoutes() {
               }
             />
 
-            <Route
-              path="/admin/vehicles"
-              element={
-                <AdminRoute>
-                  <AdminVehicles />
-                </AdminRoute>
-              }
-            />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/reset-password/:token" element={<ResetPassword />} />
+            {/* 404 Route */}
             <Route path="*" element={<NotFound />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/contact" element={<Contact />} />
-            <Route path="/offers" element={<Offers />} />
-            <Route path="/support" element={<Contact />} />
           </Routes>
         </Suspense>
       </main>
