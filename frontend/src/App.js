@@ -10,7 +10,6 @@ import {
 } from "react-router-dom";
 import VendorRegister from "./pages/VendorRegister";
 import VendorPending from "./pages/VendorPending";
-import AdminHome from "./pages/AdminHome"; // ✅ IMPORT ADD KARO
 import { Toaster } from "react-hot-toast";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { ThemeProvider } from "./context/ThemeContext";
@@ -126,12 +125,12 @@ function AppRoutes() {
               }
             />
 
-            {/* ✅ ADMIN ROUTE - YAHAN ADD KIYA */}
+            {/* ✅ ADMIN DASHBOARD - SAHI ROUTE */}
             <Route
               path="/admin"
               element={
                 <AdminRoute>
-                  <AdminHome />
+                  <AdminDashboard />
                 </AdminRoute>
               }
             />

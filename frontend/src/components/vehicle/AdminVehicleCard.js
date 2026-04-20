@@ -186,16 +186,6 @@ export default function AdminVehicleCard({ vehicle, onVehicleUpdate }) {
             )}
           </button>
         </div>
-
-        {/* View on Website Link */}
-        <Link
-          to={`/vehicles/${vehicle._id}`}
-          target="_blank"
-          className="flex items-center justify-center gap-2 mt-2 px-3 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg transition text-sm font-medium hover:bg-gray-200 dark:hover:bg-gray-600"
-        >
-          <EyeIcon className="w-4 h-4" />
-          View on Website
-        </Link>
       </div>
     </div>
   );
