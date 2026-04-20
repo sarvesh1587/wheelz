@@ -212,21 +212,50 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   // 🔐 Login
+  // const login = useCallback(async (email, password) => {
+  //   try {
+  //     const res = await authAPI.login({ email, password });
+  //     const { token, user: userData } = res.data;
+
+  //     if (!userData) throw new Error("No user data received");
+
+  //     localStorage.setItem("wheelz_token", token);
+  //     localStorage.setItem("wheelz_user", JSON.stringify(userData));
+
+  //     setUser(userData);
+  //     setWishlist(userData.wishlist || []);
+
+  //     const firstName = userData.name?.split(" ")[0] || "User";
+  //     toast.success(`Welcome back, ${firstName}! 👋`);
+
+  //     return userData;
+  //   } catch (error) {
+  //     console.error("Login error:", error);
+  //     toast.error(error.response?.data?.message || "Login failed");
+  //     throw error;
+  //   }
+  // }, []);
   const login = useCallback(async (email, password) => {
     try {
       const res = await authAPI.login({ email, password });
       const { token, user: userData } = res.data;
 
-      if (!userData) throw new Error("No user data received");
+      if (!userData) {
+        throw new Error("No user data received");
+      }
 
       localStorage.setItem("wheelz_token", token);
       localStorage.setItem("wheelz_user", JSON.stringify(userData));
-
       setUser(userData);
       setWishlist(userData.wishlist || []);
 
       const firstName = userData.name?.split(" ")[0] || "User";
       toast.success(`Welcome back, ${firstName}! 👋`);
+
+      // ✅ ADD THIS - Redirect admin to /admin
+      if (userData.role === "admin") {
+        window.location.href = "/admin";
+      }
 
       return userData;
     } catch (error) {
