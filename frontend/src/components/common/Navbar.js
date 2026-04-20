@@ -15,6 +15,9 @@ import {
   ArrowRightOnRectangleIcon,
   HomeIcon,
   BuildingStorefrontIcon,
+  BellIcon,
+  ChatBubbleLeftIcon,
+  BoltIcon,
 } from "@heroicons/react/24/outline";
 
 export default function Navbar() {
@@ -42,30 +45,22 @@ export default function Navbar() {
     navigate("/");
   };
 
-  const isActive = (path) => {
-    return location.pathname === path;
-  };
+  const isActive = (path) => location.pathname === path;
 
-  // ✅ SIRF YEH LINKS RAHENGE
   const mainNavLinks = [{ to: "/", label: "Home", icon: HomeIcon }];
 
-  // ✅ Admin ke liye sirf Manage Vehicles
   const adminLinks = [
     { to: "/admin/vehicles", label: "Manage Vehicles", icon: TruckIcon },
+    { to: "/admin/reports", label: "Reports", icon: ChartBarIcon },
   ];
 
-  // ✅ Customer ke liye All Vehicles
   const customerLinks = [
     { to: "/vehicles", label: "All Vehicles", icon: TruckIcon },
   ];
 
   const getNavLinks = () => {
-    if (isAdmin) {
-      return [...mainNavLinks, ...adminLinks];
-    }
-    if (isAuthenticated) {
-      return [...mainNavLinks, ...customerLinks];
-    }
+    if (isAdmin) return [...mainNavLinks, ...adminLinks];
+    if (isAuthenticated) return [...mainNavLinks, ...customerLinks];
     return [
       ...mainNavLinks,
       { to: "/vehicles", label: "All Vehicles", icon: TruckIcon },
@@ -86,11 +81,7 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link
-            to="/"
-            className="flex items-center gap-2 group"
-            onClick={() => window.scrollTo(0, 0)}
-          >
+          <Link to="/" className="flex items-center gap-2 group">
             <div className="w-9 h-9 bg-amber-500 rounded-xl flex items-center justify-center font-bold text-gray-900 text-lg group-hover:scale-110 transition-transform">
               W
             </div>
@@ -119,11 +110,10 @@ export default function Navbar() {
 
           {/* Right Actions */}
           <div className="flex items-center gap-2">
-            {/* Dark Mode Toggle Button */}
+            {/* Dark Mode Toggle */}
             <button
               onClick={toggle}
-              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-              aria-label="Toggle theme"
+              className="p-2 rounded-lg hover:bg-gray-100"
             >
               {dark ? (
                 <SunIcon className="w-5 h-5 text-amber-400" />
@@ -132,15 +122,31 @@ export default function Navbar() {
               )}
             </button>
 
+            {/* Notification Bell */}
+            <button className="p-2 rounded-lg hover:bg-gray-100 relative">
+              <BellIcon className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+              <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+            </button>
+
+            {/* Support Chat */}
+            <button
+              onClick={() => handleNavigation("/contact")}
+              className="hidden md:flex items-center gap-1 px-3 py-1.5 bg-blue-500/10 text-blue-600 text-sm rounded-full"
+            >
+              <ChatBubbleLeftIcon className="w-4 h-4" />
+              Help
+            </button>
+
             {/* Rent Your Vehicle Button */}
             <button
               onClick={() => handleNavigation("/vendor/register")}
               className="hidden md:flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white text-sm font-semibold rounded-xl shadow-md"
             >
               <BuildingStorefrontIcon className="w-4 h-4" />
-              Rent Your Vehicle
+              List Vehicle
             </button>
 
+            {/* Profile */}
             {isAuthenticated ? (
               <div className="relative">
                 <button
@@ -180,7 +186,7 @@ export default function Navbar() {
                         }}
                         className="flex items-center gap-3 w-full px-4 py-2.5 text-sm hover:bg-gray-50"
                       >
-                        <HeartIcon className="w-4 h-4" /> My Wishlist
+                        <HeartIcon className="w-4 h-4" /> Wishlist
                       </button>
                       <button
                         onClick={() => {
@@ -199,7 +205,7 @@ export default function Navbar() {
                           }}
                           className="flex items-center gap-3 w-full px-4 py-2.5 text-sm hover:bg-gray-50"
                         >
-                          <ChartBarIcon className="w-4 h-4" /> Admin Dashboard
+                          <ChartBarIcon className="w-4 h-4" /> Admin Panel
                         </button>
                       )}
                     </div>
@@ -255,11 +261,7 @@ export default function Navbar() {
                   handleNavigation(link.to);
                   setMenuOpen(false);
                 }}
-                className={`flex items-center gap-3 w-full px-4 py-3 rounded-lg text-left ${
-                  isActive(link.to)
-                    ? "bg-amber-500 text-white"
-                    : "text-gray-700 hover:bg-gray-50"
-                }`}
+                className="flex items-center gap-3 w-full px-4 py-3 rounded-lg text-left hover:bg-gray-50"
               >
                 {link.icon && <link.icon className="w-5 h-5" />}
                 <span className="font-medium">{link.label}</span>
@@ -268,13 +270,24 @@ export default function Navbar() {
 
             <button
               onClick={() => {
+                handleNavigation("/contact");
+                setMenuOpen(false);
+              }}
+              className="flex items-center gap-3 w-full px-4 py-3 text-blue-600 border-t mt-2 pt-3"
+            >
+              <ChatBubbleLeftIcon className="w-5 h-5" />
+              Help & Support
+            </button>
+
+            <button
+              onClick={() => {
                 handleNavigation("/vendor/register");
                 setMenuOpen(false);
               }}
-              className="flex items-center gap-3 w-full px-4 py-3 text-green-600 font-medium border-t mt-2 pt-3"
+              className="flex items-center gap-3 w-full px-4 py-3 text-green-600"
             >
               <BuildingStorefrontIcon className="w-5 h-5" />
-              Rent Your Vehicle
+              List Your Vehicle
             </button>
 
             {!isAuthenticated && (
