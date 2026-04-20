@@ -3,6 +3,7 @@ import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Offers from "./pages/Offers";
 import EditVehicle from "./pages/EditVehicle";
+import AdminReports from "./pages/AdminReports";
 import {
   BrowserRouter as Router,
   Routes,
@@ -53,7 +54,6 @@ const AdminRoute = ({ children }) => {
 const PublicRoute = ({ children }) => {
   const { isAuthenticated, isAdmin } = useAuth();
   if (isAuthenticated) {
-    // ✅ Admin ko direct dashboard pe bhejo
     if (isAdmin) {
       return <Navigate to="/admin" replace />;
     }
@@ -144,7 +144,7 @@ function AppRoutes() {
               }
             />
 
-            {/* ✅ Admin Routes - Sirf yeh rakh */}
+            {/* ✅ Admin Routes */}
             <Route
               path="/admin"
               element={
@@ -166,6 +166,14 @@ function AppRoutes() {
               element={
                 <AdminRoute>
                   <EditVehicle />
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="/admin/reports"
+              element={
+                <AdminRoute>
+                  <AdminReports />
                 </AdminRoute>
               }
             />
