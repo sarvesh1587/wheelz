@@ -72,11 +72,14 @@ export default function Navbar() {
   ];
 
   // Admin specific links
+  // const adminLinks = [
+  //   { to: "/admin", label: "Dashboard", icon: ChartBarIcon },
+  //   { to: "/admin/vehicles", label: "Manage Vehicles", icon: TruckIcon },
+  // ];
   const adminLinks = [
-    { to: "/admin", label: "Dashboard", icon: ChartBarIcon },
+    { to: "/admin/home", label: "Dashboard", icon: ChartBarIcon },
     { to: "/admin/vehicles", label: "Manage Vehicles", icon: TruckIcon },
   ];
-
   // Customer specific links
   const customerLinks = [
     { to: "/dashboard", label: "My Bookings", icon: CalendarDaysIcon },

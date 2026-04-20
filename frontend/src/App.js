@@ -3,6 +3,8 @@ import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Offers from "./pages/Offers";
 import AdminHome from "./pages/AdminHome";
+import EditVehicle from "./pages/EditVehicle";
+import AdminHomepage from "./pages/AdminHomepage";
 import {
   BrowserRouter as Router,
   Routes,
@@ -86,6 +88,14 @@ function AppRoutes() {
               }
             />
             <Route
+              path="/admin/home"
+              element={
+                <AdminRoute>
+                  <AdminHomepage />
+                </AdminRoute>
+              }
+            />
+            <Route
               path="/book/:id"
               element={
                 <PrivateRoute>
@@ -139,6 +149,14 @@ function AppRoutes() {
               element={
                 <AdminRoute>
                   <AdminDashboard />
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="/admin/vehicles/edit/:id"
+              element={
+                <AdminRoute>
+                  <EditVehicle />
                 </AdminRoute>
               }
             />
