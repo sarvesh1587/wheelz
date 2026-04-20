@@ -68,14 +68,17 @@ export default function Navbar() {
     { to: "/vehicles", label: "All Vehicles", icon: TruckIcon },
   ];
 
-  // ✅ ADMIN NAVBAR (Sirf Admin ke liye)
   const adminNavLinks = [
     { to: "/", label: "Home", icon: HomeIcon },
     { to: "/admin", label: "Dashboard", icon: ChartBarIcon },
     { to: "/admin/vehicles", label: "Manage Vehicles", icon: TruckIcon },
+    {
+      to: "/admin/vendors",
+      label: "Manage Vendors",
+      icon: BuildingStorefrontIcon,
+    },
   ];
 
-  // ✅ Choose navbar based on role
   const navLinks = isAdmin ? adminNavLinks : customerNavLinks;
 
   const handleNavigation = (path) => navigate(path);

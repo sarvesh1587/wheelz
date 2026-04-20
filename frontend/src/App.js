@@ -4,6 +4,7 @@ import Contact from "./pages/Contact";
 import Offers from "./pages/Offers";
 import EditVehicle from "./pages/EditVehicle";
 import AdminReports from "./pages/AdminReports";
+import AdminVendors from "./pages/AdminVendors";
 import {
   BrowserRouter as Router,
   Routes,
@@ -101,7 +102,14 @@ function AppRoutes() {
             {/* Vendor Routes */}
             <Route path="/vendor/register" element={<VendorRegister />} />
             <Route path="/vendor-pending" element={<VendorPending />} />
-
+            <Route
+              path="/admin/vendors"
+              element={
+                <AdminRoute>
+                  <AdminVendors />
+                </AdminRoute>
+              }
+            />
             {/* Customer Routes */}
             <Route
               path="/book/:id"
