@@ -2,6 +2,7 @@ import React, { Suspense, lazy } from "react";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Offers from "./pages/Offers";
+import AdminHome from "./pages/AdminHome";
 import {
   BrowserRouter as Router,
   Routes,
@@ -124,7 +125,14 @@ function AppRoutes() {
                 </PrivateRoute>
               }
             />
-
+            <Route
+              path="/admin/home"
+              element={
+                <AdminRoute>
+                  <AdminHome />
+                </AdminRoute>
+              }
+            />
             {/* ✅ ADMIN DASHBOARD - SAHI ROUTE */}
             <Route
               path="/admin"
