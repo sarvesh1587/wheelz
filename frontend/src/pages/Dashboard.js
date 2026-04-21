@@ -1,6 +1,6 @@
-// import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react"; // ✅ Make sure this line has useState
 import { Link } from "react-router-dom";
-import { bookingAPI, paymentAPI } from "../services/api";
+import { bookingAPI } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import LoadingSpinner from "../components/common/LoadingSpinner";
 import RazorpayButton from "../components/RazorpayButton";
@@ -66,7 +66,7 @@ export default function Dashboard() {
   const handlePaymentSuccess = () => {
     setShowPaymentModal(false);
     setSelectedBooking(null);
-    fetchData(); // Refresh bookings
+    fetchData();
     toast.success("Payment successful! Booking confirmed.");
   };
 
