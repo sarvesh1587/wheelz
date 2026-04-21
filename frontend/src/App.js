@@ -8,6 +8,7 @@ import AdminVendors from "./pages/AdminVendors";
 import AddVehicle from "./pages/AddVehicle";
 import BookingDetails from "./pages/BookingDetails";
 import VendorDashboard from "./pages/VendorDashboard";
+import VendorAddVehicle from "./pages/VendorAddVehicle";
 import {
   BrowserRouter as Router,
   Routes,
@@ -92,6 +93,14 @@ function AppRoutes() {
               }
             />
             <Route
+  path="/vendor/vehicles/add"
+  element={
+    <PrivateRoute>
+      <VendorAddVehicle />
+    </PrivateRoute>
+  }
+/>
+            <Route
               path="/register"
               element={
                 <PublicRoute>
@@ -147,21 +156,21 @@ function AppRoutes() {
               }
             />
             <Route
-  path="/vendor/dashboard"
-  element={
-    <PrivateRoute>
-      <VendorDashboard />
-    </PrivateRoute>
-  }
-/>
-<Route
-  path="/vendor/vehicles"
-  element={
-    <PrivateRoute>
-      <AdminVehicles /> {/* Reuse admin vehicles component */}
-    </PrivateRoute>
-  }
-/>
+              path="/vendor/dashboard"
+              element={
+                <PrivateRoute>
+                  <VendorDashboard />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/vendor/vehicles"
+              element={
+                <PrivateRoute>
+                  <AdminVehicles /> {/* Reuse admin vehicles component */}
+                </PrivateRoute>
+              }
+            />
             <Route
               path="/profile"
               element={
