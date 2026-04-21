@@ -7,6 +7,7 @@ import AdminReports from "./pages/AdminReports";
 import AdminVendors from "./pages/AdminVendors";
 import AddVehicle from "./pages/AddVehicle";
 import BookingDetails from "./pages/BookingDetails";
+import VendorDashboard from "./pages/VendorDashboard";
 import {
   BrowserRouter as Router,
   Routes,
@@ -145,6 +146,22 @@ function AppRoutes() {
                 </PrivateRoute>
               }
             />
+            <Route
+  path="/vendor/dashboard"
+  element={
+    <PrivateRoute>
+      <VendorDashboard />
+    </PrivateRoute>
+  }
+/>
+<Route
+  path="/vendor/vehicles"
+  element={
+    <PrivateRoute>
+      <AdminVehicles /> {/* Reuse admin vehicles component */}
+    </PrivateRoute>
+  }
+/>
             <Route
               path="/profile"
               element={

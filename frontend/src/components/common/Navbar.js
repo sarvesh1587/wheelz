@@ -57,10 +57,18 @@ export default function Navbar() {
     if (path === "/admin") return location.pathname === "/admin";
     if (path === "/admin/vehicles")
       return location.pathname === "/admin/vehicles";
+    if (path === "/admin/vendors")
+      return location.pathname === "/admin/vendors";
+    if (path === "/vendor/dashboard")
+      return location.pathname === "/vendor/dashboard";
+    if (path === "/vendor/vehicles")
+      return location.pathname === "/vendor/vehicles";
+    if (path === "/vendor/bookings")
+      return location.pathname === "/vendor/bookings";
     return location.pathname === path;
   };
 
-  // ✅ CUSTOMER NAVBAR (Pehle jaisa)
+  // ✅ CUSTOMER NAVBAR
   const customerNavLinks = [
     { to: "/", label: "Home", icon: HomeIcon },
     { to: "/vehicles?category=car", label: "Cars", icon: TruckIcon },
@@ -68,6 +76,7 @@ export default function Navbar() {
     { to: "/vehicles", label: "All Vehicles", icon: TruckIcon },
   ];
 
+  // ✅ ADMIN NAVBAR
   const adminNavLinks = [
     { to: "/", label: "Home", icon: HomeIcon },
     { to: "/admin", label: "Dashboard", icon: ChartBarIcon },
@@ -79,7 +88,23 @@ export default function Navbar() {
     },
   ];
 
-  const navLinks = isAdmin ? adminNavLinks : customerNavLinks;
+  // ✅ VENDOR NAVBAR
+  const vendorNavLinks = [
+    { to: "/", label: "Home", icon: HomeIcon },
+    { to: "/vendor/dashboard", label: "Dashboard", icon: ChartBarIcon },
+    { to: "/vendor/vehicles", label: "My Vehicles", icon: TruckIcon },
+    { to: "/vendor/bookings", label: "Bookings", icon: CalendarDaysIcon },
+  ];
+
+  // ✅ Choose navbar based on role
+  let navLinks = customerNavLinks;
+  if (isAdmin) {
+    navLinks = adminNavLinks;
+  } else if (user?.role === "vendor") {
+    navLinks = vendorNavLinks;
+  } else if (isAuthenticated) {
+    navLinks = customerNavLinks;
+  }
 
   const handleNavigation = (path) => navigate(path);
 
@@ -169,6 +194,16 @@ export default function Navbar() {
                       <p className="text-xs text-gray-500 truncate">
                         {user?.email}
                       </p>
+                      {isAdmin && (
+                        <span className="inline-block mt-1 text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full">
+                          Admin
+                        </span>
+                      )}
+                      {user?.role === "vendor" && (
+                        <span className="inline-block mt-1 text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
+                          Vendor
+                        </span>
+                      )}
                     </div>
                     <div className="py-1">
                       <button
@@ -198,6 +233,28 @@ export default function Navbar() {
                       >
                         <UserCircleIcon className="w-4 h-4" /> Profile
                       </button>
+                      {isAdmin && (
+                        <button
+                          onClick={() => {
+                            handleNavigation("/admin");
+                            setProfileOpen(false);
+                          }}
+                          className="flex items-center gap-3 w-full px-4 py-2.5 text-sm hover:bg-gray-50"
+                        >
+                          <ChartBarIcon className="w-4 h-4" /> Admin Panel
+                        </button>
+                      )}
+                      {user?.role === "vendor" && (
+                        <button
+                          onClick={() => {
+                            handleNavigation("/vendor/dashboard");
+                            setProfileOpen(false);
+                          }}
+                          className="flex items-center gap-3 w-full px-4 py-2.5 text-sm hover:bg-gray-50"
+                        >
+                          <ChartBarIcon className="w-4 h-4" /> Vendor Dashboard
+                        </button>
+                      )}
                     </div>
                     <div className="border-t mt-1 pt-1">
                       <button
