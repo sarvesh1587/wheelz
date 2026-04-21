@@ -6,6 +6,7 @@ import EditVehicle from "./pages/EditVehicle";
 import AdminReports from "./pages/AdminReports";
 import AdminVendors from "./pages/AdminVendors";
 import AddVehicle from "./pages/AddVehicle";
+import BookingDetails from "./pages/BookingDetails";
 import {
   BrowserRouter as Router,
   Routes,
@@ -109,6 +110,14 @@ function AppRoutes() {
                 <AdminRoute>
                   <AdminVendors />
                 </AdminRoute>
+              }
+            />
+            <Route
+              path="/bookings/:id"
+              element={
+                <PrivateRoute>
+                  <BookingDetails />
+                </PrivateRoute>
               }
             />
             {/* Customer Routes */}
