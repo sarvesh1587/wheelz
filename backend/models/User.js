@@ -62,11 +62,63 @@ const UserSchema = new mongoose.Schema(
     flaggedForReview: { type: Boolean, default: false },
     fraudReasons: [String],
 
-    // Vendor Specific Fields
+    // ========== VENDOR SPECIFIC FIELDS (UPDATED) ==========
+
+    // Vendor Type: individual or business
+    vendorType: {
+      type: String,
+      enum: ["individual", "business"],
+      default: null,
+    },
+
+    // Individual Vendor Details
+    individualDetails: {
+      aadharNumber: { type: String, default: "" },
+      panNumber: { type: String, default: "" },
+      address: { type: String, default: "" },
+    },
+
+    // Business Vendor Details
+    businessDetails: {
+      businessName: { type: String, default: "" },
+      gstNumber: { type: String, default: "" },
+      panNumber: { type: String, default: "" },
+      businessAddress: { type: String, default: "" },
+      registrationCertificate: { type: String, default: "" },
+      website: { type: String, default: "" },
+    },
+
+    // Bank Details (Common for both)
+    bankDetails: {
+      accountHolderName: { type: String, default: "" },
+      accountNumber: { type: String, default: "" },
+      ifscCode: { type: String, default: "" },
+      bankName: { type: String, default: "" },
+    },
+
+    // Vendor Approval Status
     isVendorApproved: {
       type: Boolean,
       default: false,
     },
+
+    // Commission Rate (different for individual vs business)
+    commissionRate: {
+      type: Number,
+      default: function () {
+        return this.vendorType === "business" ? 10 : 15;
+      },
+    },
+
+    // Vehicle Limit (different for individual vs business)
+    vehicleLimit: {
+      type: Number,
+      default: function () {
+        return this.vendorType === "business" ? 999 : 5;
+      },
+    },
+
+    // Legacy vendorDetails (keep for backward compatibility)
     vendorDetails: {
       businessName: { type: String, default: "" },
       gstNumber: { type: String, default: "" },
@@ -77,6 +129,7 @@ const UserSchema = new mongoose.Schema(
       ifscCode: { type: String, default: "" },
       accountHolderName: { type: String, default: "" },
     },
+
     totalVehicles: {
       type: Number,
       default: 0,

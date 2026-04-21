@@ -16,6 +16,8 @@ import {
   CheckBadgeIcon,
   ArrowRightIcon,
   ArrowLeftIcon,
+  IdentificationIcon,
+  GlobeAltIcon,
 } from "@heroicons/react/24/outline";
 
 export default function VendorRegister() {
@@ -23,9 +25,10 @@ export default function VendorRegister() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1);
+  const [vendorType, setVendorType] = useState(null); // 'individual' or 'business'
 
-  // Personal Information
-  const [personalInfo, setPersonalInfo] = useState({
+  // Common Information
+  const [commonInfo, setCommonInfo] = useState({
     name: "",
     email: "",
     password: "",
@@ -33,150 +36,164 @@ export default function VendorRegister() {
     phone: "",
   });
 
-  // Business Information
-  const [businessInfo, setBusinessInfo] = useState({
+  // Individual Vendor Details
+  const [individualDetails, setIndividualDetails] = useState({
+    aadharNumber: "",
+    panNumber: "",
+    address: "",
+  });
+
+  // Business Vendor Details
+  const [businessDetails, setBusinessDetails] = useState({
     businessName: "",
     gstNumber: "",
-    businessAddress: "",
     panNumber: "",
+    businessAddress: "",
+    website: "",
   });
 
-  // Bank Information
-  const [bankInfo, setBankInfo] = useState({
-    bankAccountNumber: "",
-    ifscCode: "",
+  // Bank Details (Common for both)
+  const [bankDetails, setBankDetails] = useState({
     accountHolderName: "",
+    accountNumber: "",
+    ifscCode: "",
+    bankName: "",
   });
 
-  const handlePersonalChange = (e) => {
-    setPersonalInfo({ ...personalInfo, [e.target.name]: e.target.value });
+  const handleCommonChange = (e) => {
+    setCommonInfo({ ...commonInfo, [e.target.name]: e.target.value });
+  };
+
+  const handleIndividualChange = (e) => {
+    setIndividualDetails({
+      ...individualDetails,
+      [e.target.name]: e.target.value,
+    });
   };
 
   const handleBusinessChange = (e) => {
-    setBusinessInfo({ ...businessInfo, [e.target.name]: e.target.value });
+    setBusinessDetails({ ...businessDetails, [e.target.name]: e.target.value });
   };
 
   const handleBankChange = (e) => {
-    setBankInfo({ ...bankInfo, [e.target.name]: e.target.value });
+    setBankDetails({ ...bankDetails, [e.target.name]: e.target.value });
   };
 
-  const validatePersonalInfo = () => {
-    if (!personalInfo.name.trim()) {
+  const validateCommonInfo = () => {
+    if (!commonInfo.name.trim()) {
       toast.error("Please enter your full name");
       return false;
     }
-    if (!personalInfo.email.trim()) {
+    if (!commonInfo.email.trim()) {
       toast.error("Please enter email address");
       return false;
     }
-    if (!/\S+@\S+\.\S+/.test(personalInfo.email)) {
+    if (!/\S+@\S+\.\S+/.test(commonInfo.email)) {
       toast.error("Please enter a valid email address");
       return false;
     }
-    if (!personalInfo.phone.trim()) {
+    if (!commonInfo.phone.trim()) {
       toast.error("Please enter phone number");
       return false;
     }
-    if (!/^[0-9]{10}$/.test(personalInfo.phone)) {
+    if (!/^[0-9]{10}$/.test(commonInfo.phone)) {
       toast.error("Please enter a valid 10-digit phone number");
       return false;
     }
-    if (!personalInfo.password) {
+    if (!commonInfo.password) {
       toast.error("Please enter a password");
       return false;
     }
-    if (personalInfo.password.length < 6) {
+    if (commonInfo.password.length < 6) {
       toast.error("Password must be at least 6 characters");
       return false;
     }
-    if (personalInfo.password !== personalInfo.confirmPassword) {
+    if (commonInfo.password !== commonInfo.confirmPassword) {
       toast.error("Passwords do not match");
       return false;
     }
     return true;
   };
 
-  // const validateBusinessInfo = () => {
-  //   if (!businessInfo.businessName.trim()) {
-  //     toast.error("Please enter business name");
-  //     return false;
-  //   }
-  //   if (!businessInfo.gstNumber.trim()) {
-  //     toast.error("Please enter GST number");
-  //     return false;
-  //   }
-  //   if (
-  //     !/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/.test(
-  //       businessInfo.gstNumber.toUpperCase(),
-  //     )
-  //   ) {
-  //     toast.error("Please enter a valid GST number (15 characters)");
-  //     return false;
-  //   }
-  //   if (!businessInfo.businessAddress.trim()) {
-  //     toast.error("Please enter business address");
-  //     return false;
-  //   }
-  //   if (!businessInfo.panNumber.trim()) {
-  //     toast.error("Please enter PAN number");
-  //     return false;
-  //   }
-  //   if (
-  //     !/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(businessInfo.panNumber.toUpperCase())
-  //   ) {
-  //     toast.error("Please enter a valid PAN number (10 characters)");
-  //     return false;
-  //   }
-  //   return true;
-  // };
-  const validateBusinessInfo = () => {
-    if (!businessInfo.businessName.trim()) {
-      toast.error("Please enter business name");
+  const validateIndividualInfo = () => {
+    if (!individualDetails.aadharNumber) {
+      toast.error("Please enter Aadhar number");
       return false;
     }
-    if (!businessInfo.gstNumber.trim()) {
-      toast.error("Please enter GST number");
+    if (!/^[0-9]{12}$/.test(individualDetails.aadharNumber)) {
+      toast.error("Please enter valid 12-digit Aadhar number");
       return false;
     }
-    // Relaxed GST validation - accept any 15 character input for testing
-    if (businessInfo.gstNumber.length !== 15) {
-      toast.error("GST number must be 15 characters");
-      return false;
-    }
-    if (!businessInfo.businessAddress.trim()) {
-      toast.error("Please enter business address");
-      return false;
-    }
-    if (!businessInfo.panNumber.trim()) {
+    if (!individualDetails.panNumber) {
       toast.error("Please enter PAN number");
       return false;
     }
-    // Relaxed PAN validation - accept any 10 character input for testing
-    if (businessInfo.panNumber.length !== 10) {
-      toast.error("PAN number must be 10 characters");
+    if (
+      !/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(
+        individualDetails.panNumber.toUpperCase(),
+      )
+    ) {
+      toast.error("Please enter valid PAN number");
+      return false;
+    }
+    if (!individualDetails.address) {
+      toast.error("Please enter address");
       return false;
     }
     return true;
   };
+
+  const validateBusinessInfo = () => {
+    if (!businessDetails.businessName) {
+      toast.error("Please enter business name");
+      return false;
+    }
+    if (!businessDetails.gstNumber) {
+      toast.error("Please enter GST number");
+      return false;
+    }
+    if (businessDetails.gstNumber.length !== 15) {
+      toast.error("GST number must be 15 characters");
+      return false;
+    }
+    if (!businessDetails.panNumber) {
+      toast.error("Please enter PAN number");
+      return false;
+    }
+    if (businessDetails.panNumber.length !== 10) {
+      toast.error("PAN number must be 10 characters");
+      return false;
+    }
+    if (!businessDetails.businessAddress) {
+      toast.error("Please enter business address");
+      return false;
+    }
+    return true;
+  };
+
   const validateBankInfo = () => {
-    if (!bankInfo.accountHolderName.trim()) {
+    if (!bankDetails.accountHolderName) {
       toast.error("Please enter account holder name");
       return false;
     }
-    if (!bankInfo.bankAccountNumber.trim()) {
+    if (!bankDetails.accountNumber) {
       toast.error("Please enter bank account number");
       return false;
     }
-    if (!/^[0-9]{9,18}$/.test(bankInfo.bankAccountNumber)) {
-      toast.error("Please enter a valid bank account number (9-18 digits)");
+    if (!/^[0-9]{9,18}$/.test(bankDetails.accountNumber)) {
+      toast.error("Please enter valid account number (9-18 digits)");
       return false;
     }
-    if (!bankInfo.ifscCode.trim()) {
+    if (!bankDetails.ifscCode) {
       toast.error("Please enter IFSC code");
       return false;
     }
-    if (!/^[A-Z]{4}0[A-Z0-9]{6}$/.test(bankInfo.ifscCode.toUpperCase())) {
-      toast.error("Please enter a valid IFSC code (11 characters)");
+    if (!/^[A-Z]{4}0[A-Z0-9]{6}$/.test(bankDetails.ifscCode.toUpperCase())) {
+      toast.error("Please enter valid IFSC code");
+      return false;
+    }
+    if (!bankDetails.bankName) {
+      toast.error("Please enter bank name");
       return false;
     }
     return true;
@@ -185,24 +202,24 @@ export default function VendorRegister() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!validatePersonalInfo()) return;
-    if (!validateBusinessInfo()) return;
+    if (!vendorType) {
+      toast.error("Please select vendor type");
+      return;
+    }
+    if (!validateCommonInfo()) return;
+    if (vendorType === "individual" && !validateIndividualInfo()) return;
+    if (vendorType === "business" && !validateBusinessInfo()) return;
     if (!validateBankInfo()) return;
 
     setLoading(true);
 
     const vendorData = {
-      name: personalInfo.name,
-      email: personalInfo.email,
-      password: personalInfo.password,
-      phone: personalInfo.phone,
-      businessName: businessInfo.businessName,
-      gstNumber: businessInfo.gstNumber.toUpperCase(),
-      businessAddress: businessInfo.businessAddress,
-      panNumber: businessInfo.panNumber.toUpperCase(),
-      bankAccountNumber: bankInfo.bankAccountNumber,
-      ifscCode: bankInfo.ifscCode.toUpperCase(),
-      accountHolderName: bankInfo.accountHolderName,
+      vendorType,
+      ...commonInfo,
+      ...(vendorType === "individual"
+        ? { individualDetails }
+        : { businessDetails }),
+      bankDetails,
     };
 
     try {
@@ -214,12 +231,10 @@ export default function VendorRegister() {
           body: JSON.stringify(vendorData),
         },
       );
-
       const data = await response.json();
-
       if (data.success) {
         toast.success(
-          "Registration submitted! Admin will review and approve your account.",
+          `Registration submitted! ${vendorType === "business" ? "Business" : "Individual"} vendor account pending approval.`,
         );
         navigate("/vendor-pending");
       } else {
@@ -234,81 +249,123 @@ export default function VendorRegister() {
   };
 
   const nextStep = () => {
-    if (step === 1 && validatePersonalInfo()) {
-      setStep(2);
-    } else if (step === 2 && validateBusinessInfo()) {
-      setStep(3);
-    }
+    if (step === 1 && vendorType && validateCommonInfo()) setStep(2);
+    else if (step === 2) {
+      if (vendorType === "individual" && validateIndividualInfo()) setStep(3);
+      else if (vendorType === "business" && validateBusinessInfo()) setStep(3);
+    } else if (step === 3 && validateBankInfo()) setStep(4);
   };
 
-  const prevStep = () => {
-    setStep(step - 1);
-  };
+  const prevStep = () => setStep(step - 1);
+
+  if (!vendorType) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4 py-20 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-950 dark:to-gray-900">
+        <div className="max-w-3xl w-full bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8">
+          <div className="text-center mb-8">
+            <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <BuildingStorefrontIcon className="w-8 h-8 text-white" />
+            </div>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+              Choose Vendor Type
+            </h1>
+            <p className="text-gray-500 dark:text-gray-400 mt-1">
+              Select how you want to register
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Individual Vendor */}
+            <div
+              onClick={() => setVendorType("individual")}
+              className="cursor-pointer border-2 border-gray-200 dark:border-gray-700 rounded-2xl p-6 hover:border-green-500 transition group"
+            >
+              <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center mb-4">
+                <UserIcon className="w-6 h-6 text-blue-600" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Individual Vendor</h3>
+              <p className="text-gray-500 text-sm mb-4">
+                For individuals renting out personal vehicles
+              </p>
+              <ul className="text-sm text-gray-600 space-y-1">
+                <li>✅ Up to 5 vehicles</li>
+                <li>✅ 15% commission</li>
+                <li>✅ Personal PAN required</li>
+                <li>✅ Aadhar verification</li>
+              </ul>
+            </div>
+
+            {/* Business Vendor */}
+            <div
+              onClick={() => setVendorType("business")}
+              className="cursor-pointer border-2 border-gray-200 dark:border-gray-700 rounded-2xl p-6 hover:border-green-500 transition group"
+            >
+              <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-xl flex items-center justify-center mb-4">
+                <BuildingStorefrontIcon className="w-6 h-6 text-purple-600" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Business Vendor</h3>
+              <p className="text-gray-500 text-sm mb-4">
+                For companies, rental agencies, businesses
+              </p>
+              <ul className="text-sm text-gray-600 space-y-1">
+                <li>✅ Unlimited vehicles</li>
+                <li>✅ 10% commission</li>
+                <li>✅ Business PAN & GST required</li>
+                <li>✅ Priority support</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-20 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-950 dark:to-gray-900">
-      <div className="max-w-3xl w-full bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 animate-fade-in">
+      <div className="max-w-3xl w-full bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8">
         {/* Header */}
         <div className="text-center mb-8">
           <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <BuildingStorefrontIcon className="w-8 h-8 text-white" />
+            {vendorType === "individual" ? (
+              <UserIcon className="w-8 h-8 text-white" />
+            ) : (
+              <BuildingStorefrontIcon className="w-8 h-8 text-white" />
+            )}
           </div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Become a Vendor Partner
+            {vendorType === "individual"
+              ? "Individual Vendor Registration"
+              : "Business Vendor Registration"}
           </h1>
           <p className="text-gray-500 dark:text-gray-400 mt-1">
-            Register your business and start earning with Wheelz
+            {vendorType === "individual"
+              ? "Register as an individual vehicle owner"
+              : "Register your business as a vendor partner"}
           </p>
         </div>
 
         {/* Step Indicator */}
         <div className="flex items-center justify-center mb-8">
           <div className="flex items-center gap-4">
-            <div
-              className={`flex items-center gap-2 ${step >= 1 ? "text-green-500" : "text-gray-400"}`}
-            >
-              <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center ${step >= 1 ? "bg-green-500 text-white" : "bg-gray-200 dark:bg-gray-700 text-gray-500"}`}
-              >
-                1
+            {[1, 2, 3, 4].map((s) => (
+              <div key={s} className="flex items-center">
+                <div
+                  className={`w-8 h-8 rounded-full flex items-center justify-center ${step >= s ? "bg-green-500 text-white" : "bg-gray-200 text-gray-500"}`}
+                >
+                  {s}
+                </div>
+                {s < 4 && <div className="w-12 h-0.5 bg-gray-200 ml-4"></div>}
               </div>
-              <span className="text-sm font-medium hidden sm:inline">
-                Personal
-              </span>
-            </div>
-            <div className="w-12 h-0.5 bg-gray-200 dark:bg-gray-700"></div>
-            <div
-              className={`flex items-center gap-2 ${step >= 2 ? "text-green-500" : "text-gray-400"}`}
-            >
-              <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center ${step >= 2 ? "bg-green-500 text-white" : "bg-gray-200 dark:bg-gray-700 text-gray-500"}`}
-              >
-                2
-              </div>
-              <span className="text-sm font-medium hidden sm:inline">
-                Business
-              </span>
-            </div>
-            <div className="w-12 h-0.5 bg-gray-200 dark:bg-gray-700"></div>
-            <div
-              className={`flex items-center gap-2 ${step >= 3 ? "text-green-500" : "text-gray-400"}`}
-            >
-              <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center ${step >= 3 ? "bg-green-500 text-white" : "bg-gray-200 dark:bg-gray-700 text-gray-500"}`}
-              >
-                3
-              </div>
-              <span className="text-sm font-medium hidden sm:inline">Bank</span>
-            </div>
+            ))}
           </div>
         </div>
 
         <form onSubmit={handleSubmit}>
-          {/* Step 1: Personal Information */}
+          {/* Step 1: Common Info */}
           {step === 1 && (
             <div className="space-y-5">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label className="block text-sm font-medium mb-1">
                   Full Name *
                 </label>
                 <div className="relative">
@@ -316,17 +373,16 @@ export default function VendorRegister() {
                   <input
                     type="text"
                     name="name"
-                    value={personalInfo.name}
-                    onChange={handlePersonalChange}
-                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                    value={commonInfo.name}
+                    onChange={handleCommonChange}
+                    className="input-field pl-10"
                     placeholder="John Doe"
                     required
                   />
                 </div>
               </div>
-
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label className="block text-sm font-medium mb-1">
                   Email Address *
                 </label>
                 <div className="relative">
@@ -334,17 +390,16 @@ export default function VendorRegister() {
                   <input
                     type="email"
                     name="email"
-                    value={personalInfo.email}
-                    onChange={handlePersonalChange}
-                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
-                    placeholder="business@example.com"
+                    value={commonInfo.email}
+                    onChange={handleCommonChange}
+                    className="input-field pl-10"
+                    placeholder="vendor@example.com"
                     required
                   />
                 </div>
               </div>
-
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label className="block text-sm font-medium mb-1">
                   Phone Number *
                 </label>
                 <div className="relative">
@@ -352,20 +407,16 @@ export default function VendorRegister() {
                   <input
                     type="tel"
                     name="phone"
-                    value={personalInfo.phone}
-                    onChange={handlePersonalChange}
-                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                    value={commonInfo.phone}
+                    onChange={handleCommonChange}
+                    className="input-field pl-10"
                     placeholder="9876543210"
                     required
                   />
                 </div>
-                <p className="text-xs text-gray-500 mt-1">
-                  10-digit mobile number
-                </p>
               </div>
-
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label className="block text-sm font-medium mb-1">
                   Password *
                 </label>
                 <div className="relative">
@@ -373,16 +424,16 @@ export default function VendorRegister() {
                   <input
                     type={showPassword ? "text" : "password"}
                     name="password"
-                    value={personalInfo.password}
-                    onChange={handlePersonalChange}
-                    className="w-full pl-10 pr-12 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                    value={commonInfo.password}
+                    onChange={handleCommonChange}
+                    className="input-field pl-10 pr-12"
                     placeholder="••••••"
                     required
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    className="absolute right-3 top-1/2 -translate-y-1/2"
                   >
                     {showPassword ? (
                       <EyeSlashIcon className="w-5 h-5" />
@@ -391,13 +442,9 @@ export default function VendorRegister() {
                     )}
                   </button>
                 </div>
-                <p className="text-xs text-gray-500 mt-1">
-                  Minimum 6 characters
-                </p>
               </div>
-
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label className="block text-sm font-medium mb-1">
                   Confirm Password *
                 </label>
                 <div className="relative">
@@ -405,9 +452,9 @@ export default function VendorRegister() {
                   <input
                     type={showPassword ? "text" : "password"}
                     name="confirmPassword"
-                    value={personalInfo.confirmPassword}
-                    onChange={handlePersonalChange}
-                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                    value={commonInfo.confirmPassword}
+                    onChange={handleCommonChange}
+                    className="input-field pl-10"
                     placeholder="••••••"
                     required
                   />
@@ -416,50 +463,31 @@ export default function VendorRegister() {
             </div>
           )}
 
-          {/* Step 2: Business Information */}
-          {step === 2 && (
+          {/* Step 2: Vendor Specific Details */}
+          {step === 2 && vendorType === "individual" && (
             <div className="space-y-5">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Business Name *
+                <label className="block text-sm font-medium mb-1">
+                  Aadhar Number *
                 </label>
                 <div className="relative">
-                  <BuildingStorefrontIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <IdentificationIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                   <input
                     type="text"
-                    name="businessName"
-                    value={businessInfo.businessName}
-                    onChange={handleBusinessChange}
-                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
-                    placeholder="Your Business Name"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  GST Number *
-                </label>
-                <div className="relative">
-                  <DocumentTextIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <input
-                    type="text"
-                    name="gstNumber"
-                    value={businessInfo.gstNumber}
-                    onChange={handleBusinessChange}
-                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all uppercase"
-                    placeholder="22AAAAA0000A1Z"
+                    name="aadharNumber"
+                    value={individualDetails.aadharNumber}
+                    onChange={handleIndividualChange}
+                    className="input-field pl-10"
+                    placeholder="1234 5678 9012"
                     required
                   />
                 </div>
                 <p className="text-xs text-gray-500 mt-1">
-                  15-character GST number
+                  12-digit Aadhar number
                 </p>
               </div>
-
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label className="block text-sm font-medium mb-1">
                   PAN Number *
                 </label>
                 <div className="relative">
@@ -467,31 +495,27 @@ export default function VendorRegister() {
                   <input
                     type="text"
                     name="panNumber"
-                    value={businessInfo.panNumber}
-                    onChange={handleBusinessChange}
-                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all uppercase"
-                    placeholder="AAAAA0000A"
+                    value={individualDetails.panNumber}
+                    onChange={handleIndividualChange}
+                    className="input-field pl-10 uppercase"
+                    placeholder="ABCDE1234F"
                     required
                   />
                 </div>
-                <p className="text-xs text-gray-500 mt-1">
-                  10-character PAN number
-                </p>
               </div>
-
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Business Address *
+                <label className="block text-sm font-medium mb-1">
+                  Residential Address *
                 </label>
                 <div className="relative">
                   <MapPinIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                   <textarea
-                    name="businessAddress"
-                    value={businessInfo.businessAddress}
-                    onChange={handleBusinessChange}
+                    name="address"
+                    value={individualDetails.address}
+                    onChange={handleIndividualChange}
                     rows="3"
-                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
-                    placeholder="Full business address"
+                    className="input-field pl-10"
+                    placeholder="Full address"
                     required
                   />
                 </div>
@@ -499,11 +523,100 @@ export default function VendorRegister() {
             </div>
           )}
 
-          {/* Step 3: Bank Information */}
+          {step === 2 && vendorType === "business" && (
+            <div className="space-y-5">
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Business Name *
+                </label>
+                <div className="relative">
+                  <BuildingStorefrontIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input
+                    type="text"
+                    name="businessName"
+                    value={businessDetails.businessName}
+                    onChange={handleBusinessChange}
+                    className="input-field pl-10"
+                    placeholder="Your Business Name"
+                    required
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  GST Number *
+                </label>
+                <div className="relative">
+                  <DocumentTextIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input
+                    type="text"
+                    name="gstNumber"
+                    value={businessDetails.gstNumber}
+                    onChange={handleBusinessChange}
+                    className="input-field pl-10 uppercase"
+                    placeholder="22AAAAA0000A1Z"
+                    required
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Business PAN Number *
+                </label>
+                <div className="relative">
+                  <DocumentTextIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input
+                    type="text"
+                    name="panNumber"
+                    value={businessDetails.panNumber}
+                    onChange={handleBusinessChange}
+                    className="input-field pl-10 uppercase"
+                    placeholder="ABCDE1234F"
+                    required
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Business Address *
+                </label>
+                <div className="relative">
+                  <MapPinIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <textarea
+                    name="businessAddress"
+                    value={businessDetails.businessAddress}
+                    onChange={handleBusinessChange}
+                    rows="3"
+                    className="input-field pl-10"
+                    placeholder="Full business address"
+                    required
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Website (Optional)
+                </label>
+                <div className="relative">
+                  <GlobeAltIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input
+                    type="url"
+                    name="website"
+                    value={businessDetails.website}
+                    onChange={handleBusinessChange}
+                    className="input-field pl-10"
+                    placeholder="https://yourbusiness.com"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Step 3: Bank Details */}
           {step === 3 && (
             <div className="space-y-5">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label className="block text-sm font-medium mb-1">
                   Account Holder Name *
                 </label>
                 <div className="relative">
@@ -511,38 +624,33 @@ export default function VendorRegister() {
                   <input
                     type="text"
                     name="accountHolderName"
-                    value={bankInfo.accountHolderName}
+                    value={bankDetails.accountHolderName}
                     onChange={handleBankChange}
-                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                    className="input-field pl-10"
                     placeholder="As per bank account"
                     required
                   />
                 </div>
               </div>
-
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label className="block text-sm font-medium mb-1">
                   Bank Account Number *
                 </label>
                 <div className="relative">
                   <CreditCardIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                   <input
                     type="text"
-                    name="bankAccountNumber"
-                    value={bankInfo.bankAccountNumber}
+                    name="accountNumber"
+                    value={bankDetails.accountNumber}
                     onChange={handleBankChange}
-                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                    className="input-field pl-10"
                     placeholder="Account number"
                     required
                   />
                 </div>
-                <p className="text-xs text-gray-500 mt-1">
-                  9-18 digit account number
-                </p>
               </div>
-
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label className="block text-sm font-medium mb-1">
                   IFSC Code *
                 </label>
                 <div className="relative">
@@ -550,32 +658,92 @@ export default function VendorRegister() {
                   <input
                     type="text"
                     name="ifscCode"
-                    value={bankInfo.ifscCode}
+                    value={bankDetails.ifscCode}
                     onChange={handleBankChange}
-                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all uppercase"
+                    className="input-field pl-10 uppercase"
                     placeholder="SBIN0001234"
                     required
                   />
                 </div>
-                <p className="text-xs text-gray-500 mt-1">
-                  11-character IFSC code
-                </p>
               </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Bank Name *
+                </label>
+                <input
+                  type="text"
+                  name="bankName"
+                  value={bankDetails.bankName}
+                  onChange={handleBankChange}
+                  className="input-field"
+                  placeholder="State Bank of India"
+                  required
+                />
+              </div>
+            </div>
+          )}
 
-              {/* Benefits Section */}
-              <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 rounded-xl p-4 mt-4">
-                <div className="flex items-center gap-2 mb-3">
-                  <CheckBadgeIcon className="w-5 h-5 text-green-500" />
-                  <h4 className="font-semibold text-gray-900 dark:text-white">
-                    Vendor Benefits
-                  </h4>
+          {/* Step 4: Summary & Submit */}
+          {step === 4 && (
+            <div className="space-y-4">
+              <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4">
+                <h3 className="font-semibold mb-3">Registration Summary</h3>
+                <div className="space-y-2 text-sm">
+                  <p>
+                    <strong>Vendor Type:</strong>{" "}
+                    {vendorType === "individual" ? "Individual" : "Business"}
+                  </p>
+                  <p>
+                    <strong>Name:</strong> {commonInfo.name}
+                  </p>
+                  <p>
+                    <strong>Email:</strong> {commonInfo.email}
+                  </p>
+                  <p>
+                    <strong>Phone:</strong> {commonInfo.phone}
+                  </p>
+                  {vendorType === "individual" ? (
+                    <>
+                      <p>
+                        <strong>Aadhar:</strong>{" "}
+                        {individualDetails.aadharNumber}
+                      </p>
+                      <p>
+                        <strong>PAN:</strong> {individualDetails.panNumber}
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <p>
+                        <strong>Business Name:</strong>{" "}
+                        {businessDetails.businessName}
+                      </p>
+                      <p>
+                        <strong>GST:</strong> {businessDetails.gstNumber}
+                      </p>
+                      <p>
+                        <strong>Business PAN:</strong>{" "}
+                        {businessDetails.panNumber}
+                      </p>
+                    </>
+                  )}
+                  <p>
+                    <strong>Commission Rate:</strong>{" "}
+                    {vendorType === "individual" ? "15%" : "10%"}
+                  </p>
+                  <p>
+                    <strong>Vehicle Limit:</strong>{" "}
+                    {vendorType === "individual"
+                      ? "Up to 5 vehicles"
+                      : "Unlimited"}
+                  </p>
                 </div>
-                <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-1 ml-7">
-                  <li>• 90% earnings on each booking</li>
-                  <li>• Free vehicle listing and promotion</li>
-                  <li>• 24/7 vendor support</li>
-                  <li>• Monthly payout directly to bank</li>
-                </ul>
+              </div>
+              <div className="bg-amber-50 dark:bg-amber-900/20 rounded-xl p-4">
+                <p className="text-sm text-amber-700 dark:text-amber-400">
+                  ⚠️ Your registration will be reviewed by admin. Approval may
+                  take 24-48 hours.
+                </p>
               </div>
             </div>
           )}
@@ -586,49 +754,34 @@ export default function VendorRegister() {
               <button
                 type="button"
                 onClick={prevStep}
-                className="flex items-center gap-2 px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-semibold rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-all"
+                className="flex items-center gap-2 px-6 py-3 border rounded-xl hover:bg-gray-50"
               >
-                <ArrowLeftIcon className="w-4 h-4" />
-                Previous
+                <ArrowLeftIcon className="w-4 h-4" /> Previous
               </button>
             )}
-            {step < 3 ? (
+            {step < 4 ? (
               <button
                 type="button"
                 onClick={nextStep}
-                className="flex items-center gap-2 px-6 py-3 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-xl transition-all ml-auto"
+                className="flex items-center gap-2 px-6 py-3 bg-green-500 text-white rounded-xl ml-auto"
               >
-                Next
-                <ArrowRightIcon className="w-4 h-4" />
+                Next <ArrowRightIcon className="w-4 h-4" />
               </button>
             ) : (
               <button
                 type="submit"
                 disabled={loading}
-                className="flex items-center justify-center gap-2 w-full py-3 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold rounded-xl transition-all duration-200 disabled:opacity-50"
+                className="flex items-center justify-center gap-2 w-full py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl"
               >
                 {loading ? (
-                  <>
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    Submitting...
-                  </>
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 ) : (
-                  "Submit Application"
+                  "Submit Registration"
                 )}
               </button>
             )}
           </div>
         </form>
-
-        <p className="text-center text-gray-600 dark:text-gray-400 mt-6">
-          Already have an account?{" "}
-          <Link
-            to="/login"
-            className="text-green-500 font-semibold hover:underline"
-          >
-            Sign In
-          </Link>
-        </p>
       </div>
     </div>
   );
