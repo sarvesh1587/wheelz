@@ -1,6 +1,6 @@
 /**
  * Booking Controller
- * Handles the full booking lifecycle
+ * Handles the full booking lifecycle with vendor-customer data sharing
  */
 
 const { Booking } = require("../models/Booking");
@@ -34,7 +34,12 @@ exports.createBooking = async (req, res, next) => {
       notes,
     } = req.body;
 
-    const vehicle = await Vehicle.findById(vehicleId);
+    // Get vehicle with vendor details
+    const vehicle = await Vehicle.findById(vehicleId).populate(
+      "vendor",
+      "name email phone vendorDetails businessDetails address",
+    );
+
     if (!vehicle || !vehicle.isActive) {
       return res
         .status(404)
@@ -42,12 +47,10 @@ exports.createBooking = async (req, res, next) => {
     }
 
     if (!vehicle.isAvailableForDates(startDate, endDate)) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "Vehicle is not available for selected dates",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "Vehicle is not available for selected dates",
+      });
     }
 
     const totalDays = calcDays(startDate, endDate);
@@ -56,6 +59,46 @@ exports.createBooking = async (req, res, next) => {
     const totalAmount = (pricePerDay + extrasCostPerDay) * totalDays;
     const finalAmount = totalAmount;
 
+    // Get customer details
+    const customer = await User.findById(req.user._id);
+
+    // Prepare vendor details for booking
+    const vendorData = vehicle.vendor
+      ? {
+          name: vehicle.vendor.name,
+          businessName:
+            vehicle.vendor.vendorDetails?.businessName || vehicle.vendor.name,
+          phone: vehicle.vendor.phone,
+          email: vehicle.vendor.email,
+          address:
+            vehicle.vendor.vendorDetails?.businessAddress ||
+            vehicle.vendor.address?.street ||
+            "",
+          gstNumber: vehicle.vendor.vendorDetails?.gstNumber || "",
+          pickupInstructions: `Please contact vendor at ${vehicle.vendor.phone} for pickup at ${pickupLocation || vehicle.locationName}`,
+        }
+      : {
+          name: "Wheelz Admin",
+          businessName: "Wheelz Rentals",
+          phone: "9876543210",
+          email: "support@wheelz.com",
+          address: vehicle.locationName,
+          pickupInstructions: `Please pickup at ${pickupLocation || vehicle.locationName}`,
+        };
+
+    // Prepare customer details for booking
+    const customerData = {
+      name: customer.name,
+      phone: customer.phone,
+      email: customer.email,
+      address:
+        `${customer.address?.street || ""}, ${customer.address?.city || ""}, ${customer.address?.state || ""}`.replace(
+          /^, |, $/g,
+          "",
+        ) || "Not provided",
+    };
+
+    // Create booking with vendor and customer details
     const booking = await Booking.create({
       user: req.user._id,
       vehicle: vehicleId,
@@ -72,11 +115,14 @@ exports.createBooking = async (req, res, next) => {
       notes,
       paymentStatus: "pending",
       status: "pending",
+      vendorDetails: vendorData,
+      customerDetails: customerData,
     });
 
     const flags = await booking.checkFraud();
     await booking.save();
 
+    // Mark vehicle as booked
     vehicle.bookedDates.push({ startDate, endDate, bookingId: booking._id });
     vehicle.totalBookings += 1;
     vehicle.popularityScore = Math.min(100, vehicle.popularityScore + 2);
@@ -84,8 +130,9 @@ exports.createBooking = async (req, res, next) => {
 
     const populated = await Booking.findById(booking._id)
       .populate("vehicle", "name brand images basePrice")
-      .populate("user", "name email");
+      .populate("user", "name email phone");
 
+    // Send confirmation email to customer with vendor details
     try {
       await sendEmail({
         to: req.user.email,
@@ -99,19 +146,54 @@ exports.createBooking = async (req, res, next) => {
           endDate: new Date(endDate).toDateString(),
           totalDays,
           finalAmount,
+          vendorName: vendorData.businessName,
+          vendorPhone: vendorData.phone,
+          vendorAddress: vendorData.address,
+          pickupLocation: pickupLocation || vehicle.locationName,
+          pickupInstructions: vendorData.pickupInstructions,
         },
       });
     } catch (emailErr) {
       console.warn("Booking email failed:", emailErr.message);
     }
 
+    // Send notification email to vendor about new booking
+    if (vehicle.vendor && vehicle.vendor.email) {
+      try {
+        await sendEmail({
+          to: vehicle.vendor.email,
+          subject: `New Booking Received - ${booking.bookingRef}`,
+          template: "bookingConfirmation",
+          data: {
+            name: vehicle.vendor.name,
+            bookingRef: booking.bookingRef,
+            vehicleName: vehicle.name,
+            startDate: new Date(startDate).toDateString(),
+            endDate: new Date(endDate).toDateString(),
+            totalDays,
+            finalAmount,
+            customerName: customerData.name,
+            customerPhone: customerData.phone,
+            customerEmail: customerData.email,
+            customerAddress: customerData.address,
+            pickupLocation: pickupLocation || vehicle.locationName,
+          },
+        });
+      } catch (emailErr) {
+        console.warn("Vendor notification email failed:", emailErr.message);
+      }
+    }
+
     res.status(201).json({
       success: true,
       booking: populated,
+      vendorDetails: vendorData,
+      customerDetails: customerData,
       fraudFlags: flags.length > 0 ? flags : undefined,
       message: "Booking created successfully. Proceed to payment.",
     });
   } catch (err) {
+    console.error("Create booking error:", err);
     next(err);
   }
 };
@@ -150,10 +232,11 @@ exports.getBooking = async (req, res, next) => {
       .populate("vehicle")
       .populate("user", "name email phone");
 
-    if (!booking)
+    if (!booking) {
       return res
         .status(404)
         .json({ success: false, message: "Booking not found" });
+    }
 
     if (
       req.user.role !== "admin" &&
@@ -173,10 +256,11 @@ exports.getBooking = async (req, res, next) => {
 exports.cancelBooking = async (req, res, next) => {
   try {
     const booking = await Booking.findById(req.params.id).populate("vehicle");
-    if (!booking)
+    if (!booking) {
       return res
         .status(404)
         .json({ success: false, message: "Booking not found" });
+    }
 
     if (
       req.user.role !== "admin" &&
@@ -188,12 +272,10 @@ exports.cancelBooking = async (req, res, next) => {
     }
 
     if (["completed", "cancelled"].includes(booking.status)) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: `Cannot cancel a ${booking.status} booking`,
-        });
+      return res.status(400).json({
+        success: false,
+        message: `Cannot cancel a ${booking.status} booking`,
+      });
     }
 
     booking.status = "cancelled";
@@ -220,11 +302,12 @@ exports.cancelBooking = async (req, res, next) => {
 
 exports.processPayment = async (req, res, next) => {
   try {
-    const booking = await Booking.findById(req.params.id);
-    if (!booking)
+    const booking = await Booking.findById(req.params.id).populate("vehicle");
+    if (!booking) {
       return res
         .status(404)
         .json({ success: false, message: "Booking not found" });
+    }
 
     if (
       req.user.role !== "admin" &&
@@ -241,10 +324,35 @@ exports.processPayment = async (req, res, next) => {
     booking.status = "confirmed";
     await booking.save();
 
+    // Send vendor details email after payment success
+    try {
+      await sendEmail({
+        to: req.user.email,
+        subject: `Payment Successful - ${booking.bookingRef}`,
+        template: "paymentSuccess",
+        data: {
+          name: req.user.name,
+          bookingRef: booking.bookingRef,
+          vehicleName: booking.vehicle?.name,
+          startDate: new Date(booking.startDate).toDateString(),
+          endDate: new Date(booking.endDate).toDateString(),
+          totalAmount: booking.finalAmount,
+          vendorName: booking.vendorDetails?.businessName,
+          vendorPhone: booking.vendorDetails?.phone,
+          vendorAddress: booking.vendorDetails?.address,
+          pickupLocation: booking.pickupLocation,
+        },
+      });
+    } catch (emailErr) {
+      console.warn("Payment success email failed:", emailErr.message);
+    }
+
     res.json({
       success: true,
       message: "Payment processed successfully",
       booking,
+      vendorDetails: booking.vendorDetails,
+      customerDetails: booking.customerDetails,
     });
   } catch (err) {
     next(err);

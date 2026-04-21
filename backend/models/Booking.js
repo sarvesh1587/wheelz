@@ -13,6 +13,24 @@ const BookingSchema = new mongoose.Schema(
       ref: "Vehicle",
       required: true,
     },
+    // Add these fields to BookingSchema
+    vendorDetails: {
+      name: String,
+      businessName: String,
+      phone: String,
+      email: String,
+      address: String,
+      pickupInstructions: String,
+    },
+    customerDetails: {
+      name: String,
+      phone: String,
+      email: String,
+      address: String,
+    },
+    pickupLocation: { type: String, required: true },
+    pickupTime: Date,
+    dropoffLocation: String,
 
     startDate: { type: Date, required: true },
     endDate: { type: Date, required: true },
@@ -144,18 +162,16 @@ ReviewSchema.index({ user: 1 });
 
 ReviewSchema.post("save", async function () {
   const Vehicle = require("./Vehicle");
-  const stats = await mongoose
-    .model("Review")
-    .aggregate([
-      { $match: { vehicle: this.vehicle } },
-      {
-        $group: {
-          _id: "$vehicle",
-          avgRating: { $avg: "$rating" },
-          count: { $sum: 1 },
-        },
+  const stats = await mongoose.model("Review").aggregate([
+    { $match: { vehicle: this.vehicle } },
+    {
+      $group: {
+        _id: "$vehicle",
+        avgRating: { $avg: "$rating" },
+        count: { $sum: 1 },
       },
-    ]);
+    },
+  ]);
   if (stats.length > 0) {
     await Vehicle.findByIdAndUpdate(this.vehicle, {
       averageRating: Math.round(stats[0].avgRating * 10) / 10,
