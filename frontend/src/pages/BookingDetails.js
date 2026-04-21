@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { bookingAPI } from "../services/api";
 import LoadingSpinner from "../components/common/LoadingSpinner";
+import RazorpayButton from "../components/RazorpayButton";
 import {
   CalendarIcon,
   CurrencyRupeeIcon,
@@ -19,6 +20,7 @@ export default function BookingDetails() {
   const navigate = useNavigate();
   const [booking, setBooking] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
 
   useEffect(() => {
     fetchBooking();
@@ -35,6 +37,21 @@ export default function BookingDetails() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handlePaymentClick = () => {
+    setShowPaymentModal(true);
+  };
+
+  const handlePaymentSuccess = () => {
+    setShowPaymentModal(false);
+    toast.success("Payment successful! Booking confirmed.");
+    fetchBooking(); // Refresh booking details
+  };
+
+  const handlePaymentCancel = () => {
+    setShowPaymentModal(false);
+    toast.error("Payment cancelled");
   };
 
   if (loading) return <LoadingSpinner />;
@@ -204,7 +221,41 @@ export default function BookingDetails() {
           ← Back to Dashboard
         </Link>
         {booking.paymentStatus !== "paid" && (
-          <button className="btn-primary">Complete Payment</button>
+          <>
+            <button onClick={handlePaymentClick} className="btn-primary">
+              Complete Payment
+            </button>
+            {showPaymentModal && (
+              <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-md w-full p-6">
+                  <h3 className="text-xl font-bold mb-4">Complete Payment</h3>
+                  <div className="bg-gray-50 p-3 rounded-lg mb-4">
+                    <p>
+                      <strong>Vehicle:</strong> {booking.vehicle?.name}
+                    </p>
+                    <p>
+                      <strong>Duration:</strong> {booking.totalDays} days
+                    </p>
+                    <p className="text-lg font-bold mt-2">
+                      Amount: ₹{booking.finalAmount?.toLocaleString()}
+                    </p>
+                  </div>
+                  <RazorpayButton
+                    bookingId={booking._id}
+                    amount={booking.finalAmount}
+                    onSuccess={handlePaymentSuccess}
+                    onCancel={handlePaymentCancel}
+                  />
+                  <button
+                    onClick={() => setShowPaymentModal(false)}
+                    className="w-full mt-3 text-gray-500 hover:text-gray-700 text-sm"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

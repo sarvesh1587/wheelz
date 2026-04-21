@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from "react";
+// import React, { useState, useEffect } from 'react';
 import { Link } from "react-router-dom";
-import { bookingAPI } from "../services/api";
+import { bookingAPI, paymentAPI } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import LoadingSpinner from "../components/common/LoadingSpinner";
+import RazorpayButton from "../components/RazorpayButton";
 import {
   CalendarIcon,
   MapPinIcon,
@@ -11,6 +12,7 @@ import {
   XCircleIcon,
   ClockIcon,
 } from "@heroicons/react/24/outline";
+import toast from "react-hot-toast";
 
 const STATUS_STYLES = {
   pending: "badge-pending",
@@ -33,16 +35,46 @@ export default function Dashboard() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("upcoming");
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [selectedBooking, setSelectedBooking] = useState(null);
 
   useEffect(() => {
-    Promise.all([bookingAPI.getAll({ limit: 50 }), bookingAPI.getMyStats()])
-      .then(([bookingsRes, statsRes]) => {
-        setBookings(bookingsRes.data.bookings);
-        setStats(statsRes.data.stats);
-      })
-      .catch(console.error)
-      .finally(() => setLoading(false));
+    fetchData();
   }, []);
+
+  const fetchData = async () => {
+    try {
+      const [bookingsRes, statsRes] = await Promise.all([
+        bookingAPI.getAll({ limit: 50 }),
+        bookingAPI.getMyStats(),
+      ]);
+      setBookings(bookingsRes.data.bookings);
+      setStats(statsRes.data.stats);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      toast.error("Failed to load dashboard");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePaymentClick = (booking) => {
+    setSelectedBooking(booking);
+    setShowPaymentModal(true);
+  };
+
+  const handlePaymentSuccess = () => {
+    setShowPaymentModal(false);
+    setSelectedBooking(null);
+    fetchData(); // Refresh bookings
+    toast.success("Payment successful! Booking confirmed.");
+  };
+
+  const handlePaymentCancel = () => {
+    setShowPaymentModal(false);
+    setSelectedBooking(null);
+    toast.error("Payment cancelled");
+  };
 
   const filteredBookings = bookings.filter((b) => {
     if (activeTab === "upcoming")
@@ -56,6 +88,7 @@ export default function Dashboard() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8 pt-24">
+      {/* Welcome Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
           Welcome back, {user?.name?.split(" ")[0]}! 👋
@@ -65,6 +98,7 @@ export default function Dashboard() {
         </p>
       </div>
 
+      {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         {[
           {
@@ -90,16 +124,14 @@ export default function Dashboard() {
         ].map((stat, i) => (
           <div
             key={i}
-            className="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-gray-700"
+            className="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm border"
           >
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">
                   {stat.value}
                 </p>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  {stat.label}
-                </p>
+                <p className="text-xs text-gray-500 mt-1">{stat.label}</p>
               </div>
               <stat.icon className="w-8 h-8 text-amber-500/50" />
             </div>
@@ -107,8 +139,9 @@ export default function Dashboard() {
         ))}
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
-        <div className="border-b border-gray-100 dark:border-gray-700 px-6 py-4">
+      {/* Bookings Section */}
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border overflow-hidden">
+        <div className="border-b px-6 py-4">
           <div className="flex gap-4">
             {[
               { id: "upcoming", label: "Upcoming" },
@@ -130,13 +163,11 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div className="divide-y divide-gray-100 dark:divide-gray-700">
+        <div className="divide-y">
           {filteredBookings.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-4xl mb-3">📭</p>
-              <p className="text-gray-500 dark:text-gray-400">
-                No bookings found
-              </p>
+              <p className="text-gray-500">No bookings found</p>
               <Link
                 to="/vehicles"
                 className="inline-block mt-4 text-amber-500 font-semibold hover:underline"
@@ -148,7 +179,7 @@ export default function Dashboard() {
             filteredBookings.map((booking) => (
               <div
                 key={booking._id}
-                className="p-6 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                className="p-6 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition"
               >
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div className="flex gap-4">
@@ -161,7 +192,7 @@ export default function Dashboard() {
                       <h3 className="font-semibold text-gray-900 dark:text-white">
                         {booking.vehicle?.name}
                       </h3>
-                      <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+                      <p className="text-sm text-gray-500 mt-0.5">
                         {booking.vehicle?.city}
                       </p>
                       <div className="flex items-center gap-3 mt-2 text-xs text-gray-500">
@@ -189,12 +220,23 @@ export default function Dashboard() {
                     <p className="text-lg font-bold text-gray-900 dark:text-white mt-2">
                       ₹{booking.finalAmount.toLocaleString()}
                     </p>
-                    <Link
-                      to={`/bookings/${booking._id}`}
-                      className="text-xs text-amber-500 hover:underline mt-1 inline-block"
-                    >
-                      View Details →
-                    </Link>
+                    <div className="flex gap-2 mt-2">
+                      <Link
+                        to={`/bookings/${booking._id}`}
+                        className="text-xs text-amber-500 hover:underline"
+                      >
+                        View Details →
+                      </Link>
+                      {booking.status === "pending" &&
+                        booking.paymentStatus === "pending" && (
+                          <button
+                            onClick={() => handlePaymentClick(booking)}
+                            className="text-xs bg-amber-500 text-white px-2 py-1 rounded-lg hover:bg-amber-600"
+                          >
+                            Complete Payment
+                          </button>
+                        )}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -202,6 +244,61 @@ export default function Dashboard() {
           )}
         </div>
       </div>
+
+      {/* Payment Modal */}
+      {showPaymentModal && selectedBooking && (
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          onClick={() => setShowPaymentModal(false)}
+        >
+          <div
+            className="bg-white dark:bg-gray-800 rounded-2xl max-w-md w-full p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="text-center mb-4">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                Complete Payment
+              </h2>
+              <p className="text-gray-500 text-sm mt-1">
+                Pay for your booking to confirm
+              </p>
+            </div>
+
+            <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4 mb-4">
+              <div className="flex justify-between mb-2">
+                <span className="text-gray-600">Vehicle</span>
+                <span className="font-medium">
+                  {selectedBooking.vehicle?.name}
+                </span>
+              </div>
+              <div className="flex justify-between mb-2">
+                <span className="text-gray-600">Duration</span>
+                <span>{selectedBooking.totalDays} days</span>
+              </div>
+              <div className="flex justify-between pt-2 border-t">
+                <span className="font-semibold">Total Amount</span>
+                <span className="font-bold text-amber-500 text-lg">
+                  ₹{selectedBooking.finalAmount.toLocaleString()}
+                </span>
+              </div>
+            </div>
+
+            <RazorpayButton
+              bookingId={selectedBooking._id}
+              amount={selectedBooking.finalAmount}
+              onSuccess={handlePaymentSuccess}
+              onCancel={handlePaymentCancel}
+            />
+
+            <button
+              onClick={() => setShowPaymentModal(false)}
+              className="w-full mt-3 py-2 text-gray-500 hover:text-gray-700 text-sm"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
