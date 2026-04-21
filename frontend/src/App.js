@@ -9,6 +9,8 @@ import AddVehicle from "./pages/AddVehicle";
 import BookingDetails from "./pages/BookingDetails";
 import VendorDashboard from "./pages/VendorDashboard";
 import VendorAddVehicle from "./pages/VendorAddVehicle";
+import VendorBookings from "./pages/VendorBookings";
+import VendorVehicles from "./pages/VendorVehicles";
 import {
   BrowserRouter as Router,
   Routes,
@@ -93,14 +95,6 @@ function AppRoutes() {
               }
             />
             <Route
-  path="/vendor/vehicles/add"
-  element={
-    <PrivateRoute>
-      <VendorAddVehicle />
-    </PrivateRoute>
-  }
-/>
-            <Route
               path="/register"
               element={
                 <PublicRoute>
@@ -111,25 +105,44 @@ function AppRoutes() {
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password/:token" element={<ResetPassword />} />
 
-            {/* Vendor Routes */}
+            {/* Vendor Registration Routes */}
             <Route path="/vendor/register" element={<VendorRegister />} />
             <Route path="/vendor-pending" element={<VendorPending />} />
+
+            {/* ✅ Vendor Dashboard Routes */}
             <Route
-              path="/admin/vendors"
-              element={
-                <AdminRoute>
-                  <AdminVendors />
-                </AdminRoute>
-              }
-            />
-            <Route
-              path="/bookings/:id"
+              path="/vendor/dashboard"
               element={
                 <PrivateRoute>
-                  <BookingDetails />
+                  <VendorDashboard />
                 </PrivateRoute>
               }
             />
+            <Route
+              path="/vendor/vehicles"
+              element={
+                <PrivateRoute>
+                  <VendorVehicles />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/vendor/vehicles/add"
+              element={
+                <PrivateRoute>
+                  <VendorAddVehicle />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/vendor/bookings"
+              element={
+                <PrivateRoute>
+                  <VendorBookings />
+                </PrivateRoute>
+              }
+            />
+
             {/* Customer Routes */}
             <Route
               path="/book/:id"
@@ -156,22 +169,6 @@ function AppRoutes() {
               }
             />
             <Route
-              path="/vendor/dashboard"
-              element={
-                <PrivateRoute>
-                  <VendorDashboard />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/vendor/vehicles"
-              element={
-                <PrivateRoute>
-                  <AdminVehicles /> {/* Reuse admin vehicles component */}
-                </PrivateRoute>
-              }
-            />
-            <Route
               path="/profile"
               element={
                 <PrivateRoute>
@@ -184,6 +181,14 @@ function AppRoutes() {
               element={
                 <PrivateRoute>
                   <Wishlist />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/bookings/:id"
+              element={
+                <PrivateRoute>
+                  <BookingDetails />
                 </PrivateRoute>
               }
             />
@@ -206,6 +211,14 @@ function AppRoutes() {
               }
             />
             <Route
+              path="/admin/vehicles/add"
+              element={
+                <AdminRoute>
+                  <AddVehicle />
+                </AdminRoute>
+              }
+            />
+            <Route
               path="/admin/vehicles/edit/:id"
               element={
                 <AdminRoute>
@@ -214,10 +227,10 @@ function AppRoutes() {
               }
             />
             <Route
-              path="/admin/vehicles/add"
+              path="/admin/vendors"
               element={
                 <AdminRoute>
-                  <AddVehicle />
+                  <AdminVendors />
                 </AdminRoute>
               }
             />
