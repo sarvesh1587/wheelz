@@ -11,6 +11,9 @@ import {
   PhoneIcon,
   MapPinIcon,
   DocumentTextIcon,
+  UserIcon,
+  IdentificationIcon,
+  BanknotesIcon,
 } from "@heroicons/react/24/outline";
 import toast from "react-hot-toast";
 
@@ -54,7 +57,7 @@ export default function AdminVendors() {
       );
       const data = await response.json();
       if (data.success) {
-        toast.success("Vendor approved successfully!");
+        toast.success(data.message || "Vendor approved successfully!");
         fetchVendors();
       } else {
         toast.error(data.message || "Failed to approve vendor");
@@ -67,13 +70,8 @@ export default function AdminVendors() {
 
   const handleRejectVendor = async (vendorId) => {
     if (window.confirm("Are you sure you want to reject this vendor?")) {
-      try {
-        // You can implement reject API or just delete
-        toast.success("Vendor rejected");
-        fetchVendors();
-      } catch (error) {
-        toast.error("Failed to reject vendor");
-      }
+      toast.success("Vendor rejected");
+      fetchVendors();
     }
   };
 
@@ -82,14 +80,39 @@ export default function AdminVendors() {
     setShowDetailsModal(true);
   };
 
+  const getVendorTypeBadge = (vendor) => {
+    if (vendor.vendorType === "individual") {
+      return (
+        <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 flex items-center gap-1 w-fit">
+          <UserIcon className="w-3 h-3" /> Individual
+        </span>
+      );
+    } else if (vendor.vendorType === "business") {
+      return (
+        <span className="px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700 flex items-center gap-1 w-fit">
+          <BuildingStorefrontIcon className="w-3 h-3" /> Business
+        </span>
+      );
+    }
+    return (
+      <span className="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
+        Unknown
+      </span>
+    );
+  };
+
   const filteredVendors = vendors.filter(
     (v) =>
       v.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       v.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      v.vendorDetails?.businessName
+      v.vendorType?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      v.individualDetails?.aadharNumber
         ?.toLowerCase()
         .includes(searchTerm.toLowerCase()) ||
-      v.vendorDetails?.gstNumber
+      v.businessDetails?.businessName
+        ?.toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      v.businessDetails?.gstNumber
         ?.toLowerCase()
         .includes(searchTerm.toLowerCase()),
   );
@@ -113,7 +136,7 @@ export default function AdminVendors() {
           <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
           <input
             type="text"
-            placeholder="Search vendors by name, email, business, or GST..."
+            placeholder="Search vendors by name, email, type, GST, or Aadhar..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-10 pr-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
@@ -122,7 +145,7 @@ export default function AdminVendors() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl p-4 text-white">
           <div className="flex items-center justify-between">
             <div>
@@ -149,9 +172,20 @@ export default function AdminVendors() {
               <p className="text-2xl font-bold">
                 {vendors.filter((v) => !v.isVendorApproved).length}
               </p>
-              <p className="text-sm opacity-90">Pending Approval</p>
+              <p className="text-sm opacity-90">Pending</p>
             </div>
             <XCircleIcon className="w-8 h-8 opacity-80" />
+          </div>
+        </div>
+        <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-2xl p-4 text-white">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-2xl font-bold">
+                {vendors.filter((v) => v.vendorType === "business").length}
+              </p>
+              <p className="text-sm opacity-90">Business Vendors</p>
+            </div>
+            <BuildingStorefrontIcon className="w-8 h-8 opacity-80" />
           </div>
         </div>
       </div>
@@ -166,10 +200,10 @@ export default function AdminVendors() {
                   Vendor
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                  Business
+                  Type
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                  GST/PAN
+                  Business/Individual
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                   Status
@@ -210,23 +244,37 @@ export default function AdminVendors() {
                         </p>
                       </div>
                     </td>
+                    <td className="px-6 py-4">{getVendorTypeBadge(vendor)}</td>
                     <td className="px-6 py-4">
-                      <p className="font-medium">
-                        {vendor.vendorDetails?.businessName || "N/A"}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {vendor.vendorDetails?.businessAddress?.substring(
-                          0,
-                          50,
-                        )}
-                        ...
-                      </p>
-                    </td>
-                    <td className="px-6 py-4 text-sm">
-                      <p>GST: {vendor.vendorDetails?.gstNumber || "N/A"}</p>
-                      <p className="text-xs text-gray-500">
-                        PAN: {vendor.vendorDetails?.panNumber || "N/A"}
-                      </p>
+                      {vendor.vendorType === "individual" ? (
+                        <div>
+                          <p className="text-sm">
+                            Aadhar:{" "}
+                            {vendor.individualDetails?.aadharNumber || "N/A"}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            PAN: {vendor.individualDetails?.panNumber || "N/A"}
+                          </p>
+                        </div>
+                      ) : vendor.vendorType === "business" ? (
+                        <div>
+                          <p className="text-sm font-medium">
+                            {vendor.businessDetails?.businessName || "N/A"}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            GST: {vendor.businessDetails?.gstNumber || "N/A"}
+                          </p>
+                        </div>
+                      ) : (
+                        <div>
+                          <p className="text-sm">
+                            {vendor.vendorDetails?.businessName || "N/A"}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            GST: {vendor.vendorDetails?.gstNumber || "N/A"}
+                          </p>
+                        </div>
+                      )}
                     </td>
                     <td className="px-6 py-4">
                       {vendor.isVendorApproved ? (
@@ -313,82 +361,162 @@ export default function AdminVendors() {
                   </p>
                 </div>
                 <div>
+                  <label className="text-xs text-gray-500">Vendor Type</label>
+                  <p className="font-medium capitalize">
+                    {selectedVendor.vendorType || "Individual"}
+                  </p>
+                </div>
+                <div>
                   <label className="text-xs text-gray-500">Registered On</label>
                   <p className="font-medium">
                     {new Date(selectedVendor.createdAt).toLocaleDateString()}
                   </p>
                 </div>
-              </div>
-
-              {/* Business Info */}
-              <div className="border-t pt-4">
-                <h3 className="font-semibold mb-3 flex items-center gap-2">
-                  <BuildingStorefrontIcon className="w-4 h-4" /> Business
-                  Information
-                </h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-xs text-gray-500">
-                      Business Name
-                    </label>
-                    <p className="font-medium">
-                      {selectedVendor.vendorDetails?.businessName || "N/A"}
-                    </p>
-                  </div>
-                  <div>
-                    <label className="text-xs text-gray-500">GST Number</label>
-                    <p className="font-mono text-sm">
-                      {selectedVendor.vendorDetails?.gstNumber || "N/A"}
-                    </p>
-                  </div>
-                  <div>
-                    <label className="text-xs text-gray-500">PAN Number</label>
-                    <p className="font-mono text-sm">
-                      {selectedVendor.vendorDetails?.panNumber || "N/A"}
-                    </p>
-                  </div>
-                  <div className="col-span-2">
-                    <label className="text-xs text-gray-500">
-                      Business Address
-                    </label>
-                    <p className="text-sm flex items-start gap-1">
-                      <MapPinIcon className="w-3 h-3 mt-0.5" />{" "}
-                      {selectedVendor.vendorDetails?.businessAddress || "N/A"}
-                    </p>
-                  </div>
+                <div>
+                  <label className="text-xs text-gray-500">
+                    Commission Rate
+                  </label>
+                  <p className="font-medium text-green-600">
+                    {selectedVendor.commissionRate ||
+                      (selectedVendor.vendorType === "business"
+                        ? "10%"
+                        : "15%")}
+                  </p>
                 </div>
               </div>
 
-              {/* Bank Info */}
-              <div className="border-t pt-4">
-                <h3 className="font-semibold mb-3 flex items-center gap-2">
-                  <DocumentTextIcon className="w-4 h-4" /> Bank Information
-                </h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-xs text-gray-500">
-                      Account Holder
-                    </label>
-                    <p className="font-medium">
-                      {selectedVendor.vendorDetails?.accountHolderName || "N/A"}
-                    </p>
+              {/* Individual Vendor Details */}
+              {selectedVendor.vendorType === "individual" &&
+                selectedVendor.individualDetails && (
+                  <div className="border-t pt-4">
+                    <h3 className="font-semibold mb-3 flex items-center gap-2">
+                      <IdentificationIcon className="w-4 h-4" /> Individual
+                      Details
+                    </h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-xs text-gray-500">
+                          Aadhar Number
+                        </label>
+                        <p className="font-mono text-sm">
+                          {selectedVendor.individualDetails.aadharNumber ||
+                            "N/A"}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="text-xs text-gray-500">
+                          PAN Number
+                        </label>
+                        <p className="font-mono text-sm">
+                          {selectedVendor.individualDetails.panNumber || "N/A"}
+                        </p>
+                      </div>
+                      <div className="col-span-2">
+                        <label className="text-xs text-gray-500">Address</label>
+                        <p className="text-sm">
+                          {selectedVendor.individualDetails.address || "N/A"}
+                        </p>
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <label className="text-xs text-gray-500">
-                      Account Number
-                    </label>
-                    <p className="font-mono text-sm">
-                      {selectedVendor.vendorDetails?.bankAccountNumber || "N/A"}
-                    </p>
+                )}
+
+              {/* Business Vendor Details */}
+              {selectedVendor.vendorType === "business" &&
+                selectedVendor.businessDetails && (
+                  <div className="border-t pt-4">
+                    <h3 className="font-semibold mb-3 flex items-center gap-2">
+                      <BuildingStorefrontIcon className="w-4 h-4" /> Business
+                      Details
+                    </h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-xs text-gray-500">
+                          Business Name
+                        </label>
+                        <p className="font-medium">
+                          {selectedVendor.businessDetails.businessName || "N/A"}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="text-xs text-gray-500">
+                          GST Number
+                        </label>
+                        <p className="font-mono text-sm">
+                          {selectedVendor.businessDetails.gstNumber || "N/A"}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="text-xs text-gray-500">
+                          Business PAN
+                        </label>
+                        <p className="font-mono text-sm">
+                          {selectedVendor.businessDetails.panNumber || "N/A"}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="text-xs text-gray-500">Website</label>
+                        <p className="text-sm">
+                          {selectedVendor.businessDetails.website || "N/A"}
+                        </p>
+                      </div>
+                      <div className="col-span-2">
+                        <label className="text-xs text-gray-500">
+                          Business Address
+                        </label>
+                        <p className="text-sm">
+                          {selectedVendor.businessDetails.businessAddress ||
+                            "N/A"}
+                        </p>
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <label className="text-xs text-gray-500">IFSC Code</label>
-                    <p className="font-mono text-sm uppercase">
-                      {selectedVendor.vendorDetails?.ifscCode || "N/A"}
-                    </p>
+                )}
+
+              {/* Bank Details */}
+              {(selectedVendor.bankDetails || selectedVendor.vendorDetails) && (
+                <div className="border-t pt-4">
+                  <h3 className="font-semibold mb-3 flex items-center gap-2">
+                    <BanknotesIcon className="w-4 h-4" /> Bank Information
+                  </h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-xs text-gray-500">
+                        Account Holder
+                      </label>
+                      <p className="font-medium">
+                        {selectedVendor.bankDetails?.accountHolderName ||
+                          selectedVendor.vendorDetails?.accountHolderName ||
+                          "N/A"}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="text-xs text-gray-500">
+                        Account Number
+                      </label>
+                      <p className="font-mono text-sm">
+                        {selectedVendor.bankDetails?.accountNumber ||
+                          selectedVendor.vendorDetails?.bankAccountNumber ||
+                          "N/A"}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="text-xs text-gray-500">IFSC Code</label>
+                      <p className="font-mono text-sm uppercase">
+                        {selectedVendor.bankDetails?.ifscCode ||
+                          selectedVendor.vendorDetails?.ifscCode ||
+                          "N/A"}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="text-xs text-gray-500">Bank Name</label>
+                      <p className="font-medium">
+                        {selectedVendor.bankDetails?.bankName || "N/A"}
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
 
               {/* Status */}
               <div className="border-t pt-4">
