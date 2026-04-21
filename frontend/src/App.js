@@ -5,6 +5,7 @@ import Offers from "./pages/Offers";
 import EditVehicle from "./pages/EditVehicle";
 import AdminReports from "./pages/AdminReports";
 import AdminVendors from "./pages/AdminVendors";
+import AddVehicle from "./pages/AddVehicle";
 import {
   BrowserRouter as Router,
   Routes,
@@ -174,6 +175,14 @@ function AppRoutes() {
               element={
                 <AdminRoute>
                   <EditVehicle />
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="/admin/vehicles/add"
+              element={
+                <AdminRoute>
+                  <AddVehicle />
                 </AdminRoute>
               }
             />
