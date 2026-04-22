@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from "react"; // ✅ Make sure this line has useState
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { bookingAPI } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import LoadingSpinner from "../components/common/LoadingSpinner";
 import RazorpayButton from "../components/RazorpayButton";
+import EmptyState from "../components/EmptyState";
 import {
   CalendarIcon,
   MapPinIcon,
@@ -165,16 +166,7 @@ export default function Dashboard() {
 
         <div className="divide-y">
           {filteredBookings.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-4xl mb-3">📭</p>
-              <p className="text-gray-500">No bookings found</p>
-              <Link
-                to="/vehicles"
-                className="inline-block mt-4 text-amber-500 font-semibold hover:underline"
-              >
-                Browse Vehicles →
-              </Link>
-            </div>
+            <EmptyState type="bookings" />
           ) : (
             filteredBookings.map((booking) => (
               <div

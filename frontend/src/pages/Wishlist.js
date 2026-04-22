@@ -4,6 +4,7 @@ import { wishlistAPI } from "../services/api";
 import VehicleCard from "../components/vehicle/VehicleCard";
 import LoadingSpinner from "../components/common/LoadingSpinner";
 import { HeartIcon } from "@heroicons/react/24/outline";
+import EmptyState from "../components/EmptyState";
 
 export default function Wishlist() {
   const [vehicles, setVehicles] = useState([]);
@@ -32,18 +33,7 @@ export default function Wishlist() {
       </div>
 
       {vehicles.length === 0 ? (
-        <div className="text-center py-20 bg-white dark:bg-gray-800 rounded-2xl">
-          <p className="text-6xl mb-4">❤️</p>
-          <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-            Your wishlist is empty
-          </h3>
-          <p className="text-gray-500 dark:text-gray-400 mb-6">
-            Save your favorite vehicles to see them here
-          </p>
-          <Link to="/vehicles" className="btn-primary inline-block">
-            Browse Vehicles
-          </Link>
-        </div>
+        <EmptyState type="wishlist" />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {vehicles.map((vehicle) => (
