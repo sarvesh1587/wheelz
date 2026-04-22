@@ -18,6 +18,9 @@ const FUEL_COLORS = {
 export default function VehicleCard({ vehicle, compact = false }) {
   const { isAuthenticated, isInWishlist, toggleWishlist } = useAuth();
 
+  // ✅ Safety check - if vehicle is undefined, return null
+  if (!vehicle) return null;
+
   const handleWishlist = async (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -41,6 +44,16 @@ export default function VehicleCard({ vehicle, compact = false }) {
   const inWishlist = isInWishlist(vehicle._id);
   const isPeakPrice = vehicle.currentPrice > vehicle.basePrice;
 
+  // ✅ Safe access with optional chaining
+  const fuelType = vehicle.fuelType || "petrol";
+  const vehicleName = vehicle.name || "Vehicle";
+  const vehicleYear = vehicle.year || "2024";
+  const vehicleCity = vehicle.city || "Unknown";
+  const totalReviews = vehicle.totalReviews || 0;
+  const averageRating = vehicle.averageRating || 0;
+  const currentPrice = vehicle.currentPrice || vehicle.basePrice || 0;
+  const basePrice = vehicle.basePrice || 0;
+
   return (
     <Link
       to={`/vehicles/${vehicle._id}`}
@@ -55,7 +68,7 @@ export default function VehicleCard({ vehicle, compact = false }) {
             vehicle.images?.[0] ||
             "https://images.unsplash.com/photo-1502877338535-766e1452684a?w=600"
           }
-          alt={vehicle.name}
+          alt={vehicleName}
           className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           loading="lazy"
         />
@@ -63,11 +76,10 @@ export default function VehicleCard({ vehicle, compact = false }) {
 
         <div className="absolute top-3 left-3 flex gap-1.5">
           <span
-            className={`text-xs font-medium px-2 py-1 rounded-lg ${FUEL_COLORS[vehicle.fuelType]}`}
+            className={`text-xs font-medium px-2 py-1 rounded-lg ${FUEL_COLORS[fuelType]}`}
           >
-            {vehicle.fuelType === "electric" && "⚡ "}
-            {vehicle.fuelType.charAt(0).toUpperCase() +
-              vehicle.fuelType.slice(1)}
+            {fuelType === "electric" && "⚡ "}
+            {fuelType.charAt(0).toUpperCase() + fuelType.slice(1)}
           </span>
           {isPeakPrice && (
             <span className="text-xs font-medium px-2 py-1 rounded-lg bg-red-500/90 text-white">
@@ -103,22 +115,22 @@ export default function VehicleCard({ vehicle, compact = false }) {
       <div className="p-4">
         <div className="flex items-start justify-between gap-2 mb-1">
           <h3 className="font-semibold text-gray-900 dark:text-white text-sm leading-tight group-hover:text-amber-500 transition-colors">
-            {vehicle.name}
+            {vehicleName}
           </h3>
           <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded-lg">
-            {vehicle.year}
+            {vehicleYear}
           </span>
         </div>
 
         <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 mb-3">
           <MapPinIcon className="w-3 h-3" />
-          <span className="truncate">{vehicle.city}</span>
-          {vehicle.totalReviews > 0 && (
+          <span className="truncate">{vehicleCity}</span>
+          {totalReviews > 0 && (
             <>
               <span className="mx-1">•</span>
               <StarIcon className="w-3 h-3 text-amber-400 fill-amber-400" />
-              <span>{vehicle.averageRating.toFixed(1)}</span>
-              <span className="text-gray-400">({vehicle.totalReviews})</span>
+              <span>{averageRating.toFixed(1)}</span>
+              <span className="text-gray-400">({totalReviews})</span>
             </>
           )}
         </div>
@@ -140,13 +152,13 @@ export default function VehicleCard({ vehicle, compact = false }) {
           <div>
             <div className="flex items-baseline gap-1">
               <span className="text-lg font-bold text-gray-900 dark:text-white">
-                ₹{(vehicle.currentPrice || vehicle.basePrice).toLocaleString()}
+                ₹{currentPrice.toLocaleString()}
               </span>
               <span className="text-xs text-gray-500">/day</span>
             </div>
             {isPeakPrice && (
               <p className="text-xs text-gray-400 line-through">
-                ₹{vehicle.basePrice.toLocaleString()}
+                ₹{basePrice.toLocaleString()}
               </p>
             )}
           </div>
