@@ -164,14 +164,24 @@ export default function Navbar() {
               )}
             </button>
 
-            {/* Rent Your Vehicle Button */}
-            <button
-              onClick={() => handleNavigation("/vendor/register")}
-              className="hidden md:flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white text-sm font-semibold rounded-xl shadow-md"
-            >
-              <BuildingStorefrontIcon className="w-4 h-4" />
-              List Vehicle
-            </button>
+            {/* ✅ FIXED: List Vehicle / My Vehicles Button - Conditional */}
+            {user?.role === "vendor" && user?.isVendorApproved ? (
+              <button
+                onClick={() => handleNavigation("/vendor/vehicles")}
+                className="hidden md:flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white text-sm font-semibold rounded-xl shadow-md hover:shadow-lg transition-all duration-300"
+              >
+                <BuildingStorefrontIcon className="w-4 h-4" />
+                My Vehicles
+              </button>
+            ) : (
+              <button
+                onClick={() => handleNavigation("/vendor/register")}
+                className="hidden md:flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white text-sm font-semibold rounded-xl shadow-md hover:shadow-lg transition-all duration-300"
+              >
+                <BuildingStorefrontIcon className="w-4 h-4" />
+                List Vehicle
+              </button>
+            )}
 
             {isAuthenticated ? (
               <div className="relative">
@@ -284,6 +294,7 @@ export default function Navbar() {
               </div>
             )}
 
+            {/* Mobile Menu Button */}
             <button
               onClick={() => setMenuOpen(!menuOpen)}
               className="p-2 md:hidden rounded-lg hover:bg-gray-100"
@@ -313,16 +324,32 @@ export default function Navbar() {
                 <span className="font-medium">{link.label}</span>
               </button>
             ))}
-            <button
-              onClick={() => {
-                handleNavigation("/vendor/register");
-                setMenuOpen(false);
-              }}
-              className="flex items-center gap-3 w-full px-4 py-3 text-green-600 border-t mt-2 pt-3"
-            >
-              <BuildingStorefrontIcon className="w-5 h-5" />
-              List Vehicle
-            </button>
+
+            {/* Mobile: List Vehicle / My Vehicles Button */}
+            {user?.role === "vendor" && user?.isVendorApproved ? (
+              <button
+                onClick={() => {
+                  handleNavigation("/vendor/vehicles");
+                  setMenuOpen(false);
+                }}
+                className="flex items-center gap-3 w-full px-4 py-3 text-green-600 border-t mt-2 pt-3"
+              >
+                <BuildingStorefrontIcon className="w-5 h-5" />
+                My Vehicles
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  handleNavigation("/vendor/register");
+                  setMenuOpen(false);
+                }}
+                className="flex items-center gap-3 w-full px-4 py-3 text-green-600 border-t mt-2 pt-3"
+              >
+                <BuildingStorefrontIcon className="w-5 h-5" />
+                List Vehicle
+              </button>
+            )}
+
             {!isAuthenticated && (
               <div className="flex gap-2 px-4 pt-4 border-t mt-2">
                 <button
