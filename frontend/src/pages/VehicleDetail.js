@@ -10,6 +10,7 @@ import {
   ShareIcon,
   CheckCircleIcon,
   CalendarDaysIcon,
+  ChatBubbleLeftRightIcon,
 } from "@heroicons/react/24/outline";
 import { HeartIcon as HeartSolid } from "@heroicons/react/24/solid";
 import toast from "react-hot-toast";
@@ -45,6 +46,31 @@ export default function VehicleDetail() {
     );
   };
 
+  // ✅ Share on WhatsApp Function
+  const shareOnWhatsApp = () => {
+    const vehicleName = vehicle?.name || "Vehicle";
+    const price = vehicle?.currentPrice || vehicle?.basePrice || 0;
+    const brand = vehicle?.brand || "";
+    const city = vehicle?.city || "";
+
+    const message =
+      `🚗 *${vehicleName}* by ${brand}\n\n` +
+      `💰 Price: ₹${price}/day\n` +
+      `📍 Location: ${city}\n` +
+      `⭐ Rating: ${vehicle?.averageRating || 0}★ (${vehicle?.totalReviews || 0} reviews)\n\n` +
+      `🔗 Book now: ${window.location.href}\n\n` +
+      `🚀 Rent with Wheelz - Premium Vehicle Rentals`;
+
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, "_blank");
+  };
+
+  // ✅ Share via Copy Link
+  const copyLink = () => {
+    navigator.clipboard.writeText(window.location.href);
+    toast.success("Link copied to clipboard!");
+  };
+
   if (loading) return <LoadingSpinner />;
   if (!vehicle) return null;
 
@@ -54,6 +80,7 @@ export default function VehicleDetail() {
   return (
     <div className="max-w-6xl mx-auto px-4 py-8 sm:px-6 lg:px-8 pt-24 animate-fade-in">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+        {/* Left: Images */}
         <div>
           <div className="rounded-2xl overflow-hidden bg-gray-100 dark:bg-gray-800 mb-3 aspect-[4/3]">
             <img
@@ -83,6 +110,7 @@ export default function VehicleDetail() {
           )}
         </div>
 
+        {/* Right: Info */}
         <div>
           <div className="flex items-start justify-between gap-4 mb-2">
             <div>
@@ -104,18 +132,50 @@ export default function VehicleDetail() {
                   <HeartIcon className="w-5 h-5 text-gray-600 dark:text-gray-400" />
                 )}
               </button>
-              <button
-                onClick={() => {
-                  navigator.clipboard.writeText(window.location.href);
-                  toast.success("Link copied!");
-                }}
-                className="w-10 h-10 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl flex items-center justify-center hover:border-amber-300 transition-colors"
-              >
-                <ShareIcon className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-              </button>
+              {/* ✅ Share Button with Dropdown */}
+              <div className="relative group">
+                <button className="w-10 h-10 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl flex items-center justify-center hover:border-amber-300 transition-colors">
+                  <ShareIcon className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                </button>
+                <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
+                  <button
+                    onClick={shareOnWhatsApp}
+                    className="flex items-center gap-3 w-full px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-t-xl transition"
+                  >
+                    <svg
+                      className="w-5 h-5 text-green-500"
+                      fill="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.149-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.447-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.614-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.01-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z" />
+                    </svg>
+                    Share on WhatsApp
+                  </button>
+                  <button
+                    onClick={copyLink}
+                    className="flex items-center gap-3 w-full px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-b-xl transition"
+                  >
+                    <svg
+                      className="w-5 h-5 text-blue-500"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                      />
+                    </svg>
+                    Copy Link
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
 
+          {/* Rating + Location */}
           <div className="flex items-center flex-wrap gap-4 mb-4">
             <StarRating
               rating={vehicle.averageRating}
@@ -128,6 +188,7 @@ export default function VehicleDetail() {
             </div>
           </div>
 
+          {/* Rest of your existing code... (Specs, Features, Price, etc.) */}
           <div className="grid grid-cols-2 gap-3 mb-6">
             {[
               ["Year", vehicle.year],
@@ -225,6 +286,7 @@ export default function VehicleDetail() {
         </div>
       </div>
 
+      {/* Reviews Section */}
       <div className="mt-14">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
           Reviews ({reviews.length})
