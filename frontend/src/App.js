@@ -28,6 +28,7 @@ import LoadingSpinner from "./components/common/LoadingSpinner";
 import ChatBot from "./components/common/ChatBot";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
+import VendorEditVehicle from "./pages/VendorEditVehicle";
 
 // Lazy load pages
 const Home = lazy(() => import("./pages/Home"));
@@ -100,6 +101,14 @@ function AppRoutes() {
                 <PublicRoute>
                   <Register />
                 </PublicRoute>
+              }
+            />
+            <Route
+              path="/vendor/vehicles/edit/:id"
+              element={
+                <PrivateRoute>
+                  <VendorEditVehicle />
+                </PrivateRoute>
               }
             />
             <Route path="/forgot-password" element={<ForgotPassword />} />
