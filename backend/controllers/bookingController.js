@@ -24,6 +24,8 @@ const calcExtrasCost = (extras = {}) => {
 
 exports.createBooking = async (req, res, next) => {
   try {
+    console.log("📝 Booking request body:", req.body);
+
     const {
       vehicleId,
       startDate,
@@ -33,6 +35,28 @@ exports.createBooking = async (req, res, next) => {
       extras,
       notes,
     } = req.body;
+
+    // Validation
+    if (!vehicleId) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Vehicle ID is required" });
+    }
+    if (!startDate) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Start date is required" });
+    }
+    if (!endDate) {
+      return res
+        .status(400)
+        .json({ success: false, message: "End date is required" });
+    }
+    if (!pickupLocation) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Pickup location is required" });
+    }
 
     // Get vehicle with vendor details
     const vehicle = await Vehicle.findById(vehicleId).populate(
@@ -102,8 +126,8 @@ exports.createBooking = async (req, res, next) => {
     const booking = await Booking.create({
       user: req.user._id,
       vehicle: vehicleId,
-      startDate,
-      endDate,
+      startDate: new Date(startDate),
+      endDate: new Date(endDate),
       pickupLocation: pickupLocation || vehicle.locationName,
       dropoffLocation: dropoffLocation || vehicle.locationName,
       totalDays,
@@ -112,7 +136,7 @@ exports.createBooking = async (req, res, next) => {
       discount: 0,
       finalAmount,
       extras: extras || {},
-      notes,
+      notes: notes || "",
       paymentStatus: "pending",
       status: "pending",
       vendorDetails: vendorData,
@@ -123,7 +147,11 @@ exports.createBooking = async (req, res, next) => {
     await booking.save();
 
     // Mark vehicle as booked
-    vehicle.bookedDates.push({ startDate, endDate, bookingId: booking._id });
+    vehicle.bookedDates.push({
+      startDate: new Date(startDate),
+      endDate: new Date(endDate),
+      bookingId: booking._id,
+    });
     vehicle.totalBookings += 1;
     vehicle.popularityScore = Math.min(100, vehicle.popularityScore + 2);
     await vehicle.save();
@@ -194,7 +222,7 @@ exports.createBooking = async (req, res, next) => {
     });
   } catch (err) {
     console.error("Create booking error:", err);
-    next(err);
+    res.status(500).json({ success: false, message: err.message });
   }
 };
 
@@ -300,94 +328,6 @@ exports.cancelBooking = async (req, res, next) => {
   }
 };
 
-// exports.processPayment = async (req, res, next) => {
-//   try {
-//     const booking = await Booking.findById(req.params.id).populate("vehicle");
-//     if (!booking) {
-//       return res
-//         .status(404)
-//         .json({ success: false, message: "Booking not found" });
-//     }
-
-//     if (
-//       req.user.role !== "admin" &&
-//       booking.user.toString() !== req.user._id.toString()
-//     ) {
-//       return res
-//         .status(403)
-//         .json({ success: false, message: "Not authorized" });
-//     }
-
-//     booking.paymentStatus = "paid";
-//     booking.paymentMethod = req.body.method || "mock";
-//     booking.paidAt = new Date();
-//     booking.status = "confirmed";
-//     await booking.save();
-
-//     // Send vendor details email after payment success
-//     try {
-//       await sendEmail({
-//         to: req.user.email,
-//         subject: `Payment Successful - ${booking.bookingRef}`,
-//         template: "paymentSuccess",
-//         data: {
-//           name: req.user.name,
-//           bookingRef: booking.bookingRef,
-//           vehicleName: booking.vehicle?.name,
-//           startDate: new Date(booking.startDate).toDateString(),
-//           endDate: new Date(booking.endDate).toDateString(),
-//           totalAmount: booking.finalAmount,
-//           vendorName: booking.vendorDetails?.businessName,
-//           vendorPhone: booking.vendorDetails?.phone,
-//           vendorAddress: booking.vendorDetails?.address,
-//           pickupLocation: booking.pickupLocation,
-//         },
-//       });
-//     } catch (emailErr) {
-//       console.warn("Payment success email failed:", emailErr.message);
-//     }
-
-//     res.json({
-//       success: true,
-//       message: "Payment processed successfully",
-//       booking,
-//       vendorDetails: booking.vendorDetails,
-//       customerDetails: booking.customerDetails,
-//     });
-//   } catch (err) {
-//     next(err);
-//   }
-// };
-
-exports.getMyStats = async (req, res, next) => {
-  try {
-    const userId = req.user._id;
-    const [total, active, completed, spent] = await Promise.all([
-      Booking.countDocuments({ user: userId }),
-      Booking.countDocuments({
-        user: userId,
-        status: { $in: ["confirmed", "active"] },
-      }),
-      Booking.countDocuments({ user: userId, status: "completed" }),
-      Booking.aggregate([
-        { $match: { user: userId, paymentStatus: "paid" } },
-        { $group: { _id: null, total: { $sum: "$finalAmount" } } },
-      ]),
-    ]);
-
-    res.json({
-      success: true,
-      stats: {
-        totalBookings: total,
-        activeBookings: active,
-        completedBookings: completed,
-        totalSpent: spent[0]?.total || 0,
-      },
-    });
-  } catch (err) {
-    next(err);
-  }
-};
 exports.processPayment = async (req, res, next) => {
   try {
     const booking = await Booking.findById(req.params.id).populate("vehicle");
@@ -477,6 +417,36 @@ exports.processPayment = async (req, res, next) => {
       booking,
       vendorDetails: booking.vendorDetails,
       customerDetails: booking.customerDetails,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.getMyStats = async (req, res, next) => {
+  try {
+    const userId = req.user._id;
+    const [total, active, completed, spent] = await Promise.all([
+      Booking.countDocuments({ user: userId }),
+      Booking.countDocuments({
+        user: userId,
+        status: { $in: ["confirmed", "active"] },
+      }),
+      Booking.countDocuments({ user: userId, status: "completed" }),
+      Booking.aggregate([
+        { $match: { user: userId, paymentStatus: "paid" } },
+        { $group: { _id: null, total: { $sum: "$finalAmount" } } },
+      ]),
+    ]);
+
+    res.json({
+      success: true,
+      stats: {
+        totalBookings: total,
+        activeBookings: active,
+        completedBookings: completed,
+        totalSpent: spent[0]?.total || 0,
+      },
     });
   } catch (err) {
     next(err);

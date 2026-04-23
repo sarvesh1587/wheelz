@@ -4,7 +4,6 @@ import { vehicleAPI, bookingAPI, paymentAPI } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import LoadingSpinner from "../components/common/LoadingSpinner";
 import DatePicker from "react-datepicker";
-import RazorpayButton from "../components/RazorpayButton";
 import BookingConfirmationModal from "../components/BookingConfirmationModal";
 import "react-datepicker/dist/react-datepicker.css";
 import toast from "react-hot-toast";
@@ -24,10 +23,7 @@ export default function Booking() {
     childSeat: false,
     driver: false,
   });
-  const [createdBooking, setCreatedBooking] = useState(null);
   const [creatingBooking, setCreatingBooking] = useState(false);
-  const [step, setStep] = useState(1);
-  const [paymentMethod, setPaymentMethod] = useState("card");
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
   const [confirmedBooking, setConfirmedBooking] = useState(null);
 
@@ -82,15 +78,23 @@ export default function Booking() {
 
     setCreatingBooking(true);
     try {
+      console.log("Creating booking with data:", {
+        vehicleId: id,
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
+        pickupLocation: vehicle?.locationName,
+        extras,
+      });
+
       const res = await bookingAPI.create({
         vehicleId: id,
         startDate: startDate.toISOString(),
         endDate: endDate.toISOString(),
-        pickupLocation: vehicle.locationName,
+        pickupLocation: vehicle?.locationName,
         extras,
       });
 
-      setCreatedBooking(res.data.booking);
+      console.log("Booking response:", res.data);
 
       // Process payment
       await paymentAPI.confirm(res.data.booking._id, "mock");
@@ -99,20 +103,12 @@ export default function Booking() {
       setShowConfirmationModal(true);
       toast.success("Booking confirmed!");
     } catch (err) {
+      console.error("Booking error:", err);
+      console.error("Error response:", err.response?.data);
       toast.error(err.response?.data?.message || "Booking failed");
     } finally {
       setCreatingBooking(false);
     }
-  };
-
-  const handlePaymentSuccess = () => {
-    toast.success("Payment successful! Booking confirmed");
-    navigate(`/booking/success/${createdBooking._id}`);
-  };
-
-  const handlePaymentCancel = () => {
-    setStep(1);
-    toast.error("Payment cancelled. You can try again.");
   };
 
   if (loading) return <LoadingSpinner />;
@@ -124,34 +120,8 @@ export default function Booking() {
         Complete Your Booking
       </h1>
 
-      {/* Step Indicator */}
-      <div className="flex items-center justify-center mb-8">
-        <div className="flex items-center gap-4">
-          <div
-            className={`flex items-center gap-2 ${step >= 1 ? "text-amber-500" : "text-gray-400"}`}
-          >
-            <div
-              className={`w-8 h-8 rounded-full flex items-center justify-center ${step >= 1 ? "bg-amber-500 text-white" : "bg-gray-200 dark:bg-gray-700 text-gray-500"}`}
-            >
-              1
-            </div>
-            <span className="text-sm font-medium">Booking Details</span>
-          </div>
-          <div className="w-12 h-0.5 bg-gray-200 dark:bg-gray-700"></div>
-          <div
-            className={`flex items-center gap-2 ${step >= 2 ? "text-amber-500" : "text-gray-400"}`}
-          >
-            <div
-              className={`w-8 h-8 rounded-full flex items-center justify-center ${step >= 2 ? "bg-amber-500 text-white" : "bg-gray-200 dark:bg-gray-700 text-gray-500"}`}
-            >
-              2
-            </div>
-            <span className="text-sm font-medium">Payment</span>
-          </div>
-        </div>
-      </div>
-
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Left Column */}
         <div className="lg:col-span-2 space-y-6">
           {/* Vehicle Summary */}
           <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border">
@@ -170,119 +140,74 @@ export default function Booking() {
             </div>
           </div>
 
-          {step === 1 ? (
-            <>
-              {/* Date Selection */}
-              <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border">
-                <h3 className="font-semibold mb-4">Select Dates</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm mb-1">Pickup Date</label>
-                    <DatePicker
-                      selected={startDate}
-                      onChange={setStartDate}
-                      selectsStart
-                      startDate={startDate}
-                      endDate={endDate}
-                      minDate={new Date()}
-                      className="input-field"
-                      dateFormat="dd/MM/yyyy"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm mb-1">Return Date</label>
-                    <DatePicker
-                      selected={endDate}
-                      onChange={setEndDate}
-                      selectsEnd
-                      startDate={startDate}
-                      endDate={endDate}
-                      minDate={startDate || new Date()}
-                      className="input-field"
-                      dateFormat="dd/MM/yyyy"
-                    />
-                  </div>
-                </div>
+          {/* Date Selection */}
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border">
+            <h3 className="font-semibold mb-4">Select Dates</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm mb-1">Pickup Date</label>
+                <DatePicker
+                  selected={startDate}
+                  onChange={setStartDate}
+                  selectsStart
+                  startDate={startDate}
+                  endDate={endDate}
+                  minDate={new Date()}
+                  className="input-field"
+                  dateFormat="dd/MM/yyyy"
+                />
               </div>
-
-              {/* Extras */}
-              <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border">
-                <h3 className="font-semibold mb-4">Add Extras</h3>
-                <div className="space-y-3">
-                  {[
-                    {
-                      key: "insurance",
-                      label: "Zero Dep Insurance",
-                      price: 200,
-                    },
-                    { key: "gps", label: "GPS Navigation", price: 100 },
-                    { key: "childSeat", label: "Child Seat", price: 150 },
-                    { key: "driver", label: "Professional Driver", price: 500 },
-                  ].map((extra) => (
-                    <label
-                      key={extra.key}
-                      className="flex items-center justify-between p-3 bg-gray-50 rounded-xl cursor-pointer"
-                    >
-                      <div>
-                        <div className="font-medium text-sm">{extra.label}</div>
-                        <div className="text-xs text-gray-500">
-                          +₹{extra.price}/day
-                        </div>
-                      </div>
-                      <input
-                        type="checkbox"
-                        checked={extras[extra.key]}
-                        onChange={(e) =>
-                          setExtras({
-                            ...extras,
-                            [extra.key]: e.target.checked,
-                          })
-                        }
-                        className="w-5 h-5 rounded"
-                      />
-                    </label>
-                  ))}
-                </div>
-              </div>
-            </>
-          ) : (
-            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border">
-              <h3 className="font-semibold mb-4">Booking Summary</h3>
-              <div className="space-y-3">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Vehicle</span>
-                  <span className="font-medium">{vehicle.name}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Duration</span>
-                  <span className="font-medium">{totalDays} days</span>
-                </div>
-              </div>
-
-              <div className="mt-4 pt-4 border-t">
-                <label className="block text-sm font-medium mb-2">
-                  Select Payment Method
-                </label>
-                <div className="grid grid-cols-2 gap-3">
-                  <button
-                    onClick={() => setPaymentMethod("card")}
-                    className={`py-2 rounded-lg text-sm font-medium ${paymentMethod === "card" ? "bg-amber-500 text-white" : "bg-gray-100 text-gray-700"}`}
-                  >
-                    💳 Card
-                  </button>
-                  <button
-                    onClick={() => setPaymentMethod("upi_qr")}
-                    className={`py-2 rounded-lg text-sm font-medium ${paymentMethod === "upi_qr" ? "bg-amber-500 text-white" : "bg-gray-100 text-gray-700"}`}
-                  >
-                    📱 UPI / QR
-                  </button>
-                </div>
+              <div>
+                <label className="block text-sm mb-1">Return Date</label>
+                <DatePicker
+                  selected={endDate}
+                  onChange={setEndDate}
+                  selectsEnd
+                  startDate={startDate}
+                  endDate={endDate}
+                  minDate={startDate || new Date()}
+                  className="input-field"
+                  dateFormat="dd/MM/yyyy"
+                />
               </div>
             </div>
-          )}
+          </div>
+
+          {/* Extras */}
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border">
+            <h3 className="font-semibold mb-4">Add Extras</h3>
+            <div className="space-y-3">
+              {[
+                { key: "insurance", label: "Zero Dep Insurance", price: 200 },
+                { key: "gps", label: "GPS Navigation", price: 100 },
+                { key: "childSeat", label: "Child Seat", price: 150 },
+                { key: "driver", label: "Professional Driver", price: 500 },
+              ].map((extra) => (
+                <label
+                  key={extra.key}
+                  className="flex items-center justify-between p-3 bg-gray-50 rounded-xl cursor-pointer"
+                >
+                  <div>
+                    <div className="font-medium text-sm">{extra.label}</div>
+                    <div className="text-xs text-gray-500">
+                      +₹{extra.price}/day
+                    </div>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={extras[extra.key]}
+                    onChange={(e) =>
+                      setExtras({ ...extras, [extra.key]: e.target.checked })
+                    }
+                    className="w-5 h-5 rounded"
+                  />
+                </label>
+              ))}
+            </div>
+          </div>
         </div>
 
-        {/* Price Summary */}
+        {/* Right Column - Price Summary */}
         <div className="lg:col-span-1">
           <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border sticky top-24">
             <h3 className="font-semibold text-lg mb-4">Price Summary</h3>
@@ -309,30 +234,18 @@ export default function Booking() {
               </div>
             </div>
 
-            {step === 1 ? (
-              <button
-                onClick={handleCreateBooking}
-                disabled={creatingBooking}
-                className="w-full btn-primary mt-6"
-              >
-                {creatingBooking ? "Processing..." : "Proceed to Payment"}
-              </button>
-            ) : (
-              createdBooking &&
-              paymentMethod === "card" && (
-                <RazorpayButton
-                  bookingId={createdBooking._id}
-                  amount={total}
-                  onSuccess={handlePaymentSuccess}
-                  onCancel={handlePaymentCancel}
-                />
-              )
-            )}
+            <button
+              onClick={handleCreateBooking}
+              disabled={creatingBooking}
+              className="w-full btn-primary mt-6"
+            >
+              {creatingBooking ? "Processing..." : "Confirm Booking"}
+            </button>
           </div>
         </div>
       </div>
 
-      {/* ✅ Booking Confirmation Modal */}
+      {/* Booking Confirmation Modal */}
       {showConfirmationModal && (
         <BookingConfirmationModal
           booking={confirmedBooking}
