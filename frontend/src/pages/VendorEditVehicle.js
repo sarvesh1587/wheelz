@@ -93,7 +93,24 @@ export default function VendorEditVehicle() {
     e.preventDefault();
     setLoading(true);
     try {
-      await vehicleAPI.update(id, formData);
+      const updateData = {
+        name: formData.name,
+        brand: formData.brand,
+        model: formData.model,
+        year: formData.year,
+        category: formData.category,
+        subCategory: formData.subCategory,
+        fuelType: formData.fuelType,
+        transmission: formData.transmission,
+        seatingCapacity: formData.seatingCapacity,
+        basePrice: formData.basePrice,
+        currentPrice: formData.basePrice,
+        locationName: formData.locationName,
+        city: formData.city,
+        images: formData.images,
+      };
+
+      await vehicleAPI.update(id, updateData);
       toast.success("Vehicle updated successfully!");
       navigate("/vendor/vehicles");
     } catch (error) {

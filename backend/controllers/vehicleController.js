@@ -162,22 +162,49 @@ exports.createVehicle = async (req, res, next) => {
   }
 };
 
+// exports.updateVehicle = async (req, res, next) => {
+//   try {
+//     const vehicle = await Vehicle.findByIdAndUpdate(req.params.id, req.body, {
+//       new: true,
+//       runValidators: true,
+//     });
+//     if (!vehicle)
+//       return res
+//         .status(404)
+//         .json({ success: false, message: "Vehicle not found" });
+//     res.json({ success: true, vehicle });
+//   } catch (err) {
+//     next(err);
+//   }
+// };
 exports.updateVehicle = async (req, res, next) => {
   try {
-    const vehicle = await Vehicle.findByIdAndUpdate(req.params.id, req.body, {
+    // Update current price when base price changes
+    const updateData = { ...req.body };
+    if (req.body.basePrice) {
+      updateData.currentPrice = req.body.basePrice;
+    }
+
+    const vehicle = await Vehicle.findByIdAndUpdate(req.params.id, updateData, {
       new: true,
       runValidators: true,
     });
-    if (!vehicle)
+
+    if (!vehicle) {
       return res
         .status(404)
         .json({ success: false, message: "Vehicle not found" });
+    }
+
+    // Recalculate dynamic price
+    vehicle.calculateDynamicPrice();
+    await vehicle.save();
+
     res.json({ success: true, vehicle });
   } catch (err) {
     next(err);
   }
 };
-
 exports.deleteVehicle = async (req, res, next) => {
   try {
     const vehicle = await Vehicle.findById(req.params.id);
