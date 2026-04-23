@@ -37,17 +37,29 @@ const RazorpayButton = ({ bookingId, amount, onSuccess, onCancel }) => {
       const orderRes = await paymentAPI.createOrder(bookingId);
       console.log("Order response:", orderRes.data);
 
-      const { orderId, amount: orderAmount, keyId } = orderRes.data;
+      const { paymentIntent, amount: orderAmount } = orderRes.data;
+
+      // ✅ Get Razorpay key from environment variable
+      const razorpayKey = process.env.REACT_APP_RAZORPAY_KEY_ID;
+
+      if (!razorpayKey) {
+        console.error("❌ Razorpay key not found!");
+        toast.error("Payment configuration error. Please try again later.");
+        setLoading(false);
+        return;
+      }
+
+      console.log("Razorpay Key:", razorpayKey);
 
       const options = {
-        key: keyId,
+        key: razorpayKey,
         amount: orderAmount,
         currency: "INR",
         name: "Wheelz",
-        description: `Booking Payment`,
-        order_id: orderId,
+        description: "Vehicle Rental Payment",
+        order_id: paymentIntent.id,
         handler: async (response) => {
-          console.log("Payment response:", response);
+          console.log("Payment success response:", response);
           try {
             const verifyRes = await paymentAPI.verifyPayment({
               bookingId,
@@ -108,7 +120,7 @@ const RazorpayButton = ({ bookingId, amount, onSuccess, onCancel }) => {
         {loading ? (
           <>
             <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-            Initializing...
+            Processing...
           </>
         ) : (
           `Pay ₹${amount.toLocaleString()} via Razorpay`
