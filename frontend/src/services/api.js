@@ -9,11 +9,11 @@ import toast from "react-hot-toast";
 const API_BASE =
   process.env.REACT_APP_API_URL || "https://wheelz-ldq2.onrender.com/api";
 
-console.log("API Base URL:", API_BASE); // This helps debug
+console.log("API Base URL:", API_BASE);
 
 const api = axios.create({
   baseURL: API_BASE,
-  timeout: 30000, // Increased timeout for mobile networks
+  timeout: 30000,
   headers: { "Content-Type": "application/json" },
 });
 
@@ -55,6 +55,7 @@ export const authAPI = {
   forgotPassword: (data) => api.post("/auth/forgot-password", data),
   resetPassword: (token, data) =>
     api.post(`/auth/reset-password/${token}`, data),
+  googleLogin: (data) => api.post("/auth/google/google-login", data),
 };
 
 // ─── Vehicles ─────────────────────────────────────────────────────────────────
@@ -87,6 +88,8 @@ export const paymentAPI = {
   checkQRStatus: (qrCodeId) => api.get(`/payments/qr-status/${qrCodeId}`),
   createUPIIntent: (bookingId) =>
     api.post("/payments/create-upi-intent", { bookingId }),
+  confirm: (bookingId, method) =>
+    api.post(`/payments/confirm/${bookingId}`, { method }),
 };
 
 // ─── AI ───────────────────────────────────────────────────────────────────────

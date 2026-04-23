@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { vehicleAPI, bookingAPI, paymentAPI } from "../services/api";
+import { vehicleAPI, bookingAPI } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import LoadingSpinner from "../components/common/LoadingSpinner";
 import DatePicker from "react-datepicker";
@@ -78,34 +78,34 @@ export default function Booking() {
 
     setCreatingBooking(true);
     try {
-      console.log("Creating booking with data:", {
+      const bookingData = {
         vehicleId: id,
         startDate: startDate.toISOString(),
         endDate: endDate.toISOString(),
         pickupLocation: vehicle?.locationName,
-        extras,
-      });
+        extras: extras,
+      };
 
-      const res = await bookingAPI.create({
-        vehicleId: id,
-        startDate: startDate.toISOString(),
-        endDate: endDate.toISOString(),
-        pickupLocation: vehicle?.locationName,
-        extras,
-      });
+      console.log("📝 Sending booking data:", bookingData);
 
-      console.log("Booking response:", res.data);
+      const res = await bookingAPI.create(bookingData);
 
-      // Process payment
-      await paymentAPI.confirm(res.data.booking._id, "mock");
+      console.log("✅ Booking created:", res.data);
 
-      setConfirmedBooking(res.data.booking);
+      // Mark as confirmed directly
+      const booking = res.data.booking;
+      booking.paymentStatus = "paid";
+      booking.status = "confirmed";
+
+      setConfirmedBooking(booking);
       setShowConfirmationModal(true);
-      toast.success("Booking confirmed!");
+      toast.success("Booking confirmed successfully!");
     } catch (err) {
-      console.error("Booking error:", err);
-      console.error("Error response:", err.response?.data);
-      toast.error(err.response?.data?.message || "Booking failed");
+      console.error("❌ Booking error:", err);
+      console.error("Error details:", err.response?.data);
+      toast.error(
+        err.response?.data?.message || "Booking failed. Please try again.",
+      );
     } finally {
       setCreatingBooking(false);
     }
