@@ -4,7 +4,9 @@ import toast from "react-hot-toast";
 
 const RazorpayButton = ({ bookingId, amount, onSuccess, onCancel }) => {
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
+  // Helper to load Razorpay script
   const loadRazorpayScript = () => {
     return new Promise((resolve) => {
       if (window.Razorpay) {
@@ -21,46 +23,52 @@ const RazorpayButton = ({ bookingId, amount, onSuccess, onCancel }) => {
 
   const handlePayment = async () => {
     setLoading(true);
-    console.log("Starting payment for booking:", bookingId);
+    setError(null);
+    console.log("🚀 Starting payment for booking:", bookingId);
 
+    // 1. Load the script
     const isScriptLoaded = await loadRazorpayScript();
     if (!isScriptLoaded) {
-      toast.error("Failed to load payment gateway");
+      const msg =
+        "Payment gateway failed to load. Please check your internet connection.";
+      toast.error(msg);
+      setError(msg);
       setLoading(false);
       return;
     }
 
-    try {
-      console.log("Creating order for amount:", amount);
+    // 2. Get the Razorpay Key ID from the environment
+    const razorpayKey = process.env.REACT_APP_RAZORPAY_KEY_ID;
+    if (!razorpayKey) {
+      const msg = "Payment configuration error. Please contact support.";
+      console.error("❌ Razorpay key not found!");
+      toast.error(msg);
+      setError(msg);
+      setLoading(false);
+      return;
+    }
+    console.log("🔑 Using Razorpay Key:", razorpayKey);
 
-      // Create order on backend
+    // 3. Create an order on your backend
+    try {
+      console.log("📦 Creating order for amount:", amount);
       const orderRes = await paymentAPI.createOrder(bookingId);
-      console.log("Order response:", orderRes.data);
+      console.log("✅ Order response:", orderRes.data);
 
       const { paymentIntent, amount: orderAmount } = orderRes.data;
 
-      // ✅ Get Razorpay key from environment variable
-      const razorpayKey = process.env.REACT_APP_RAZORPAY_KEY_ID;
-
-      if (!razorpayKey) {
-        console.error("❌ Razorpay key not found!");
-        toast.error("Payment configuration error. Please try again later.");
-        setLoading(false);
-        return;
-      }
-
-      console.log("Razorpay Key:", razorpayKey);
-
+      // 4. Configure Razorpay Checkout
       const options = {
         key: razorpayKey,
         amount: orderAmount,
         currency: "INR",
         name: "Wheelz",
-        description: "Vehicle Rental Payment",
+        description: `Payment for Booking ${bookingId.slice(-6)}`,
         order_id: paymentIntent.id,
         handler: async (response) => {
-          console.log("Payment success response:", response);
+          console.log("💰 Payment success response:", response);
           try {
+            // Verify the payment on your backend
             const verifyRes = await paymentAPI.verifyPayment({
               bookingId,
               razorpayOrderId: response.razorpay_order_id,
@@ -69,12 +77,16 @@ const RazorpayButton = ({ bookingId, amount, onSuccess, onCancel }) => {
             });
 
             if (verifyRes.data.success) {
-              toast.success("Payment successful!");
+              toast.success("Payment successful! Your booking is confirmed.");
               onSuccess();
+            } else {
+              throw new Error("Verification failed on server.");
             }
           } catch (err) {
-            console.error("Verification error:", err);
-            toast.error("Payment verification failed");
+            console.error("❌ Verification error:", err);
+            toast.error(
+              "Payment could not be verified. Please contact support.",
+            );
           }
         },
         prefill: {
@@ -83,35 +95,40 @@ const RazorpayButton = ({ bookingId, amount, onSuccess, onCancel }) => {
           contact: "9999999999",
         },
         theme: {
-          color: "#f59e0b",
+          color: "#f59e0b", // Wheelz orange color
         },
         modal: {
           ondismiss: () => {
+            console.log("🛑 Payment modal closed by user.");
             setLoading(false);
-            toast.error("Payment cancelled");
+            toast.error("Payment cancelled.");
             onCancel();
           },
         },
       };
 
       const razorpay = new window.Razorpay(options);
+
       razorpay.on("payment.failed", (response) => {
-        console.error("Payment failed:", response.error);
-        toast.error("Payment failed: " + response.error.description);
+        console.error("💥 Razorpay Payment Failed:", response.error);
+        toast.error(`Payment failed: ${response.error.description}`);
         setLoading(false);
       });
+
       razorpay.open();
     } catch (err) {
-      console.error("Payment initialization error:", err);
-      toast.error(
-        err.response?.data?.message || "Failed to initialize payment",
-      );
+      console.error("🔥 Payment initialization error:", err);
+      const errorMsg =
+        err.response?.data?.message ||
+        "Could not initialize payment. Please try again.";
+      toast.error(errorMsg);
+      setError(errorMsg);
       setLoading(false);
     }
   };
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       <button
         onClick={handlePayment}
         disabled={loading}
@@ -120,12 +137,17 @@ const RazorpayButton = ({ bookingId, amount, onSuccess, onCancel }) => {
         {loading ? (
           <>
             <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-            Processing...
+            Initializing Payment...
           </>
         ) : (
-          `Pay ₹${amount.toLocaleString()} via Razorpay`
+          `Pay ₹${amount.toLocaleString()} via Card/UPI`
         )}
       </button>
+      {error && (
+        <div className="text-center text-sm text-red-600 bg-red-50 p-2 rounded-lg">
+          ⚠️ {error}
+        </div>
+      )}
       <button onClick={onCancel} className="w-full btn-secondary">
         Cancel
       </button>
