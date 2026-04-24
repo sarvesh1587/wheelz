@@ -6,7 +6,6 @@ const {
   verifyPayment,
 } = require("../controllers/paymentController");
 
-// Real Razorpay routes
 router.post("/create-order", protect, createOrder);
 router.post("/verify", protect, verifyPayment);
 
