@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { bookingAPI } from "../services/api";
 import LoadingSpinner from "../components/common/LoadingSpinner";
+import PaymentReceipt from "../components/PaymentReceipt";
 import {
   CheckCircleIcon,
   CalendarIcon,
@@ -13,6 +14,7 @@ export default function BookingSuccess() {
   const { id } = useParams();
   const [booking, setBooking] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showReceipt, setShowReceipt] = useState(false);
 
   useEffect(() => {
     bookingAPI
@@ -91,8 +93,20 @@ export default function BookingSuccess() {
           <Link to="/dashboard" className="btn-primary flex-1 text-center">
             View My Bookings
           </Link>
-          <Link to="/vehicles" className="btn-secondary flex-1 text-center">
-            Browse More Vehicles
+          <button
+            onClick={() => setShowReceipt(true)}
+            className="btn-secondary flex-1 text-center"
+          >
+            📄 Download Receipt
+          </button>
+        </div>
+
+        <div className="mt-3">
+          <Link
+            to="/vehicles"
+            className="text-amber-500 hover:underline text-sm"
+          >
+            Browse More Vehicles →
           </Link>
         </div>
 
@@ -100,6 +114,14 @@ export default function BookingSuccess() {
           Need help? Contact our 24/7 support at support@wheelz.com
         </p>
       </div>
+
+      {/* Payment Receipt Modal */}
+      {showReceipt && (
+        <PaymentReceipt
+          booking={booking}
+          onClose={() => setShowReceipt(false)}
+        />
+      )}
     </div>
   );
 }
