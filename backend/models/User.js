@@ -139,6 +139,10 @@ const UserSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
+    googleId: {
+      type: String,
+      default: null,
+    },
 
     // Notification Preferences
     notifications: {
