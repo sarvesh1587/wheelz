@@ -14,6 +14,8 @@ const PaymentReceipt = ({ booking, onClose }) => {
     html2pdf().set(opt).from(element).save();
   };
 
+  if (!booking) return null;
+
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
@@ -27,7 +29,6 @@ const PaymentReceipt = ({ booking, onClose }) => {
           </button>
         </div>
 
-        {/* Receipt Content */}
         <div id="receipt-content" className="p-6">
           <div className="text-center mb-6">
             <div className="w-16 h-16 bg-amber-500 rounded-2xl flex items-center justify-center mx-auto mb-3">
@@ -44,9 +45,7 @@ const PaymentReceipt = ({ booking, onClose }) => {
             </div>
             <div className="flex justify-between mb-2">
               <span className="text-gray-600">Payment Date:</span>
-              <span>
-                {new Date(booking.paidAt || booking.createdAt).toLocaleString()}
-              </span>
+              <span>{new Date().toLocaleString()}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">Payment Status:</span>
@@ -61,9 +60,6 @@ const PaymentReceipt = ({ booking, onClose }) => {
             </p>
             <p>
               <strong>Email:</strong> {booking.user?.email}
-            </p>
-            <p>
-              <strong>Phone:</strong> {booking.user?.phone || "N/A"}
             </p>
           </div>
 
@@ -99,17 +95,7 @@ const PaymentReceipt = ({ booking, onClose }) => {
           </div>
 
           <div className="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg mt-4">
-            <div className="flex justify-between mb-2">
-              <span>Subtotal:</span>
-              <span>₹{(booking.finalAmount / 1.18).toFixed(0)}</span>
-            </div>
-            <div className="flex justify-between mb-2">
-              <span>GST (18%):</span>
-              <span>
-                ₹{(booking.finalAmount - booking.finalAmount / 1.18).toFixed(0)}
-              </span>
-            </div>
-            <div className="flex justify-between pt-2 border-t font-bold">
+            <div className="flex justify-between font-bold">
               <span>Total Amount:</span>
               <span className="text-amber-500">
                 ₹{booking.finalAmount.toLocaleString()}
@@ -119,7 +105,7 @@ const PaymentReceipt = ({ booking, onClose }) => {
 
           <div className="text-center text-gray-400 text-xs mt-6">
             <p>Thank you for choosing Wheelz!</p>
-            <p>For support: support@wheelz.com | +91 98765 43210</p>
+            <p>support@wheelz.com | +91 98765 43210</p>
           </div>
         </div>
 
