@@ -36,7 +36,7 @@ const RazorpayButton = ({ bookingId, amount, onSuccess, onCancel }) => {
       console.log("✅ Order response:", orderRes.data);
 
       const options = {
-        key: process.env.REACT_APP_RAZORPAY_KEY_ID || "rzp_test_ShPo542q8R01pa",
+        key: "rzp_test_ShPo542q8R01pa",
         amount: orderRes.data.amount,
         currency: "INR",
         name: "Wheelz",
