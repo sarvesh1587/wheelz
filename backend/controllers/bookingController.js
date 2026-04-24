@@ -328,6 +328,100 @@ exports.cancelBooking = async (req, res, next) => {
   }
 };
 
+// exports.processPayment = async (req, res, next) => {
+//   try {
+//     const booking = await Booking.findById(req.params.id).populate("vehicle");
+//     if (!booking) {
+//       return res
+//         .status(404)
+//         .json({ success: false, message: "Booking not found" });
+//     }
+
+//     if (
+//       req.user.role !== "admin" &&
+//       booking.user.toString() !== req.user._id.toString()
+//     ) {
+//       return res
+//         .status(403)
+//         .json({ success: false, message: "Not authorized" });
+//     }
+
+//     booking.paymentStatus = "paid";
+//     booking.paymentMethod = req.body.method || "mock";
+//     booking.paidAt = new Date();
+//     booking.status = "confirmed";
+//     await booking.save();
+
+//     // Get customer and vendor details
+//     const customer = await User.findById(booking.user);
+//     const vendor = await User.findById(booking.vehicle.vendor);
+
+//     // Send email to customer with vendor details
+//     try {
+//       await sendEmail({
+//         to: customer.email,
+//         subject: `Payment Successful - ${booking.bookingRef}`,
+//         template: "paymentSuccess",
+//         data: {
+//           name: customer.name,
+//           bookingRef: booking.bookingRef,
+//           vehicleName: booking.vehicle.name,
+//           startDate: new Date(booking.startDate).toDateString(),
+//           endDate: new Date(booking.endDate).toDateString(),
+//           totalAmount: booking.finalAmount,
+//           vendorName:
+//             vendor?.vendorDetails?.businessName || vendor?.name || "Wheelz",
+//           vendorPhone: vendor?.phone || "9876543210",
+//           vendorAddress:
+//             booking.vendorDetails?.address || booking.pickupLocation,
+//           pickupLocation: booking.pickupLocation,
+//         },
+//       });
+//       console.log(`✅ Payment success email sent to ${customer.email}`);
+//     } catch (emailErr) {
+//       console.error("Payment success email failed:", emailErr.message);
+//     }
+
+//     // Send email to vendor about booking confirmation
+//     if (vendor && vendor.email) {
+//       try {
+//         await sendEmail({
+//           to: vendor.email,
+//           subject: `Booking Confirmed - ${booking.bookingRef}`,
+//           template: "newBookingForVendor",
+//           data: {
+//             vendorName: vendor.vendorDetails?.businessName || vendor.name,
+//             customerName: customer.name,
+//             customerPhone: customer.phone,
+//             customerEmail: customer.email,
+//             customerAddress: booking.customerDetails?.address || "Not provided",
+//             vehicleName: booking.vehicle.name,
+//             startDate: new Date(booking.startDate).toDateString(),
+//             endDate: new Date(booking.endDate).toDateString(),
+//             totalDays: booking.totalDays,
+//             totalAmount: booking.finalAmount,
+//             pickupLocation: booking.pickupLocation,
+//           },
+//         });
+//         console.log(
+//           `✅ Booking confirmation email sent to vendor ${vendor.email}`,
+//         );
+//       } catch (emailErr) {
+//         console.error("Vendor email failed:", emailErr.message);
+//       }
+//     }
+
+//     res.json({
+//       success: true,
+//       message: "Payment processed successfully",
+//       booking,
+//       vendorDetails: booking.vendorDetails,
+//       customerDetails: booking.customerDetails,
+//     });
+//   } catch (err) {
+//     next(err);
+//   }
+// };
 exports.processPayment = async (req, res, next) => {
   try {
     const booking = await Booking.findById(req.params.id).populate("vehicle");
@@ -346,20 +440,30 @@ exports.processPayment = async (req, res, next) => {
         .json({ success: false, message: "Not authorized" });
     }
 
+    // ✅ Get customer from booking
+    const customer = await User.findById(booking.user);
+    const vendor = await User.findById(booking.vehicle.vendor);
+
+    console.log("📧 Sending email to:", customer?.email);
+    console.log("👤 Customer name:", customer?.name);
+
+    if (!customer || !customer.email) {
+      console.error("❌ Customer not found or no email!");
+      return res
+        .status(400)
+        .json({ success: false, message: "Customer email not found" });
+    }
+
     booking.paymentStatus = "paid";
-    booking.paymentMethod = req.body.method || "mock";
+    booking.paymentMethod = req.body.method || "razorpay";
     booking.paidAt = new Date();
     booking.status = "confirmed";
     await booking.save();
 
-    // Get customer and vendor details
-    const customer = await User.findById(booking.user);
-    const vendor = await User.findById(booking.vehicle.vendor);
-
-    // Send email to customer with vendor details
+    // Send email to customer
     try {
       await sendEmail({
-        to: customer.email,
+        to: customer.email, // ✅ This should be harsh.pvt@gmail.com
         subject: `Payment Successful - ${booking.bookingRef}`,
         template: "paymentSuccess",
         data: {
@@ -377,12 +481,12 @@ exports.processPayment = async (req, res, next) => {
           pickupLocation: booking.pickupLocation,
         },
       });
-      console.log(`✅ Payment success email sent to ${customer.email}`);
+      console.log(`✅ Payment email sent to ${customer.email}`);
     } catch (emailErr) {
-      console.error("Payment success email failed:", emailErr.message);
+      console.error("Payment email failed:", emailErr.message);
     }
 
-    // Send email to vendor about booking confirmation
+    // Send email to vendor
     if (vendor && vendor.email) {
       try {
         await sendEmail({
@@ -403,9 +507,7 @@ exports.processPayment = async (req, res, next) => {
             pickupLocation: booking.pickupLocation,
           },
         });
-        console.log(
-          `✅ Booking confirmation email sent to vendor ${vendor.email}`,
-        );
+        console.log(`✅ Vendor email sent to ${vendor.email}`);
       } catch (emailErr) {
         console.error("Vendor email failed:", emailErr.message);
       }
@@ -415,14 +517,12 @@ exports.processPayment = async (req, res, next) => {
       success: true,
       message: "Payment processed successfully",
       booking,
-      vendorDetails: booking.vendorDetails,
-      customerDetails: booking.customerDetails,
     });
   } catch (err) {
+    console.error("Process payment error:", err);
     next(err);
   }
 };
-
 exports.getMyStats = async (req, res, next) => {
   try {
     const userId = req.user._id;
