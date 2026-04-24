@@ -51,8 +51,12 @@ export default function VehicleCard({ vehicle, compact = false }) {
   const vehicleCity = vehicle.city || "Unknown";
   const totalReviews = vehicle.totalReviews || 0;
   const averageRating = vehicle.averageRating || 0;
-  const currentPrice = vehicle.currentPrice || vehicle.basePrice || 0;
-  const basePrice = vehicle.basePrice || 0;
+
+  // ✅ Show discounted price if available
+  const displayPrice =
+    vehicle.discountedPrice || vehicle.currentPrice || vehicle.basePrice || 0;
+  const originalPrice = vehicle.originalPrice || vehicle.basePrice || 0;
+  const hasDiscount = vehicle.isDiscounted && vehicle.discountedPrice;
 
   return (
     <Link
@@ -74,7 +78,19 @@ export default function VehicleCard({ vehicle, compact = false }) {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
 
-        <div className="absolute top-3 left-3 flex gap-1.5">
+        {/* ✅ Discount Badge */}
+        {hasDiscount && (
+          <div className="absolute top-3 left-3 z-10">
+            <span className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-lg animate-pulse">
+              🔥 {vehicle.discountPercentage}% OFF
+            </span>
+          </div>
+        )}
+
+        <div
+          className="absolute top-3 left-3 flex gap-1.5"
+          style={{ left: hasDiscount ? 90 : 12 }}
+        >
           <span
             className={`text-xs font-medium px-2 py-1 rounded-lg ${FUEL_COLORS[fuelType]}`}
           >
@@ -148,17 +164,35 @@ export default function VehicleCard({ vehicle, compact = false }) {
           </div>
         )}
 
+        {/* ✅ Price Section with Discount */}
         <div className="flex items-end justify-between">
           <div>
-            <div className="flex items-baseline gap-1">
-              <span className="text-lg font-bold text-gray-900 dark:text-white">
-                ₹{currentPrice.toLocaleString()}
-              </span>
-              <span className="text-xs text-gray-500">/day</span>
-            </div>
-            {isPeakPrice && (
+            {hasDiscount ? (
+              <>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-lg font-bold text-red-500">
+                    ₹{displayPrice.toLocaleString()}
+                  </span>
+                  <span className="text-xs text-gray-400 line-through">
+                    ₹{originalPrice.toLocaleString()}
+                  </span>
+                  <span className="text-xs bg-red-500 text-white px-1.5 py-0.5 rounded-full">
+                    -{vehicle.discountPercentage}%
+                  </span>
+                </div>
+                <span className="text-xs text-gray-500">/day</span>
+              </>
+            ) : (
+              <div className="flex items-baseline gap-1">
+                <span className="text-lg font-bold text-gray-900 dark:text-white">
+                  ₹{displayPrice.toLocaleString()}
+                </span>
+                <span className="text-xs text-gray-500">/day</span>
+              </div>
+            )}
+            {isPeakPrice && !hasDiscount && (
               <p className="text-xs text-gray-400 line-through">
-                ₹{basePrice.toLocaleString()}
+                ₹{originalPrice.toLocaleString()}
               </p>
             )}
           </div>

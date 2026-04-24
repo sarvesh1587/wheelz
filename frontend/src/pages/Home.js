@@ -41,6 +41,23 @@ export default function Home() {
   const navigate = useNavigate();
   const searchRef = useRef(null);
 
+  // ✅ Apply 20% discount to all featured vehicles
+  const applyDiscount = (vehicle) => {
+    const discountPercentage = 20;
+    const discountedPrice = Math.round(
+      vehicle.basePrice * (1 - discountPercentage / 100),
+    );
+
+    return {
+      ...vehicle,
+      originalPrice: vehicle.basePrice,
+      discountedPrice: discountedPrice,
+      discountPercentage: discountPercentage,
+      discountAmount: vehicle.basePrice - discountedPrice,
+      isDiscounted: true,
+    };
+  };
+
   useEffect(() => {
     vehicleAPI
       .getAll({ sort: "popular", limit: 8 })
@@ -79,6 +96,9 @@ export default function Home() {
     activeTab === "all"
       ? featured
       : featured.filter((v) => v.category === activeTab);
+
+  // ✅ Apply discount to all vehicles before rendering
+  const discountedVehicles = filteredFeatured.map((v) => applyDiscount(v));
 
   return (
     <div className="animate-fade-in">
@@ -168,7 +188,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Featured Vehicles Section */}
+      {/* Featured Vehicles Section with Discount */}
       <section className="max-w-7xl mx-auto px-4 py-20 sm:px-6 lg:px-8">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
           <div>
@@ -176,7 +196,7 @@ export default function Home() {
               Featured Vehicles
             </h2>
             <p className="text-gray-500 dark:text-gray-400 mt-1">
-              Most popular picks this week
+              Most popular picks this week with up to 20% OFF
             </p>
           </div>
           <div className="flex gap-2">
@@ -214,7 +234,7 @@ export default function Home() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {filteredFeatured.map((v) => (
+            {discountedVehicles.map((v) => (
               <VehicleCard key={v._id} vehicle={v} />
             ))}
           </div>
@@ -273,6 +293,7 @@ export default function Home() {
           ))}
         </div>
       </section>
+
       {/* Customer Reviews Section */}
       <ReviewSection />
     </div>
