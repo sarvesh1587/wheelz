@@ -135,6 +135,10 @@ const UserSchema = new mongoose.Schema(
       default: 0,
     },
     vendorSince: Date,
+    googleId: {
+      type: String,
+      default: null,
+    },
 
     // Notification Preferences
     notifications: {

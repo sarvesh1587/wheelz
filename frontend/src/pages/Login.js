@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import GoogleLoginButton from "../components/GoogleLoginButton";
 import {
   EnvelopeIcon,
   LockClosedIcon,
@@ -33,9 +34,13 @@ export default function Login() {
 
     setLoading(true);
     try {
-      await login(email, password);
-      toast.success("Login successful!");
-      navigate(from, { replace: true });
+      const userData = await login(email, password);
+
+      if (userData.role === "admin") {
+        navigate("/admin", { replace: true });
+      } else {
+        navigate(from, { replace: true });
+      }
     } catch (err) {
       const errorMsg =
         err.response?.data?.message ||
@@ -136,6 +141,20 @@ export default function Login() {
             )}
           </button>
         </form>
+
+        {/* Google Login Button */}
+        <div className="relative my-6">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-gray-300 dark:border-gray-600"></div>
+          </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="px-2 bg-white dark:bg-gray-800 text-gray-500">
+              Or continue with
+            </span>
+          </div>
+        </div>
+
+        <GoogleLoginButton />
 
         {/* Sign Up Link */}
         <p className="text-center text-gray-600 dark:text-gray-400 mt-6">
