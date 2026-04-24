@@ -78,32 +78,17 @@ export default function VehicleCard({ vehicle, compact = false }) {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
 
-        {/* ✅ Discount Badge */}
-        {hasDiscount && (
-          <div className="absolute top-3 left-3 z-10">
-            <span className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-lg animate-pulse">
-              🔥 {vehicle.discountPercentage}% OFF
-            </span>
-          </div>
-        )}
-
-        <div
-          className="absolute top-3 left-3 flex gap-1.5"
-          style={{ left: hasDiscount ? 90 : 12 }}
-        >
+        {/* ✅ Fuel Badge Only - Removed discount badge from top */}
+        <div className="absolute top-3 left-3 flex gap-1.5">
           <span
             className={`text-xs font-medium px-2 py-1 rounded-lg ${FUEL_COLORS[fuelType]}`}
           >
             {fuelType === "electric" && "⚡ "}
             {fuelType.charAt(0).toUpperCase() + fuelType.slice(1)}
           </span>
-          {isPeakPrice && (
-            <span className="text-xs font-medium px-2 py-1 rounded-lg bg-red-500/90 text-white">
-              Peak 🔥
-            </span>
-          )}
         </div>
 
+        {/* ✅ Availability Badge - Adjusted position */}
         <div className="absolute top-3 right-3">
           <span
             className={`text-xs font-medium px-2 py-1 rounded-lg ${
@@ -115,6 +100,15 @@ export default function VehicleCard({ vehicle, compact = false }) {
             {vehicle.isAvailable ? "Available" : "Booked"}
           </span>
         </div>
+
+        {/* Peak Badge - Moved to bottom left */}
+        {isPeakPrice && (
+          <div className="absolute bottom-3 left-3">
+            <span className="text-xs font-medium px-2 py-1 rounded-lg bg-red-500/90 text-white">
+              Peak Pricing 🔥
+            </span>
+          </div>
+        )}
 
         <button
           onClick={handleWishlist}
@@ -189,11 +183,6 @@ export default function VehicleCard({ vehicle, compact = false }) {
                 </span>
                 <span className="text-xs text-gray-500">/day</span>
               </div>
-            )}
-            {isPeakPrice && !hasDiscount && (
-              <p className="text-xs text-gray-400 line-through">
-                ₹{originalPrice.toLocaleString()}
-              </p>
             )}
           </div>
 
