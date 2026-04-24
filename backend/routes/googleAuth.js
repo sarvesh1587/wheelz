@@ -2,11 +2,16 @@ const express = require("express");
 const router = express.Router();
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
+const { OAuth2Client } = require("google-auth-library");
 
-// Google Login - Frontend token verification
+// Initialize Google OAuth client
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
 router.post("/google-login", async (req, res) => {
   try {
     const { googleToken } = req.body;
+
+    console.log("📝 Google login request received");
 
     if (!googleToken) {
       return res
@@ -14,23 +19,46 @@ router.post("/google-login", async (req, res) => {
         .json({ success: false, message: "Google token required" });
     }
 
-    // Verify Google token
-    const { OAuth2Client } = require("google-auth-library");
-    const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+    // For authorization code flow, exchange code for tokens
+    let payload;
 
-    const ticket = await client.verifyIdToken({
-      idToken: googleToken,
-      audience: process.env.GOOGLE_CLIENT_ID,
-    });
+    // Check if it's an authorization code (starts with 4/0 or 4/1)
+    if (googleToken.startsWith("4/")) {
+      console.log("🔐 Exchanging authorization code for tokens...");
 
-    const payload = ticket.getPayload();
+      // Exchange code for tokens
+      const { tokens } = await client.getToken({
+        code: googleToken,
+        redirect_uri: "postmessage", // Special URI for client-side flow
+      });
+
+      // Verify the ID token
+      const ticket = await client.verifyIdToken({
+        idToken: tokens.id_token,
+        audience: process.env.GOOGLE_CLIENT_ID,
+      });
+
+      payload = ticket.getPayload();
+    } else {
+      // Direct ID token verification (for implicit flow)
+      console.log("🔐 Verifying ID token directly...");
+      const ticket = await client.verifyIdToken({
+        idToken: googleToken,
+        audience: process.env.GOOGLE_CLIENT_ID,
+      });
+
+      payload = ticket.getPayload();
+    }
+
     const { email, name, picture, sub: googleId } = payload;
+
+    console.log(`👤 Google user: ${email} (${name})`);
 
     // Check if user exists
     let user = await User.findOne({ email });
 
     if (!user) {
-      // Create new user
+      console.log(`📝 Creating new user for ${email}`);
       user = await User.create({
         name: name,
         email: email,
@@ -42,13 +70,12 @@ router.post("/google-login", async (req, res) => {
       });
       console.log(`✅ New user created via Google: ${email}`);
     } else {
-      // Update googleId if not set
+      console.log(`✅ Existing user found: ${email}`);
       if (!user.googleId) {
         user.googleId = googleId;
         if (!user.avatar && picture) user.avatar = picture;
         await user.save();
       }
-      console.log(`✅ Existing user logged in via Google: ${email}`);
     }
 
     // Generate JWT token
@@ -57,6 +84,8 @@ router.post("/google-login", async (req, res) => {
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRE || "30d" },
     );
+
+    console.log(`✅ Google login successful for ${email}`);
 
     res.json({
       success: true,
@@ -70,10 +99,12 @@ router.post("/google-login", async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Google login error:", error);
-    res
-      .status(500)
-      .json({ success: false, message: "Google authentication failed" });
+    console.error("❌ Google login error:", error.message);
+    console.error("Stack:", error.stack);
+    res.status(500).json({
+      success: false,
+      message: error.message || "Google authentication failed",
+    });
   }
 });
 

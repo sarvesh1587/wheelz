@@ -4,12 +4,11 @@ import toast from "react-hot-toast";
 
 const GoogleLoginButton = () => {
   const googleLogin = useGoogleLogin({
-    flow: "auth-code", // ✅ Changed from 'implicit' to 'auth-code'
     onSuccess: async (tokenResponse) => {
-      console.log("Google auth response:", tokenResponse);
+      console.log("Google token response:", tokenResponse);
 
-      // Get the ID token (not access token)
-      const idToken = tokenResponse.code; // For auth-code flow
+      // Get the access token
+      const accessToken = tokenResponse.access_token;
 
       try {
         const res = await fetch(
@@ -17,7 +16,7 @@ const GoogleLoginButton = () => {
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ googleToken: idToken }),
+            body: JSON.stringify({ googleToken: accessToken }),
           },
         );
 
@@ -36,7 +35,10 @@ const GoogleLoginButton = () => {
         toast.error("Login failed. Please try again.");
       }
     },
-    onError: () => toast.error("Google login failed"),
+    onError: (error) => {
+      console.error("Google login error:", error);
+      toast.error("Google login failed");
+    },
   });
 
   return (
