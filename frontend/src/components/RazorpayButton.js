@@ -1,36 +1,56 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { paymentAPI } from "../services/api";
 import toast from "react-hot-toast";
 
 const RazorpayButton = ({ bookingId, amount, onSuccess, onCancel }) => {
   const [loading, setLoading] = useState(false);
+  const [isScriptLoaded, setIsScriptLoaded] = useState(false);
+
+  // Load Razorpay script once when component mounts
+  useEffect(() => {
+    if (window.Razorpay) {
+      setIsScriptLoaded(true);
+      return;
+    }
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.async = true;
+    script.onload = () => setIsScriptLoaded(true);
+    script.onerror = () => console.error("Failed to load Razorpay script");
+    document.body.appendChild(script);
+  }, []);
 
   const handlePayment = async () => {
+    if (!isScriptLoaded) {
+      toast.error("Payment system is still loading. Please try again.");
+      return;
+    }
+
     setLoading(true);
     console.log("Starting payment for booking:", bookingId);
 
     try {
-      // Create order on backend
+      // 1. Create an order on YOUR backend
       const orderRes = await paymentAPI.createOrder(bookingId);
-      console.log("Order response:", orderRes.data);
+      console.log("Order created:", orderRes.data);
 
-      // ✅ Use a fixed test key (Razorpay's official test key)
-      const razorpayKey = "rzp_test_2V8FbQ7xJ2k3Lm";
-
+      const razorpayKey =
+        process.env.REACT_APP_RAZORPAY_KEY_ID || "rzp_test_ShPo542q8R01pa";
       const options = {
-        key: razorpayKey,
+        key: razorpayKey, // Using your exact key
         amount: orderRes.data.amount,
         currency: "INR",
         name: "Wheelz",
-        description: "Vehicle Rental Payment",
-        order_id: orderRes.data.orderId,
+        description: `Payment for Booking`,
+        order_id: orderRes.data.orderId, // The order ID you created in step 1
         handler: async (response) => {
-          console.log("Payment success:", response);
+          console.log("Payment Success:", response);
+          // Optional: Verify the payment signature on your backend here
           toast.success("Payment successful!");
           onSuccess();
         },
         prefill: {
-          name: "Customer",
+          name: "Customer Name",
           email: "customer@example.com",
           contact: "9999999999",
         },
@@ -49,25 +69,21 @@ const RazorpayButton = ({ bookingId, amount, onSuccess, onCancel }) => {
       const razorpay = new window.Razorpay(options);
       razorpay.open();
     } catch (err) {
-      console.error("Payment error:", err);
-      toast.error(err.response?.data?.message || "Payment failed");
+      console.error("Payment initialization failed:", err);
+      toast.error(
+        err.response?.data?.message ||
+          "Could not initialize payment. Please try again.",
+      );
+    } finally {
       setLoading(false);
     }
   };
-
-  // Load Razorpay script
-  React.useEffect(() => {
-    const script = document.createElement("script");
-    script.src = "https://checkout.razorpay.com/v1/checkout.js";
-    script.async = true;
-    document.body.appendChild(script);
-  }, []);
 
   return (
     <div className="space-y-3">
       <button
         onClick={handlePayment}
-        disabled={loading}
+        disabled={loading || !isScriptLoaded}
         className="w-full btn-primary flex items-center justify-center gap-2"
       >
         {loading ? (
@@ -76,7 +92,7 @@ const RazorpayButton = ({ bookingId, amount, onSuccess, onCancel }) => {
             Processing...
           </>
         ) : (
-          `Pay ₹${amount.toLocaleString()} via Razorpay`
+          `Pay ₹${amount.toLocaleString()}`
         )}
       </button>
       <button onClick={onCancel} className="w-full btn-secondary">
