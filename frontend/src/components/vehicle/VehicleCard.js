@@ -105,7 +105,7 @@ export default function VehicleCard({ vehicle, compact = false }) {
         {isPeakPrice && (
           <div className="absolute bottom-3 left-3">
             <span className="text-xs font-medium px-2 py-1 rounded-lg bg-red-500/90 text-white">
-              Peak Pricing 🔥
+              Peak 🔥
             </span>
           </div>
         )}
