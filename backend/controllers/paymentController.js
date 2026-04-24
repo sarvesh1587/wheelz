@@ -19,6 +19,9 @@ exports.createOrder = async (req, res) => {
         .json({ success: false, message: "Booking not found" });
     }
 
+    console.log("💰 Booking finalAmount:", booking.finalAmount);
+    console.log("💸 Amount in paise:", Math.round(booking.finalAmount * 100));
+
     const options = {
       amount: Math.round(booking.finalAmount * 100),
       currency: "INR",
