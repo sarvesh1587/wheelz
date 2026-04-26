@@ -20,8 +20,8 @@ import {
   EnvelopeIcon,
   MapPinIcon,
   DocumentTextIcon,
-  CreditCardIcon,
   XMarkIcon,
+  DocumentArrowDownIcon,
 } from "@heroicons/react/24/outline";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -34,6 +34,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
+import html2pdf from "html2pdf.js";
 
 export default function VendorDashboard() {
   const { user } = useAuth();
@@ -129,6 +130,182 @@ export default function VendorDashboard() {
   const viewBookingDetails = (booking) => {
     setSelectedBooking(booking);
     setShowBookingModal(true);
+  };
+
+  // PDF Download Function
+  const downloadBookingPDF = () => {
+    if (!selectedBooking) return;
+
+    // Create a temporary div for PDF content
+    const pdfContent = document.createElement("div");
+    pdfContent.style.padding = "20px";
+    pdfContent.style.fontFamily = "Arial, sans-serif";
+    pdfContent.style.backgroundColor = "white";
+
+    pdfContent.innerHTML = `
+      <div style="max-width: 800px; margin: 0 auto;">
+        <!-- Header -->
+        <div style="text-align: center; margin-bottom: 30px; border-bottom: 2px solid #f59e0b; padding-bottom: 20px;">
+          <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
+            <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #f59e0b, #d97706); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold; color: white;">W</div>
+            <h1 style="color: #f59e0b; margin: 0;">WHEELZ</h1>
+          </div>
+          <h2 style="margin: 10px 0 5px; color: #333;">Booking Confirmation</h2>
+          <p style="color: #666; margin: 0;">Booking ID: ${selectedBooking.bookingRef}</p>
+          <p style="color: #666; margin: 5px 0 0;">Date: ${new Date().toLocaleDateString("en-IN")}</p>
+        </div>
+
+        <!-- Customer Details -->
+        <div style="margin-bottom: 20px;">
+          <h3 style="color: #f59e0b; margin-bottom: 10px; border-left: 3px solid #f59e0b; padding-left: 10px;">👤 Customer Information</h3>
+          <table style="width: 100%; border-collapse: collapse;">
+            <tr style="border-bottom: 1px solid #eee;">
+              <td style="padding: 8px; font-weight: bold; width: 120px;">Full Name</td>
+              <td style="padding: 8px;">${selectedBooking.user?.name || selectedBooking.customerDetails?.name || "N/A"}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #eee;">
+              <td style="padding: 8px; font-weight: bold;">Email</td>
+              <td style="padding: 8px;">${selectedBooking.user?.email || selectedBooking.customerDetails?.email || "N/A"}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #eee;">
+              <td style="padding: 8px; font-weight: bold;">Phone</td>
+              <td style="padding: 8px;">${selectedBooking.user?.phone || selectedBooking.customerDetails?.phone || "N/A"}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #eee;">
+              <td style="padding: 8px; font-weight: bold;">Address</td>
+              <td style="padding: 8px;">${selectedBooking.customerDetails?.address || "Not provided"}</td>
+            </tr>
+          </table>
+        </div>
+
+        <!-- Vehicle Details -->
+        <div style="margin-bottom: 20px;">
+          <h3 style="color: #f59e0b; margin-bottom: 10px; border-left: 3px solid #f59e0b; padding-left: 10px;">🚗 Vehicle Information</h3>
+          <table style="width: 100%; border-collapse: collapse;">
+            <tr style="border-bottom: 1px solid #eee;">
+              <td style="padding: 8px; font-weight: bold; width: 120px;">Vehicle Name</td>
+              <td style="padding: 8px;">${selectedBooking.vehicle?.name || "N/A"}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #eee;">
+              <td style="padding: 8px; font-weight: bold;">Brand</td>
+              <td style="padding: 8px;">${selectedBooking.vehicle?.brand || "N/A"}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #eee;">
+              <td style="padding: 8px; font-weight: bold;">Year</td>
+              <td style="padding: 8px;">${selectedBooking.vehicle?.year || "N/A"}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #eee;">
+              <td style="padding: 8px; font-weight: bold;">Price/Day</td>
+              <td style="padding: 8px;">₹${selectedBooking.pricePerDay?.toLocaleString() || 0}</td>
+            </tr>
+          </table>
+        </div>
+
+        <!-- Booking Details -->
+        <div style="margin-bottom: 20px;">
+          <h3 style="color: #f59e0b; margin-bottom: 10px; border-left: 3px solid #f59e0b; padding-left: 10px;">📅 Booking Information</h3>
+          <table style="width: 100%; border-collapse: collapse;">
+            <tr style="border-bottom: 1px solid #eee;">
+              <td style="padding: 8px; font-weight: bold; width: 120px;">Pickup Date</td>
+              <td style="padding: 8px;">${new Date(selectedBooking.startDate).toLocaleDateString("en-IN", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #eee;">
+              <td style="padding: 8px; font-weight: bold;">Return Date</td>
+              <td style="padding: 8px;">${new Date(selectedBooking.endDate).toLocaleDateString("en-IN", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #eee;">
+              <td style="padding: 8px; font-weight: bold;">Total Days</td>
+              <td style="padding: 8px;">${selectedBooking.totalDays} days</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #eee;">
+              <td style="padding: 8px; font-weight: bold;">Pickup Location</td>
+              <td style="padding: 8px;">${selectedBooking.pickupLocation || "N/A"}</td>
+            </tr>
+          </table>
+        </div>
+
+        <!-- Price Breakdown -->
+        <div style="margin-bottom: 20px;">
+          <h3 style="color: #f59e0b; margin-bottom: 10px; border-left: 3px solid #f59e0b; padding-left: 10px;">💰 Price Breakdown</h3>
+          <table style="width: 100%; border-collapse: collapse;">
+            <tr style="border-bottom: 1px solid #eee;">
+              <td style="padding: 8px; font-weight: bold;">Price per day</td>
+              <td style="padding: 8px;">₹${selectedBooking.pricePerDay?.toLocaleString()}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #eee;">
+              <td style="padding: 8px; font-weight: bold;">Number of days</td>
+              <td style="padding: 8px;">${selectedBooking.totalDays} days</td>
+            </tr>
+            ${
+              selectedBooking.extras
+                ? Object.entries(selectedBooking.extras)
+                    .filter(([_, v]) => v)
+                    .map(([key]) => {
+                      const extraNames = {
+                        insurance: "Zero Dep Insurance",
+                        gps: "GPS Navigation",
+                        childSeat: "Child Seat",
+                        driver: "Professional Driver",
+                      };
+                      const extraPrices = {
+                        insurance: 200,
+                        gps: 100,
+                        childSeat: 150,
+                        driver: 500,
+                      };
+                      return `
+                <tr style="border-bottom: 1px solid #eee;">
+                  <td style="padding: 8px; padding-left: 20px; font-weight: bold;">• ${extraNames[key]}</td>
+                  <td style="padding: 8px;">+₹${extraPrices[key]}/day</td>
+                </tr>
+              `;
+                    })
+                    .join("")
+                : ""
+            }
+            <tr style="border-top: 2px solid #f59e0b;">
+              <td style="padding: 12px 8px; font-weight: bold; font-size: 16px;">Total Amount</td>
+              <td style="padding: 12px 8px; font-size: 20px; font-weight: bold; color: #f59e0b;">₹${selectedBooking.finalAmount?.toLocaleString() || selectedBooking.totalAmount?.toLocaleString()}</td>
+            </tr>
+          </table>
+        </div>
+
+        <!-- Status -->
+        <div style="margin-bottom: 20px;">
+          <h3 style="color: #f59e0b; margin-bottom: 10px; border-left: 3px solid #f59e0b; padding-left: 10px;">📊 Status</h3>
+          <table style="width: 100%; border-collapse: collapse;">
+            <tr style="border-bottom: 1px solid #eee;">
+              <td style="padding: 8px; font-weight: bold; width: 120px;">Booking Status</td>
+              <td style="padding: 8px;"><span style="background: #d1fae5; color: #065f46; padding: 4px 12px; border-radius: 20px;">${selectedBooking.status?.toUpperCase()}</span></td>
+            </tr>
+            <tr style="border-bottom: 1px solid #eee;">
+              <td style="padding: 8px; font-weight: bold;">Payment Status</td>
+              <td style="padding: 8px;"><span style="background: #fed7aa; color: #92400e; padding: 4px 12px; border-radius: 20px;">${selectedBooking.paymentStatus?.toUpperCase()}</span></td>
+            </tr>
+          </table>
+        </div>
+
+        <!-- Footer -->
+        <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; color: #666; font-size: 12px;">
+          <p>Thank you for choosing Wheelz!</p>
+          <p>For any queries, contact us at support@wheelz.com | 9876543210</p>
+          <p>This is a system generated document. No signature required.</p>
+        </div>
+      </div>
+    `;
+
+    // PDF options
+    const opt = {
+      margin: [0.5, 0.5, 0.5, 0.5],
+      filename: `Booking_${selectedBooking.bookingRef}.pdf`,
+      image: { type: "jpeg", quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true },
+      jsPDF: { unit: "in", format: "a4", orientation: "portrait" },
+    };
+
+    // Generate PDF
+    html2pdf().set(opt).from(pdfContent).save();
+    toast.success("PDF downloaded successfully!");
   };
 
   const statsCards = [
@@ -421,7 +598,7 @@ export default function VendorDashboard() {
           </motion.div>
         )}
 
-        {/* Bookings Tab - Clickable bookings */}
+        {/* Bookings Tab */}
         {activeTab === "bookings" && (
           <motion.div
             initial={{ opacity: 0 }}
@@ -507,7 +684,6 @@ export default function VendorDashboard() {
       </div>
 
       {/* Booking Details Modal */}
-      {/* Booking Details Modal */}
       <AnimatePresence>
         {showBookingModal && selectedBooking && (
           <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
@@ -538,23 +714,22 @@ export default function VendorDashboard() {
                     Booking ID: {selectedBooking.bookingRef}
                   </p>
                 </div>
-                <button
-                  onClick={() => setShowBookingModal(false)}
-                  className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="w-5 h-5"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
+                <div className="flex items-center gap-2">
+                  {/* PDF Download Button */}
+                  <button
+                    onClick={downloadBookingPDF}
+                    className="p-2 rounded-full bg-green-500 hover:bg-green-600 text-white transition-colors flex items-center gap-1"
+                    title="Download PDF"
                   >
-                    <path
-                      fillRule="evenodd"
-                      d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </button>
+                    <DocumentArrowDownIcon className="w-5 h-5" />
+                  </button>
+                  <button
+                    onClick={() => setShowBookingModal(false)}
+                    className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                  >
+                    <XMarkIcon className="w-5 h-5" />
+                  </button>
+                </div>
               </div>
 
               <div className="p-6">
