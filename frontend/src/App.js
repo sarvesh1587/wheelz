@@ -11,6 +11,7 @@ import VendorDashboard from "./pages/VendorDashboard";
 import VendorAddVehicle from "./pages/VendorAddVehicle";
 import VendorBookings from "./pages/VendorBookings";
 import VendorVehicles from "./pages/VendorVehicles";
+import AdminVendorDetails from "./pages/AdminVendorDetails";
 import {
   BrowserRouter as Router,
   Routes,
@@ -183,6 +184,14 @@ function AppRoutes() {
                 <PrivateRoute>
                   <Profile />
                 </PrivateRoute>
+              }
+            />
+            <Route
+              path="/admin/vendors/:id"
+              element={
+                <AdminRoute>
+                  <AdminVendorDetails />
+                </AdminRoute>
               }
             />
             <Route

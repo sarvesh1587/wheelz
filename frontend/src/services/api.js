@@ -104,13 +104,22 @@ export const aiAPI = {
 };
 
 // ─── Admin ────────────────────────────────────────────────────────────────────
+// export const adminAPI = {
+//   getDashboard: () => api.get("/admin/dashboard"),
+//   getAllUsers: (params) => api.get("/admin/users", { params }),
+//   toggleUserActive: (id) => api.put(`/admin/users/${id}/toggle-active`),
+//   getRevenueBreakdown: () => api.get("/admin/revenue/breakdown"),
+// };
+// Add to adminAPI object in api.js
 export const adminAPI = {
   getDashboard: () => api.get("/admin/dashboard"),
   getAllUsers: (params) => api.get("/admin/users", { params }),
+  getUserById: (id) => api.get(`/admin/users/${id}`), // ← Add this
   toggleUserActive: (id) => api.put(`/admin/users/${id}/toggle-active`),
+  toggleVendorStatus: (id, status) =>
+    api.put(`/admin/vendors/${id}/status`, { approved: status }), // ← Add this
   getRevenueBreakdown: () => api.get("/admin/revenue/breakdown"),
 };
-
 // ─── Reviews ──────────────────────────────────────────────────────────────────
 export const reviewAPI = {
   getByVehicle: (vehicleId) => api.get(`/reviews/vehicle/${vehicleId}`),

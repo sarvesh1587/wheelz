@@ -15,7 +15,21 @@ import {
   EyeIcon,
   TrashIcon,
 } from "@heroicons/react/24/outline";
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
+import {
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+} from "recharts";
 import { motion } from "framer-motion";
 
 export default function AdminDashboard() {
@@ -30,20 +44,47 @@ export default function AdminDashboard() {
     fetchDashboardData();
   }, []);
 
+  // const fetchDashboardData = async () => {
+  //   try {
+  //     const [dashboardRes, usersRes, vendorsRes, vehiclesRes, bookingsRes] = await Promise.all([
+  //       adminAPI.getDashboard(),
+  //       adminAPI.getAllUsers({ role: "customer" }),
+  //       adminAPI.getAllUsers({ role: "vendor" }),
+  //       vehicleAPI.getAll({ limit: 100 }),
+  //       bookingAPI.getAll({ limit: 100 }),
+  //     ]);
+
+  //     setDashboardData(dashboardRes.data);
+  //     setUsers(usersRes.data.users || []);
+  //     setVendors(vendorsRes.data.users || []);
+  //     setDashboardData(prev => ({
+  //       ...prev,
+  //       totalVehicles: vehiclesRes.data.vehicles?.length || 0,
+  //       totalBookings: bookingsRes.data.bookings?.length || 0,
+  //     }));
+  //   } catch (error) {
+  //     console.error("Error fetching admin data:", error);
+  //     toast.error("Failed to load dashboard");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+  // Update the fetchDashboardData function - change the vendors API call
   const fetchDashboardData = async () => {
     try {
-      const [dashboardRes, usersRes, vendorsRes, vehiclesRes, bookingsRes] = await Promise.all([
-        adminAPI.getDashboard(),
-        adminAPI.getAllUsers({ role: "customer" }),
-        adminAPI.getAllUsers({ role: "vendor" }),
-        vehicleAPI.getAll({ limit: 100 }),
-        bookingAPI.getAll({ limit: 100 }),
-      ]);
+      const [dashboardRes, usersRes, vendorsRes, vehiclesRes, bookingsRes] =
+        await Promise.all([
+          adminAPI.getDashboard(),
+          adminAPI.getAllUsers({ role: "customer" }), // ← Only customers
+          adminAPI.getAllUsers({ role: "vendor" }), // ← Only vendors (FIXED)
+          vehicleAPI.getAll({ limit: 100 }),
+          bookingAPI.getAll({ limit: 100 }),
+        ]);
 
       setDashboardData(dashboardRes.data);
       setUsers(usersRes.data.users || []);
-      setVendors(vendorsRes.data.users || []);
-      setDashboardData(prev => ({
+      setVendors(vendorsRes.data.users || []); // ← Now only vendors
+      setDashboardData((prev) => ({
         ...prev,
         totalVehicles: vehiclesRes.data.vehicles?.length || 0,
         totalBookings: bookingsRes.data.bookings?.length || 0,
@@ -55,11 +96,12 @@ export default function AdminDashboard() {
       setLoading(false);
     }
   };
-
   const toggleUserStatus = async (userId, currentStatus) => {
     try {
       await adminAPI.toggleUserActive(userId);
-      toast.success(`User ${currentStatus ? "deactivated" : "activated"} successfully`);
+      toast.success(
+        `User ${currentStatus ? "deactivated" : "activated"} successfully`,
+      );
       fetchDashboardData();
     } catch (error) {
       toast.error("Failed to update user status");
@@ -67,12 +109,42 @@ export default function AdminDashboard() {
   };
 
   const statsCards = [
-    { label: "Total Users", value: users.length, icon: UsersIcon, color: "from-blue-500 to-blue-600" },
-    { label: "Total Vendors", value: vendors.length, icon: BuildingStorefrontIcon, color: "from-green-500 to-green-600" },
-    { label: "Total Vehicles", value: dashboardData?.totalVehicles || 0, icon: TruckIcon, color: "from-amber-500 to-amber-600" },
-    { label: "Total Bookings", value: dashboardData?.totalBookings || 0, icon: CalendarIcon, color: "from-purple-500 to-purple-600" },
-    { label: "Total Revenue", value: `₹${(dashboardData?.totalRevenue || 0).toLocaleString()}`, icon: CurrencyRupeeIcon, color: "from-red-500 to-red-600" },
-    { label: "Active Bookings", value: dashboardData?.activeBookings || 0, icon: CheckCircleIcon, color: "from-emerald-500 to-emerald-600" },
+    {
+      label: "Total Users",
+      value: users.length,
+      icon: UsersIcon,
+      color: "from-blue-500 to-blue-600",
+    },
+    {
+      label: "Total Vendors",
+      value: vendors.length,
+      icon: BuildingStorefrontIcon,
+      color: "from-green-500 to-green-600",
+    },
+    {
+      label: "Total Vehicles",
+      value: dashboardData?.totalVehicles || 0,
+      icon: TruckIcon,
+      color: "from-amber-500 to-amber-600",
+    },
+    {
+      label: "Total Bookings",
+      value: dashboardData?.totalBookings || 0,
+      icon: CalendarIcon,
+      color: "from-purple-500 to-purple-600",
+    },
+    {
+      label: "Total Revenue",
+      value: `₹${(dashboardData?.totalRevenue || 0).toLocaleString()}`,
+      icon: CurrencyRupeeIcon,
+      color: "from-red-500 to-red-600",
+    },
+    {
+      label: "Active Bookings",
+      value: dashboardData?.activeBookings || 0,
+      icon: CheckCircleIcon,
+      color: "from-emerald-500 to-emerald-600",
+    },
   ];
 
   const revenueData = [
@@ -134,7 +206,9 @@ export default function AdminDashboard() {
                     {stat.value}
                   </p>
                 </div>
-                <div className={`w-10 h-10 bg-gradient-to-r ${stat.color} rounded-lg flex items-center justify-center`}>
+                <div
+                  className={`w-10 h-10 bg-gradient-to-r ${stat.color} rounded-lg flex items-center justify-center`}
+                >
                   <stat.icon className="w-5 h-5 text-white" />
                 </div>
               </div>
@@ -161,7 +235,12 @@ export default function AdminDashboard() {
                 <YAxis />
                 <Tooltip />
                 <Legend />
-                <Line type="monotone" dataKey="revenue" stroke="#f59e0b" strokeWidth={2} />
+                <Line
+                  type="monotone"
+                  dataKey="revenue"
+                  stroke="#f59e0b"
+                  strokeWidth={2}
+                />
               </LineChart>
             </ResponsiveContainer>
           </motion.div>
@@ -183,7 +262,9 @@ export default function AdminDashboard() {
                   cx="50%"
                   cy="50%"
                   labelLine={false}
-                  label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                  label={({ name, percent }) =>
+                    `${name}: ${(percent * 100).toFixed(0)}%`
+                  }
                   outerRadius={100}
                   fill="#8884d8"
                   dataKey="value"
@@ -231,38 +312,63 @@ export default function AdminDashboard() {
               <table className="w-full">
                 <thead className="bg-gray-50 dark:bg-gray-700/50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">User</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Phone</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Joined</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                      User
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                      Email
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                      Phone
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                      Joined
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                      Status
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                      Actions
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                   {users.map((user) => (
-                    <tr key={user._id} className="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
+                    <tr
+                      key={user._id}
+                      className="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors"
+                    >
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
                           <div className="w-8 h-8 bg-amber-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
                             {user.name?.[0]?.toUpperCase()}
                           </div>
-                          <span className="font-medium text-gray-900 dark:text-white">{user.name}</span>
+                          <span className="font-medium text-gray-900 dark:text-white">
+                            {user.name}
+                          </span>
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{user.email}</td>
-                      <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{user.phone || "-"}</td>
+                      <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
+                        {user.email}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
+                        {user.phone || "-"}
+                      </td>
                       <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
                         {new Date(user.createdAt).toLocaleDateString()}
                       </td>
                       <td className="px-6 py-4">
-                        <span className={`text-xs px-2 py-0.5 rounded-full ${user.isActive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
+                        <span
+                          className={`text-xs px-2 py-0.5 rounded-full ${user.isActive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}
+                        >
                           {user.isActive ? "Active" : "Inactive"}
                         </span>
                       </td>
                       <td className="px-6 py-4">
                         <button
-                          onClick={() => toggleUserStatus(user._id, user.isActive)}
+                          onClick={() =>
+                            toggleUserStatus(user._id, user.isActive)
+                          }
                           className={`text-sm ${user.isActive ? "text-red-500 hover:text-red-600" : "text-green-500 hover:text-green-600"}`}
                         >
                           {user.isActive ? "Deactivate" : "Activate"}
@@ -287,36 +393,63 @@ export default function AdminDashboard() {
               <table className="w-full">
                 <thead className="bg-gray-50 dark:bg-gray-700/50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Vendor</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Business Name</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Phone</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                      Vendor
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                      Business Name
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                      Email
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                      Phone
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                      Status
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                      Actions
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                   {vendors.map((vendor) => (
-                    <tr key={vendor._id} className="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
+                    <tr
+                      key={vendor._id}
+                      className="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors"
+                    >
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
                           <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
                             {vendor.name?.[0]?.toUpperCase()}
                           </div>
-                          <span className="font-medium text-gray-900 dark:text-white">{vendor.name}</span>
+                          <span className="font-medium text-gray-900 dark:text-white">
+                            {vendor.name}
+                          </span>
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{vendor.businessName || "-"}</td>
-                      <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{vendor.email}</td>
-                      <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{vendor.phone || "-"}</td>
+                      <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
+                        {vendor.businessName || "-"}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
+                        {vendor.email}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
+                        {vendor.phone || "-"}
+                      </td>
                       <td className="px-6 py-4">
-                        <span className={`text-xs px-2 py-0.5 rounded-full ${vendor.isVendorApproved ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}>
+                        <span
+                          className={`text-xs px-2 py-0.5 rounded-full ${vendor.isVendorApproved ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}
+                        >
                           {vendor.isVendorApproved ? "Approved" : "Pending"}
                         </span>
                       </td>
                       <td className="px-6 py-4">
                         <button
-                          onClick={() => navigate(`/admin/vendors/${vendor._id}`)}
+                          onClick={() =>
+                            navigate(`/admin/vendors/${vendor._id}`)
+                          }
                           className="text-amber-500 hover:text-amber-600"
                         >
                           View Details
