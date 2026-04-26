@@ -507,6 +507,7 @@ export default function VendorDashboard() {
       </div>
 
       {/* Booking Details Modal */}
+      {/* Booking Details Modal */}
       <AnimatePresence>
         {showBookingModal && selectedBooking && (
           <>
@@ -515,276 +516,297 @@ export default function VendorDashboard() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setShowBookingModal(false)}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100]"
             />
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="fixed inset-x-4 top-1/2 -translate-y-1/2 max-w-4xl mx-auto bg-white dark:bg-gray-900 rounded-2xl shadow-2xl z-50 max-h-[85vh] overflow-y-auto"
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-4xl max-h-[85vh] overflow-y-auto z-[101]"
             >
-              {/* Modal Header */}
-              <div className="sticky top-0 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 px-6 py-4 flex items-center justify-between rounded-t-2xl">
-                <div>
-                  <h2 className="text-xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400 bg-clip-text text-transparent">
-                    Booking Details
-                  </h2>
-                  <p className="text-sm text-gray-500">
-                    Booking ID: {selectedBooking.bookingRef}
-                  </p>
-                </div>
-                <button
-                  onClick={() => setShowBookingModal(false)}
-                  className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                >
-                  <XMarkIcon className="w-5 h-5" />
-                </button>
-              </div>
-
-              <div className="p-6">
-                {/* Customer Details Section */}
-                <div className="mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                    <UserIcon className="w-5 h-5 text-amber-500" />
-                    Customer Information
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
-                      <div className="flex items-center gap-2 text-gray-500 mb-1">
-                        <UserIcon className="w-4 h-4" />
-                        <span className="text-xs">Full Name</span>
-                      </div>
-                      <p className="font-medium text-gray-900 dark:text-white">
-                        {selectedBooking.user?.name ||
-                          selectedBooking.customerDetails?.name ||
-                          "N/A"}
-                      </p>
-                    </div>
-                    <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
-                      <div className="flex items-center gap-2 text-gray-500 mb-1">
-                        <EnvelopeIcon className="w-4 h-4" />
-                        <span className="text-xs">Email Address</span>
-                      </div>
-                      <p className="font-medium text-gray-900 dark:text-white">
-                        {selectedBooking.user?.email ||
-                          selectedBooking.customerDetails?.email ||
-                          "N/A"}
-                      </p>
-                    </div>
-                    <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
-                      <div className="flex items-center gap-2 text-gray-500 mb-1">
-                        <PhoneIcon className="w-4 h-4" />
-                        <span className="text-xs">Phone Number</span>
-                      </div>
-                      <p className="font-medium text-gray-900 dark:text-white">
-                        {selectedBooking.user?.phone ||
-                          selectedBooking.customerDetails?.phone ||
-                          "N/A"}
-                      </p>
-                    </div>
-                    <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
-                      <div className="flex items-center gap-2 text-gray-500 mb-1">
-                        <MapPinIcon className="w-4 h-4" />
-                        <span className="text-xs">Address</span>
-                      </div>
-                      <p className="font-medium text-gray-900 dark:text-white">
-                        {selectedBooking.customerDetails?.address ||
-                          "Not provided"}
-                      </p>
-                    </div>
+              <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl overflow-hidden">
+                {/* Modal Header */}
+                <div className="sticky top-0 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 px-6 py-4 flex items-center justify-between">
+                  <div>
+                    <h2 className="text-xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400 bg-clip-text text-transparent">
+                      Booking Details
+                    </h2>
+                    <p className="text-sm text-gray-500">
+                      Booking ID: {selectedBooking.bookingRef}
+                    </p>
                   </div>
+                  <button
+                    onClick={() => setShowBookingModal(false)}
+                    className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="w-5 h-5"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </button>
                 </div>
 
-                {/* Vehicle Details Section */}
-                <div className="mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                    <TruckIcon className="w-5 h-5 text-amber-500" />
-                    Vehicle Information
-                  </h3>
-                  <div className="flex gap-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
-                    <img
-                      src={selectedBooking.vehicle?.images?.[0]}
-                      alt={selectedBooking.vehicle?.name}
-                      className="w-24 h-24 rounded-xl object-cover"
-                    />
-                    <div className="flex-1">
-                      <h4 className="font-bold text-gray-900 dark:text-white">
-                        {selectedBooking.vehicle?.name}
-                      </h4>
-                      <p className="text-sm text-gray-500">
-                        {selectedBooking.vehicle?.brand} •{" "}
-                        {selectedBooking.vehicle?.year}
-                      </p>
-                      <div className="flex flex-wrap gap-4 mt-2 text-sm">
-                        <div className="flex items-center gap-1">
-                          <span className="text-gray-500">Reg No:</span>
-                          <span className="font-medium">
-                            {selectedBooking.vehicle?.registrationNumber ||
-                              "N/A"}
-                          </span>
+                <div className="p-6">
+                  {/* Customer Details Section */}
+                  <div className="mb-6">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                      <UserIcon className="w-5 h-5 text-amber-500" />
+                      Customer Information
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                        <div className="flex items-center gap-2 text-gray-500 mb-1">
+                          <UserIcon className="w-4 h-4" />
+                          <span className="text-xs">Full Name</span>
                         </div>
-                        <div className="flex items-center gap-1">
-                          <span className="text-gray-500">Color:</span>
-                          <span className="font-medium">
-                            {selectedBooking.vehicle?.color || "N/A"}
-                          </span>
+                        <p className="font-medium text-gray-900 dark:text-white">
+                          {selectedBooking.user?.name ||
+                            selectedBooking.customerDetails?.name ||
+                            "N/A"}
+                        </p>
+                      </div>
+                      <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                        <div className="flex items-center gap-2 text-gray-500 mb-1">
+                          <EnvelopeIcon className="w-4 h-4" />
+                          <span className="text-xs">Email Address</span>
                         </div>
+                        <p className="font-medium text-gray-900 dark:text-white">
+                          {selectedBooking.user?.email ||
+                            selectedBooking.customerDetails?.email ||
+                            "N/A"}
+                        </p>
+                      </div>
+                      <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                        <div className="flex items-center gap-2 text-gray-500 mb-1">
+                          <PhoneIcon className="w-4 h-4" />
+                          <span className="text-xs">Phone Number</span>
+                        </div>
+                        <p className="font-medium text-gray-900 dark:text-white">
+                          {selectedBooking.user?.phone ||
+                            selectedBooking.customerDetails?.phone ||
+                            "N/A"}
+                        </p>
+                      </div>
+                      <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                        <div className="flex items-center gap-2 text-gray-500 mb-1">
+                          <MapPinIcon className="w-4 h-4" />
+                          <span className="text-xs">Address</span>
+                        </div>
+                        <p className="font-medium text-gray-900 dark:text-white">
+                          {selectedBooking.customerDetails?.address ||
+                            "Not provided"}
+                        </p>
                       </div>
                     </div>
                   </div>
-                </div>
 
-                {/* Booking Details Section */}
-                <div className="mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                    <CalendarIcon className="w-5 h-5 text-amber-500" />
-                    Booking Information
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
-                      <p className="text-xs text-gray-500 mb-1">Pickup Date</p>
-                      <p className="font-medium">
-                        {new Date(selectedBooking.startDate).toLocaleDateString(
-                          "en-IN",
-                          {
+                  {/* Vehicle Details Section */}
+                  <div className="mb-6">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                      <TruckIcon className="w-5 h-5 text-amber-500" />
+                      Vehicle Information
+                    </h3>
+                    <div className="flex gap-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                      <img
+                        src={selectedBooking.vehicle?.images?.[0]}
+                        alt={selectedBooking.vehicle?.name}
+                        className="w-24 h-24 rounded-xl object-cover"
+                      />
+                      <div className="flex-1">
+                        <h4 className="font-bold text-gray-900 dark:text-white">
+                          {selectedBooking.vehicle?.name}
+                        </h4>
+                        <p className="text-sm text-gray-500">
+                          {selectedBooking.vehicle?.brand} •{" "}
+                          {selectedBooking.vehicle?.year}
+                        </p>
+                        <div className="flex flex-wrap gap-4 mt-2 text-sm">
+                          <div className="flex items-center gap-1">
+                            <span className="text-gray-500">Reg No:</span>
+                            <span className="font-medium">
+                              {selectedBooking.vehicle?.registrationNumber ||
+                                "N/A"}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <span className="text-gray-500">Color:</span>
+                            <span className="font-medium">
+                              {selectedBooking.vehicle?.color || "N/A"}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Booking Details Section */}
+                  <div className="mb-6">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                      <CalendarIcon className="w-5 h-5 text-amber-500" />
+                      Booking Information
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                        <p className="text-xs text-gray-500 mb-1">
+                          Pickup Date
+                        </p>
+                        <p className="font-medium">
+                          {new Date(
+                            selectedBooking.startDate,
+                          ).toLocaleDateString("en-IN", {
                             weekday: "long",
                             year: "numeric",
                             month: "long",
                             day: "numeric",
-                          },
-                        )}
-                      </p>
-                    </div>
-                    <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
-                      <p className="text-xs text-gray-500 mb-1">Return Date</p>
-                      <p className="font-medium">
-                        {new Date(selectedBooking.endDate).toLocaleDateString(
-                          "en-IN",
-                          {
-                            weekday: "long",
-                            year: "numeric",
-                            month: "long",
-                            day: "numeric",
-                          },
-                        )}
-                      </p>
-                    </div>
-                    <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
-                      <p className="text-xs text-gray-500 mb-1">
-                        Pickup Location
-                      </p>
-                      <p className="font-medium">
-                        {selectedBooking.pickupLocation}
-                      </p>
-                    </div>
-                    <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
-                      <p className="text-xs text-gray-500 mb-1">Total Days</p>
-                      <p className="font-medium">
-                        {selectedBooking.totalDays} days
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Price Breakdown Section */}
-                <div className="mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                    <CurrencyRupeeIcon className="w-5 h-5 text-amber-500" />
-                    Price Breakdown
-                  </h3>
-                  <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800/50 dark:to-gray-900/50 rounded-xl p-4">
-                    <div className="space-y-2">
-                      <div className="flex justify-between">
-                        <span className="text-gray-600 dark:text-gray-400">
-                          Price per day
-                        </span>
-                        <span className="font-medium">
-                          ₹{selectedBooking.pricePerDay?.toLocaleString()}
-                        </span>
+                          })}
+                        </p>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600 dark:text-gray-400">
-                          Number of days
-                        </span>
-                        <span className="font-medium">
+                      <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                        <p className="text-xs text-gray-500 mb-1">
+                          Return Date
+                        </p>
+                        <p className="font-medium">
+                          {new Date(selectedBooking.endDate).toLocaleDateString(
+                            "en-IN",
+                            {
+                              weekday: "long",
+                              year: "numeric",
+                              month: "long",
+                              day: "numeric",
+                            },
+                          )}
+                        </p>
+                      </div>
+                      <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                        <p className="text-xs text-gray-500 mb-1">
+                          Pickup Location
+                        </p>
+                        <p className="font-medium">
+                          {selectedBooking.pickupLocation}
+                        </p>
+                      </div>
+                      <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                        <p className="text-xs text-gray-500 mb-1">Total Days</p>
+                        <p className="font-medium">
                           {selectedBooking.totalDays} days
-                        </span>
+                        </p>
                       </div>
-                      {selectedBooking.extras &&
-                        Object.entries(selectedBooking.extras).map(
-                          ([key, value]) => {
-                            if (!value) return null;
-                            const extraNames = {
-                              insurance: "Zero Dep Insurance",
-                              gps: "GPS Navigation",
-                              childSeat: "Child Seat",
-                              driver: "Professional Driver",
-                            };
-                            const extraPrices = {
-                              insurance: 200,
-                              gps: 100,
-                              childSeat: 150,
-                              driver: 500,
-                            };
-                            return (
-                              <div
-                                key={key}
-                                className="flex justify-between pl-4"
-                              >
-                                <span className="text-gray-500 text-sm">
-                                  • {extraNames[key]}
-                                </span>
-                                <span className="text-gray-500 text-sm">
-                                  +₹{extraPrices[key]}/day
-                                </span>
-                              </div>
-                            );
-                          },
-                        )}
-                      <div className="border-t border-gray-200 dark:border-gray-700 pt-3 mt-3">
-                        <div className="flex justify-between items-center">
-                          <span className="font-bold text-gray-900 dark:text-white">
-                            Total Amount
+                    </div>
+                  </div>
+
+                  {/* Price Breakdown Section */}
+                  <div className="mb-6">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                      <CurrencyRupeeIcon className="w-5 h-5 text-amber-500" />
+                      Price Breakdown
+                    </h3>
+                    <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800/50 dark:to-gray-900/50 rounded-xl p-4">
+                      <div className="space-y-2">
+                        <div className="flex justify-between">
+                          <span className="text-gray-600 dark:text-gray-400">
+                            Price per day
                           </span>
-                          <span className="text-2xl font-bold text-amber-500">
-                            ₹
-                            {selectedBooking.finalAmount?.toLocaleString() ||
-                              selectedBooking.totalAmount?.toLocaleString()}
+                          <span className="font-medium">
+                            ₹{selectedBooking.pricePerDay?.toLocaleString()}
                           </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600 dark:text-gray-400">
+                            Number of days
+                          </span>
+                          <span className="font-medium">
+                            {selectedBooking.totalDays} days
+                          </span>
+                        </div>
+                        {selectedBooking.extras &&
+                          Object.entries(selectedBooking.extras).map(
+                            ([key, value]) => {
+                              if (!value) return null;
+                              const extraNames = {
+                                insurance: "Zero Dep Insurance",
+                                gps: "GPS Navigation",
+                                childSeat: "Child Seat",
+                                driver: "Professional Driver",
+                              };
+                              const extraPrices = {
+                                insurance: 200,
+                                gps: 100,
+                                childSeat: 150,
+                                driver: 500,
+                              };
+                              return (
+                                <div
+                                  key={key}
+                                  className="flex justify-between pl-4"
+                                >
+                                  <span className="text-gray-500 text-sm">
+                                    • {extraNames[key]}
+                                  </span>
+                                  <span className="text-gray-500 text-sm">
+                                    +₹{extraPrices[key]}/day
+                                  </span>
+                                </div>
+                              );
+                            },
+                          )}
+                        <div className="border-t border-gray-200 dark:border-gray-700 pt-3 mt-3">
+                          <div className="flex justify-between items-center">
+                            <span className="font-bold text-gray-900 dark:text-white">
+                              Total Amount
+                            </span>
+                            <span className="text-2xl font-bold text-amber-500">
+                              ₹
+                              {selectedBooking.finalAmount?.toLocaleString() ||
+                                selectedBooking.totalAmount?.toLocaleString()}
+                            </span>
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
 
-                {/* Status Section */}
-                <div className="flex flex-wrap gap-3">
-                  <div className="flex-1 p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
-                    <p className="text-xs text-gray-500 mb-1">Booking Status</p>
-                    <span
-                      className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${getStatusBadge(selectedBooking.status)}`}
-                    >
-                      {selectedBooking.status?.toUpperCase()}
-                    </span>
-                  </div>
-                  <div className="flex-1 p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
-                    <p className="text-xs text-gray-500 mb-1">Payment Status</p>
-                    <span
-                      className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${getPaymentStatusBadge(selectedBooking.paymentStatus)}`}
-                    >
-                      {selectedBooking.paymentStatus?.toUpperCase()}
-                    </span>
-                  </div>
-                  {selectedBooking.notes && (
-                    <div className="w-full p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                  {/* Status Section */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
                       <p className="text-xs text-gray-500 mb-1">
-                        Customer Notes
+                        Booking Status
                       </p>
-                      <p className="text-sm text-gray-700 dark:text-gray-300">
-                        {selectedBooking.notes}
-                      </p>
+                      <span
+                        className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${getStatusBadge(selectedBooking.status)}`}
+                      >
+                        {selectedBooking.status?.toUpperCase()}
+                      </span>
                     </div>
-                  )}
+                    <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                      <p className="text-xs text-gray-500 mb-1">
+                        Payment Status
+                      </p>
+                      <span
+                        className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${getPaymentStatusBadge(selectedBooking.paymentStatus)}`}
+                      >
+                        {selectedBooking.paymentStatus?.toUpperCase()}
+                      </span>
+                    </div>
+                    {selectedBooking.notes && (
+                      <div className="col-span-full p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                        <p className="text-xs text-gray-500 mb-1">
+                          Customer Notes
+                        </p>
+                        <p className="text-sm text-gray-700 dark:text-gray-300">
+                          {selectedBooking.notes}
+                        </p>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </motion.div>
