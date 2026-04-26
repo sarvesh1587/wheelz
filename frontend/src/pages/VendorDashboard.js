@@ -1,70 +1,83 @@
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { vehicleAPI, bookingAPI } from "../services/api";
-import LoadingSpinner from "../components/common/LoadingSpinner";
+import toast from "react-hot-toast";
 import {
   TruckIcon,
   CalendarIcon,
   CurrencyRupeeIcon,
-  StarIcon,
+  ChartBarIcon,
   PlusIcon,
   EyeIcon,
   PencilIcon,
   TrashIcon,
   CheckCircleIcon,
   XCircleIcon,
-  UsersIcon,
+  ClockIcon,
 } from "@heroicons/react/24/outline";
-import toast from "react-hot-toast";
+import { motion } from "framer-motion";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
 
 export default function VendorDashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("overview");
   const [vehicles, setVehicles] = useState([]);
   const [bookings, setBookings] = useState([]);
+  const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({
-    totalVehicles: 0,
-    totalBookings: 0,
-    totalEarnings: 0,
-    averageRating: 0,
-  });
+  const [activeTab, setActiveTab] = useState("vehicles");
 
   useEffect(() => {
     fetchVendorData();
   }, []);
 
   const fetchVendorData = async () => {
-    setLoading(true);
     try {
-      // Fetch vendor's vehicles
-      const vehiclesRes = await vehicleAPI.getAll({ limit: 100 });
-      const vendorVehicles = vehiclesRes.data.vehicles.filter(
-        (v) => v.vendor === user?._id,
-      );
-      setVehicles(vendorVehicles);
+      const [vehiclesRes, bookingsRes] = await Promise.all([
+        vehicleAPI.getAll({ vendorId: user?._id, limit: 50 }),
+        bookingAPI.getAll({ vendorId: user?._id, limit: 50 }),
+      ]);
 
-      // Fetch all bookings and filter vendor's
-      const bookingsRes = await bookingAPI.getAll({ limit: 100 });
-      const vendorBookings = bookingsRes.data.bookings.filter((b) =>
-        vendorVehicles.some((v) => v._id === b.vehicle?._id),
-      );
+      const vendorVehicles = vehiclesRes.data.vehicles || [];
+      const vendorBookings = bookingsRes.data.bookings || [];
+
+      setVehicles(vendorVehicles);
       setBookings(vendorBookings);
 
       // Calculate stats
-      const totalEarnings = vendorBookings
-        .filter((b) => b.paymentStatus === "paid")
-        .reduce((sum, b) => sum + (b.finalAmount || 0), 0);
+      const totalVehicles = vendorVehicles.length;
+      const availableVehicles = vendorVehicles.filter(
+        (v) => v.isAvailable,
+      ).length;
+      const totalBookings = vendorBookings.length;
+      const completedBookings = vendorBookings.filter(
+        (b) => b.status === "completed",
+      ).length;
+      const totalRevenue = vendorBookings.reduce(
+        (sum, b) => sum + (b.totalAmount || 0),
+        0,
+      );
+      const pendingAmount = vendorBookings
+        .filter((b) => b.status === "pending")
+        .reduce((sum, b) => sum + (b.totalAmount || 0), 0);
 
       setStats({
-        totalVehicles: vendorVehicles.length,
-        totalBookings: vendorBookings.length,
-        totalEarnings: totalEarnings,
-        averageRating:
-          vendorVehicles.reduce((sum, v) => sum + (v.averageRating || 0), 0) /
-            vendorVehicles.length || 0,
+        totalVehicles,
+        availableVehicles,
+        totalBookings,
+        completedBookings,
+        totalRevenue,
+        pendingAmount,
       });
     } catch (error) {
       console.error("Error fetching vendor data:", error);
@@ -74,8 +87,24 @@ export default function VendorDashboard() {
     }
   };
 
-  const handleDeleteVehicle = async (vehicleId) => {
-    if (window.confirm("Are you sure you want to delete this vehicle?")) {
+  const toggleVehicleAvailability = async (vehicleId, currentStatus) => {
+    try {
+      await vehicleAPI.update(vehicleId, { isAvailable: !currentStatus });
+      toast.success(
+        `Vehicle ${!currentStatus ? "listed" : "unlisted"} successfully`,
+      );
+      fetchVendorData();
+    } catch (error) {
+      toast.error("Failed to update vehicle status");
+    }
+  };
+
+  const deleteVehicle = async (vehicleId) => {
+    if (
+      window.confirm(
+        "Are you sure you want to delete this vehicle? This action cannot be undone.",
+      )
+    ) {
       try {
         await vehicleAPI.delete(vehicleId);
         toast.success("Vehicle deleted successfully");
@@ -86,356 +115,356 @@ export default function VendorDashboard() {
     }
   };
 
-  const handleToggleAvailability = async (vehicleId, currentStatus) => {
-    try {
-      await vehicleAPI.update(vehicleId, { isAvailable: !currentStatus });
-      toast.success(
-        `Vehicle is now ${!currentStatus ? "available" : "unavailable"}`,
-      );
-      fetchVendorData();
-    } catch (error) {
-      toast.error("Failed to update status");
-    }
+  const statsCards = [
+    {
+      label: "Total Vehicles",
+      value: stats?.totalVehicles || 0,
+      icon: TruckIcon,
+      color: "from-blue-500 to-blue-600",
+    },
+    {
+      label: "Available",
+      value: stats?.availableVehicles || 0,
+      icon: CheckCircleIcon,
+      color: "from-green-500 to-green-600",
+    },
+    {
+      label: "Total Bookings",
+      value: stats?.totalBookings || 0,
+      icon: CalendarIcon,
+      color: "from-amber-500 to-amber-600",
+    },
+    {
+      label: "Completed",
+      value: stats?.completedBookings || 0,
+      icon: ChartBarIcon,
+      color: "from-purple-500 to-purple-600",
+    },
+    {
+      label: "Total Revenue",
+      value: `₹${(stats?.totalRevenue || 0).toLocaleString()}`,
+      icon: CurrencyRupeeIcon,
+      color: "from-red-500 to-red-600",
+    },
+    {
+      label: "Pending Payout",
+      value: `₹${(stats?.pendingAmount || 0).toLocaleString()}`,
+      icon: ClockIcon,
+      color: "from-orange-500 to-orange-600",
+    },
+  ];
+
+  const revenueData = [
+    { month: "Jan", revenue: 25000 },
+    { month: "Feb", revenue: 35000 },
+    { month: "Mar", revenue: 45000 },
+    { month: "Apr", revenue: 55000 },
+    { month: "May", revenue: 65000 },
+    { month: "Jun", revenue: 75000 },
+  ];
+
+  const getStatusBadge = (status) => {
+    const badges = {
+      confirmed: "bg-green-100 text-green-700",
+      pending: "bg-yellow-100 text-yellow-700",
+      cancelled: "bg-red-100 text-red-700",
+      completed: "bg-blue-100 text-blue-700",
+    };
+    return badges[status] || badges.pending;
   };
 
-  if (loading) return <LoadingSpinner />;
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center pt-20">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-gray-500">Loading vendor dashboard...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-950 pt-20">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-950 pt-24 pb-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            Vendor Dashboard
-          </h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">
-            Welcome back, {user?.name?.split(" ")[0]}! Manage your vehicles and
-            bookings.
-          </p>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex flex-wrap items-center justify-between gap-4 mb-8"
+        >
+          <div>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400 bg-clip-text text-transparent">
+              Vendor Dashboard
+            </h1>
+            <p className="text-gray-500 dark:text-gray-400 mt-1">
+              Manage your vehicles, track bookings, and monitor earnings
+            </p>
+          </div>
+          <button
+            onClick={() => navigate("/vendor/vehicles/add")}
+            className="btn-primary flex items-center gap-2"
+          >
+            <PlusIcon className="w-5 h-5" />
+            Add New Vehicle
+          </button>
+        </motion.div>
+
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-8">
+          {statsCards.map((stat, idx) => (
+            <motion.div
+              key={stat.label}
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: idx * 0.05 }}
+              className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-md hover:shadow-lg transition-all"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-gray-500">{stat.label}</p>
+                  <p className="text-xl font-bold text-gray-900 dark:text-white mt-1">
+                    {stat.value}
+                  </p>
+                </div>
+                <div
+                  className={`w-10 h-10 bg-gradient-to-r ${stat.color} rounded-lg flex items-center justify-center`}
+                >
+                  <stat.icon className="w-5 h-5 text-white" />
+                </div>
+              </div>
+            </motion.div>
+          ))}
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl p-4 text-white">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-2xl font-bold">{stats.totalVehicles}</p>
-                <p className="text-sm opacity-90">Total Vehicles</p>
-              </div>
-              <TruckIcon className="w-8 h-8 opacity-80" />
-            </div>
-          </div>
-          <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-2xl p-4 text-white">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-2xl font-bold">{stats.totalBookings}</p>
-                <p className="text-sm opacity-90">Total Bookings</p>
-              </div>
-              <CalendarIcon className="w-8 h-8 opacity-80" />
-            </div>
-          </div>
-          <div className="bg-gradient-to-r from-amber-500 to-amber-600 rounded-2xl p-4 text-white">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-2xl font-bold">
-                  ₹{stats.totalEarnings.toLocaleString()}
-                </p>
-                <p className="text-sm opacity-90">Total Earnings</p>
-              </div>
-              <CurrencyRupeeIcon className="w-8 h-8 opacity-80" />
-            </div>
-          </div>
-          <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-2xl p-4 text-white">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-2xl font-bold">
-                  {stats.averageRating.toFixed(1)}★
-                </p>
-                <p className="text-sm opacity-90">Average Rating</p>
-              </div>
-              <StarIcon className="w-8 h-8 opacity-80" />
-            </div>
-          </div>
-        </div>
+        {/* Revenue Chart */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg mb-8"
+        >
+          <h3 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+            <ChartBarIcon className="w-5 h-5 text-amber-500" />
+            Revenue Overview (Last 6 Months)
+          </h3>
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={revenueData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="month" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Line
+                type="monotone"
+                dataKey="revenue"
+                stroke="#f59e0b"
+                strokeWidth={2}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </motion.div>
 
-        {/* Tab Navigation */}
-        <div className="flex flex-wrap gap-2 mb-6 border-b border-gray-200 dark:border-gray-700">
+        {/* Tabs */}
+        <div className="flex gap-2 mb-6 border-b border-gray-200 dark:border-gray-700">
           {[
-            { id: "overview", label: "📊 Overview" },
-            { id: "vehicles", label: "🚗 My Vehicles" },
-            { id: "bookings", label: "📅 Bookings" },
+            { id: "vehicles", label: "My Vehicles", icon: TruckIcon },
+            { id: "bookings", label: "Bookings", icon: CalendarIcon },
           ].map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`px-4 py-2 rounded-t-lg transition-colors ${
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-t-lg transition-all ${
                 activeTab === tab.id
                   ? "bg-amber-500 text-white"
-                  : "text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-800"
+                  : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
               }`}
             >
+              <tab.icon className="w-4 h-4" />
               {tab.label}
             </button>
           ))}
         </div>
 
-        {/* Overview Tab */}
-        {activeTab === "overview" && (
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Recent Bookings */}
-              <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm">
-                <h3 className="font-semibold text-gray-900 dark:text-white mb-4">
-                  Recent Bookings
-                </h3>
-                {bookings.slice(0, 5).length === 0 ? (
-                  <p className="text-gray-500 text-center py-4">
-                    No bookings yet
-                  </p>
-                ) : (
-                  <div className="space-y-3">
-                    {bookings.slice(0, 5).map((booking) => (
-                      <div
-                        key={booking._id}
-                        className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl"
-                      >
-                        <div>
-                          <p className="font-medium">{booking.vehicle?.name}</p>
-                          <p className="text-xs text-gray-500">
-                            {new Date(booking.startDate).toLocaleDateString()} -{" "}
-                            {new Date(booking.endDate).toLocaleDateString()}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-semibold text-amber-500">
-                            ₹{booking.finalAmount}
-                          </p>
-                          <p className="text-xs text-gray-500 capitalize">
-                            {booking.status}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Quick Actions */}
-              <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm">
-                <h3 className="font-semibold text-gray-900 dark:text-white mb-4">
-                  Quick Actions
-                </h3>
-                <div className="space-y-3">
-                  <button
-                    onClick={() => navigate("/vendor/vehicles/add")}
-                    className="w-full flex items-center gap-3 p-3 bg-amber-500 hover:bg-amber-600 text-white rounded-xl transition"
-                  >
-                    <PlusIcon className="w-5 h-5" />
-                    <span>Add New Vehicle</span>
-                  </button>
-                  <button
-                    onClick={() => setActiveTab("vehicles")}
-                    className="w-full flex items-center gap-3 p-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl transition"
-                  >
-                    <TruckIcon className="w-5 h-5" />
-                    <span>Manage My Vehicles</span>
-                  </button>
-                  <button
-                    onClick={() => setActiveTab("bookings")}
-                    className="w-full flex items-center gap-3 p-3 bg-green-500 hover:bg-green-600 text-white rounded-xl transition"
-                  >
-                    <CalendarIcon className="w-5 h-5" />
-                    <span>View All Bookings</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Vehicles Tab */}
         {activeTab === "vehicles" && (
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm overflow-hidden">
-            <div className="p-4 border-b flex justify-between items-center">
-              <h3 className="font-semibold">My Vehicles ({vehicles.length})</h3>
-              <button
-                onClick={() => navigate("/vendor/vehicles/add")}
-                className="flex items-center gap-2 px-4 py-2 bg-amber-500 text-white rounded-xl text-sm"
-              >
-                <PlusIcon className="w-4 h-4" />
-                Add Vehicle
-              </button>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50 dark:bg-gray-700/50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      Vehicle
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      Price/Day
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      Status
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                  {vehicles.map((vehicle) => (
-                    <tr
-                      key={vehicle._id}
-                      className="hover:bg-gray-50 dark:hover:bg-gray-700/30"
-                    >
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <img
-                            src={vehicle.images?.[0]}
-                            alt={vehicle.name}
-                            className="w-10 h-10 rounded-lg object-cover"
-                          />
-                          <div>
-                            <p className="font-medium">{vehicle.name}</p>
-                            <p className="text-xs text-gray-500">
-                              {vehicle.brand} {vehicle.model}
-                            </p>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="space-y-4"
+          >
+            {vehicles.length === 0 ? (
+              <div className="text-center py-16 bg-white dark:bg-gray-800 rounded-2xl">
+                <TruckIcon className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                  No Vehicles Listed
+                </h3>
+                <p className="text-gray-500 mb-4">
+                  Start earning by listing your first vehicle!
+                </p>
+                <button
+                  onClick={() => navigate("/vendor/vehicles/add")}
+                  className="btn-primary inline-flex"
+                >
+                  Add Vehicle
+                </button>
+              </div>
+            ) : (
+              vehicles.map((vehicle, idx) => (
+                <motion.div
+                  key={vehicle._id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: idx * 0.05 }}
+                  className="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-md hover:shadow-lg transition-all"
+                >
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    <img
+                      src={vehicle.images?.[0]}
+                      alt={vehicle.name}
+                      className="w-24 h-24 rounded-xl object-cover"
+                    />
+                    <div className="flex-1">
+                      <div className="flex flex-wrap items-start justify-between gap-2">
+                        <div>
+                          <h3 className="font-bold text-gray-900 dark:text-white">
+                            {vehicle.name}
+                          </h3>
+                          <p className="text-sm text-gray-500">
+                            {vehicle.brand} • {vehicle.year}
+                          </p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <span
+                              className={`text-xs px-2 py-0.5 rounded-full ${vehicle.isAvailable ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}
+                            >
+                              {vehicle.isAvailable
+                                ? "Available"
+                                : "Not Available"}
+                            </span>
                           </div>
                         </div>
-                      </td>
-                      <td className="px-6 py-4">₹{vehicle.basePrice}/day</td>
-                      <td className="px-6 py-4">
-                        <span
-                          className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            vehicle.isAvailable
-                              ? "bg-green-100 text-green-700"
-                              : "bg-red-100 text-red-700"
-                          }`}
-                        >
-                          {vehicle.isAvailable ? "Available" : "Unavailable"}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() =>
-                              navigate(`/vendor/vehicles/edit/${vehicle._id}`)
-                            }
-                            className="p-1.5 text-blue-500 hover:bg-blue-50 rounded-lg"
-                          >
-                            <PencilIcon className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() =>
-                              handleToggleAvailability(
-                                vehicle._id,
-                                vehicle.isAvailable,
-                              )
-                            }
-                            className="p-1.5 text-yellow-500 hover:bg-yellow-50 rounded-lg"
-                          >
-                            {vehicle.isAvailable ? (
-                              <XCircleIcon className="w-4 h-4" />
-                            ) : (
-                              <CheckCircleIcon className="w-4 h-4" />
-                            )}
-                          </button>
-                          <button
-                            onClick={() => handleDeleteVehicle(vehicle._id)}
-                            className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg"
-                          >
-                            <TrashIcon className="w-4 h-4" />
-                          </button>
+                        <div className="text-right">
+                          <p className="text-xl font-bold text-amber-500">
+                            ₹{vehicle.currentPrice?.toLocaleString()}
+                          </p>
+                          <p className="text-xs text-gray-400">per day</p>
                         </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+                      </div>
+                      <div className="flex flex-wrap gap-3 mt-3">
+                        <button
+                          onClick={() => navigate(`/vehicles/${vehicle._id}`)}
+                          className="text-sm text-amber-500 hover:text-amber-600 flex items-center gap-1"
+                        >
+                          <EyeIcon className="w-4 h-4" /> View
+                        </button>
+                        <button
+                          onClick={() =>
+                            navigate(`/vendor/vehicles/edit/${vehicle._id}`)
+                          }
+                          className="text-sm text-blue-500 hover:text-blue-600 flex items-center gap-1"
+                        >
+                          <PencilIcon className="w-4 h-4" /> Edit
+                        </button>
+                        <button
+                          onClick={() =>
+                            toggleVehicleAvailability(
+                              vehicle._id,
+                              vehicle.isAvailable,
+                            )
+                          }
+                          className={`text-sm flex items-center gap-1 ${vehicle.isAvailable ? "text-red-500" : "text-green-500"}`}
+                        >
+                          {vehicle.isAvailable ? (
+                            <XCircleIcon className="w-4 h-4" />
+                          ) : (
+                            <CheckCircleIcon className="w-4 h-4" />
+                          )}
+                          {vehicle.isAvailable ? "Unlist" : "List"}
+                        </button>
+                        <button
+                          onClick={() => deleteVehicle(vehicle._id)}
+                          className="text-sm text-red-500 hover:text-red-600 flex items-center gap-1"
+                        >
+                          <TrashIcon className="w-4 h-4" /> Delete
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              ))
+            )}
+          </motion.div>
         )}
 
         {/* Bookings Tab */}
         {activeTab === "bookings" && (
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50 dark:bg-gray-700/50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      Customer
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      Vehicle
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      Dates
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      Amount
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      Status
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      Action
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                  {bookings.map((booking) => (
-                    <tr
-                      key={booking._id}
-                      className="hover:bg-gray-50 dark:hover:bg-gray-700/30"
-                    >
-                      <td className="px-6 py-4">
-                        <div>
-                          <p className="font-medium">
-                            {booking.customerDetails?.name ||
-                              booking.user?.name}
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            {booking.customerDetails?.phone ||
-                              booking.user?.email}
-                          </p>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="space-y-4"
+          >
+            {bookings.length === 0 ? (
+              <div className="text-center py-16 bg-white dark:bg-gray-800 rounded-2xl">
+                <CalendarIcon className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                  No Bookings Yet
+                </h3>
+                <p className="text-gray-500">
+                  When customers book your vehicles, they'll appear here.
+                </p>
+              </div>
+            ) : (
+              bookings.map((booking, idx) => (
+                <motion.div
+                  key={booking._id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: idx * 0.05 }}
+                  className="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-md"
+                >
+                  <div className="flex flex-wrap items-start justify-between gap-4">
+                    <div className="flex gap-4">
+                      <img
+                        src={booking.vehicle?.images?.[0]}
+                        alt={booking.vehicle?.name}
+                        className="w-16 h-16 rounded-xl object-cover"
+                      />
+                      <div>
+                        <h3 className="font-bold text-gray-900 dark:text-white">
+                          {booking.vehicle?.name}
+                        </h3>
+                        <p className="text-sm text-gray-500">
+                          {booking.vehicle?.brand} • {booking.vehicle?.year}
+                        </p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span
+                            className={`text-xs px-2 py-0.5 rounded-full ${getStatusBadge(booking.status)}`}
+                          >
+                            {booking.status?.toUpperCase()}
+                          </span>
                         </div>
-                      </td>
-                      <td className="px-6 py-4">{booking.vehicle?.name}</td>
-                      <td className="px-6 py-4 text-sm">
-                        {new Date(booking.startDate).toLocaleDateString()} -{" "}
-                        {new Date(booking.endDate).toLocaleDateString()}
-                      </td>
-                      <td className="px-6 py-4">₹{booking.finalAmount}</td>
-                      <td className="px-6 py-4">
-                        <span
-                          className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            booking.status === "confirmed"
-                              ? "bg-green-100 text-green-700"
-                              : booking.status === "completed"
-                                ? "bg-blue-100 text-blue-700"
-                                : "bg-yellow-100 text-yellow-700"
-                          }`}
-                        >
-                          {booking.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <Link
-                          to={`/bookings/${booking._id}`}
-                          className="text-blue-500 hover:underline text-sm"
-                        >
-                          View Details
-                        </Link>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xl font-bold text-amber-500">
+                        ₹{booking.totalAmount?.toLocaleString()}
+                      </p>
+                      <p className="text-xs text-gray-400">Total Amount</p>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-4 mt-3 text-sm text-gray-600 dark:text-gray-400">
+                    <div className="flex items-center gap-1">
+                      <CalendarIcon className="w-4 h-4" />
+                      {new Date(booking.startDate).toLocaleDateString()} -{" "}
+                      {new Date(booking.endDate).toLocaleDateString()}
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <span>Customer: {booking.user?.name || "Guest"}</span>
+                    </div>
+                  </div>
+                </motion.div>
+              ))
+            )}
+          </motion.div>
         )}
       </div>
     </div>
