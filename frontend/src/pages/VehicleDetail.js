@@ -4,6 +4,7 @@ import { vehicleAPI, reviewAPI, wishlistAPI } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import { StarRating } from "../components/common/LoadingSpinner";
 import LoadingSpinner from "../components/common/LoadingSpinner";
+import BookingFlowModal from "../components/BookingFlowModal"; // ✅ Add this import
 import {
   MapPinIcon,
   HeartIcon,
@@ -23,6 +24,7 @@ export default function VehicleDetail() {
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeImg, setActiveImg] = useState(0);
+  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false); // ✅ Add state
 
   useEffect(() => {
     Promise.all([vehicleAPI.getOne(id), reviewAPI.getByVehicle(id)])
@@ -46,7 +48,7 @@ export default function VehicleDetail() {
     );
   };
 
-  // ✅ Call Vendor Function - Fixed
+  // Call Vendor Function
   const callVendor = () => {
     if (!vehicle) return;
     const vendorPhone =
@@ -263,10 +265,11 @@ export default function VehicleDetail() {
 
             {vehicle.isAvailable ? (
               <>
+                {/* ✅ UPDATED: Book Now button opens modal instead of navigating */}
                 <button
                   onClick={() =>
                     isAuthenticated
-                      ? navigate(`/book/${id}`)
+                      ? setIsBookingModalOpen(true) // ✅ Open modal
                       : navigate("/login")
                   }
                   className="w-full btn-primary flex items-center justify-center gap-2 mb-3"
@@ -275,7 +278,7 @@ export default function VehicleDetail() {
                   {isAuthenticated ? "Book Now" : "Login to Book"}
                 </button>
 
-                {/* ✅ Call Vendor Button */}
+                {/* Call Vendor Button */}
                 <button
                   onClick={callVendor}
                   className="w-full flex items-center justify-center gap-2 py-3 bg-green-500 hover:bg-green-600 text-white rounded-xl transition-all duration-200 font-medium"
@@ -349,6 +352,13 @@ export default function VehicleDetail() {
           </div>
         )}
       </div>
+
+      {/* ✅ Add the Booking Modal */}
+      <BookingFlowModal
+        isOpen={isBookingModalOpen}
+        onClose={() => setIsBookingModalOpen(false)}
+        vehicle={vehicle}
+      />
     </div>
   );
 }
