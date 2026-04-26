@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   XMarkIcon,
-  CalendarIcon,
   MapPinIcon,
   ShieldCheckIcon,
   DevicePhoneMobileIcon,
@@ -18,7 +17,7 @@ import { bookingAPI } from "../services/api";
 import toast from "react-hot-toast";
 import "react-datepicker/dist/react-datepicker.css";
 
-// Step Indicator Component
+// Step Indicator
 const StepIndicator = ({ currentStep, steps }) => {
   return (
     <div className="mb-6 px-4 pt-4">
@@ -93,7 +92,7 @@ const StepDates = ({
             startDate={startDate}
             endDate={endDate}
             minDate={new Date()}
-            className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+            className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-amber-500"
             dateFormat="dd/MM/yyyy"
             placeholderText="Select pickup date"
           />
@@ -109,7 +108,7 @@ const StepDates = ({
             startDate={startDate}
             endDate={endDate}
             minDate={startDate || new Date()}
-            className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+            className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-amber-500"
             dateFormat="dd/MM/yyyy"
             placeholderText="Select return date"
           />
@@ -225,24 +224,11 @@ const StepExtras = ({ extras, setExtras, onNext, onBack }) => {
 
 // Step 3: Payment
 const StepPayment = ({
-  startDate,
-  endDate,
-  extras,
-  vehicle,
   totalPrice,
   totalDays,
   onCreateBooking,
   isCreating,
 }) => {
-  const pricePerDay = vehicle?.currentPrice || vehicle?.basePrice || 0;
-  const extrasPerDay = Object.entries(extras).reduce((sum, [key, selected]) => {
-    if (selected) {
-      const prices = { insurance: 200, gps: 100, childSeat: 150, driver: 500 };
-      return sum + (prices[key] || 0);
-    }
-    return sum;
-  }, 0);
-
   return (
     <div className="space-y-4">
       <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 space-y-2">
@@ -251,21 +237,13 @@ const StepPayment = ({
         </h3>
         <div className="space-y-1 text-sm">
           <div className="flex justify-between">
-            <span className="text-gray-600">Rental Days</span>
+            <span className="text-gray-600">Total Days</span>
             <span>{totalDays} days</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-gray-600">Price per day</span>
-            <span>₹{pricePerDay.toLocaleString()}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-gray-600">Extras per day</span>
-            <span>+₹{extrasPerDay.toLocaleString()}</span>
           </div>
           <div className="border-t pt-2 mt-2">
             <div className="flex justify-between font-bold">
-              <span>Total</span>
-              <span className="text-amber-600">
+              <span>Total Amount</span>
+              <span className="text-amber-600 text-lg">
                 ₹{totalPrice.toLocaleString()}
               </span>
             </div>
@@ -282,6 +260,10 @@ const StepPayment = ({
           ? "Processing..."
           : `Confirm & Pay ₹${totalPrice.toLocaleString()}`}
       </button>
+
+      <p className="text-xs text-center text-gray-500">
+        By confirming, you agree to our Terms of Service
+      </p>
     </div>
   );
 };
@@ -324,39 +306,23 @@ export default function BookingFlowModal({ isOpen, onClose, vehicle }) {
 
   const totalPrice = (pricePerDay + extrasPerDay) * totalDays;
 
-  const handleNext = () => {
+  const handleNext = () =>
     setCurrentStep((prev) => Math.min(prev + 1, steps.length - 1));
-  };
-
-  const handleBack = () => {
-    setCurrentStep((prev) => Math.max(prev - 1, 0));
-  };
+  const handleBack = () => setCurrentStep((prev) => Math.max(prev - 1, 0));
 
   const handleCreateBooking = async () => {
     setIsCreating(true);
     try {
-      const bookingData = {
+      await bookingAPI.create({
         vehicleId: vehicle._id,
         startDate: startDate.toISOString(),
         endDate: endDate.toISOString(),
         pickupLocation: vehicle?.locationName || vehicle?.city,
         extras: extras,
-      };
-
-      await bookingAPI.create(bookingData);
-
-      toast.success("Booking confirmed successfully! 🎉");
-      onClose();
-      setCurrentStep(0);
-      setStartDate(null);
-      setEndDate(null);
-      setExtras({
-        insurance: false,
-        gps: false,
-        childSeat: false,
-        driver: false,
       });
 
+      toast.success("Booking confirmed! 🎉");
+      onClose();
       setTimeout(() => {
         window.location.href = "/dashboard";
       }, 1500);
@@ -380,9 +346,7 @@ export default function BookingFlowModal({ isOpen, onClose, vehicle }) {
           {/* Header */}
           <div className="sticky top-0 bg-white dark:bg-gray-900 border-b px-5 py-3 flex items-center justify-between">
             <div>
-              <h2 className="text-lg font-bold text-gray-900 dark:text-white">
-                Book {vehicle?.name}
-              </h2>
+              <h2 className="text-lg font-bold">Book {vehicle?.name}</h2>
               <p className="text-xs text-gray-500">
                 Step {currentStep + 1} of 3
               </p>
@@ -395,7 +359,7 @@ export default function BookingFlowModal({ isOpen, onClose, vehicle }) {
             </button>
           </div>
 
-          {/* Steps Indicator */}
+          {/* Steps */}
           <StepIndicator currentStep={currentStep} steps={steps} />
 
           {/* Content */}
