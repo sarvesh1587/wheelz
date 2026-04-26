@@ -467,3 +467,40 @@ exports.getMyStats = async (req, res, next) => {
     next(err);
   }
 };
+/**
+ * Get bookings for vendor's vehicles
+ * GET /api/bookings/vendor/my-bookings
+ */
+exports.getVendorBookings = async (req, res, next) => {
+  try {
+    // First find all vehicles belonging to this vendor
+    const vendorVehicles = await Vehicle.find({ vendor: req.user._id });
+    const vehicleIds = vendorVehicles.map((v) => v._id);
+
+    // If no vehicles, return empty array
+    if (vehicleIds.length === 0) {
+      return res.json({
+        success: true,
+        count: 0,
+        bookings: [],
+      });
+    }
+
+    // Find bookings for those vehicles
+    const bookings = await Booking.find({
+      vehicle: { $in: vehicleIds },
+    })
+      .populate("vehicle", "name brand images currentPrice category")
+      .populate("user", "name email phone")
+      .sort("-createdAt");
+
+    res.json({
+      success: true,
+      count: bookings.length,
+      bookings,
+    });
+  } catch (err) {
+    console.error("Error fetching vendor bookings:", err);
+    next(err);
+  }
+};

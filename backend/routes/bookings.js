@@ -7,6 +7,7 @@ const {
   cancelBooking,
   processPayment,
   getMyStats,
+  getVendorBookings, // ✅ ADD THIS IMPORT
 } = require("../controllers/bookingController");
 const { protect, authorize } = require("../middleware/auth");
 
@@ -17,5 +18,12 @@ bookingRouter.get("/my-stats", getMyStats);
 bookingRouter.get("/:id", getBooking);
 bookingRouter.put("/:id/cancel", cancelBooking);
 bookingRouter.put("/:id/payment", processPayment);
+
+// ✅ ADD THIS ROUTE
+bookingRouter.get(
+  "/vendor/my-bookings",
+  authorize("vendor"),
+  getVendorBookings,
+);
 
 module.exports = bookingRouter;

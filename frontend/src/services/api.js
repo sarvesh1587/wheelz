@@ -59,6 +59,18 @@ export const authAPI = {
 };
 
 // ─── Vehicles ─────────────────────────────────────────────────────────────────
+// export const vehicleAPI = {
+//   getAll: (params) => api.get("/vehicles", { params }),
+//   getOne: (id) => api.get(`/vehicles/${id}`),
+//   create: (data) => api.post("/vehicles", data),
+//   update: (id, data) => api.put(`/vehicles/${id}`, data),
+//   delete: (id) => api.delete(`/vehicles/${id}`),
+//   checkAvailability: (id, params) =>
+//     api.get(`/vehicles/${id}/availability`, { params }),
+//   getCategoryStats: () => api.get("/vehicles/stats/categories"),
+// };
+// Add to your api.js file
+
 export const vehicleAPI = {
   getAll: (params) => api.get("/vehicles", { params }),
   getOne: (id) => api.get(`/vehicles/${id}`),
@@ -68,9 +80,11 @@ export const vehicleAPI = {
   checkAvailability: (id, params) =>
     api.get(`/vehicles/${id}/availability`, { params }),
   getCategoryStats: () => api.get("/vehicles/stats/categories"),
+
+  // ✅ ADD THESE NEW METHODS:
+  getVendorVehicles: () => api.get("/vehicles/vendor/my-vehicles"), // ← New endpoint
 };
 
-// ─── Bookings ─────────────────────────────────────────────────────────────────
 export const bookingAPI = {
   create: (data) => api.post("/bookings", data),
   getAll: (params) => api.get("/bookings", { params }),
@@ -78,7 +92,19 @@ export const bookingAPI = {
   cancel: (id, data) => api.put(`/bookings/${id}/cancel`, data),
   processPayment: (id, data) => api.put(`/bookings/${id}/payment`, data),
   getMyStats: () => api.get("/bookings/my-stats"),
+
+  // ✅ ADD THESE NEW METHODS:
+  getVendorBookings: () => api.get("/bookings/vendor/my-bookings"), // ← New endpoint
 };
+// ─── Bookings ─────────────────────────────────────────────────────────────────
+// export const bookingAPI = {
+//   create: (data) => api.post("/bookings", data),
+//   getAll: (params) => api.get("/bookings", { params }),
+//   getOne: (id) => api.get(`/bookings/${id}`),
+//   cancel: (id, data) => api.put(`/bookings/${id}/cancel`, data),
+//   processPayment: (id, data) => api.put(`/bookings/${id}/payment`, data),
+//   getMyStats: () => api.get("/bookings/my-stats"),
+// };
 
 // ─── Payments ─────────────────────────────────────────────────────────────────
 export const paymentAPI = {

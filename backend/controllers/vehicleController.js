@@ -262,3 +262,24 @@ exports.getCategoryStats = async (req, res, next) => {
     next(err);
   }
 };
+/**
+ * Get vehicles for the logged-in vendor only
+ * GET /api/vehicles/vendor/my-vehicles
+ */
+exports.getVendorVehicles = async (req, res, next) => {
+  try {
+    // Get vehicles where vendor field matches logged-in user's ID
+    const vehicles = await Vehicle.find({
+      vendor: req.user._id,
+      isActive: true,
+    }).populate("addedBy", "name email");
+
+    res.json({
+      success: true,
+      count: vehicles.length,
+      vehicles,
+    });
+  } catch (err) {
+    next(err);
+  }
+};

@@ -43,13 +43,17 @@ export default function VendorDashboard() {
 
   const fetchVendorData = async () => {
     try {
+      // ✅ FIXED: Use vendor-specific endpoints
       const [vehiclesRes, bookingsRes] = await Promise.all([
-        vehicleAPI.getAll({ vendorId: user?._id, limit: 50 }),
-        bookingAPI.getAll({ vendorId: user?._id, limit: 50 }),
+        vehicleAPI.getVendorVehicles(), // Only vendor's vehicles
+        bookingAPI.getVendorBookings(), // Only vendor's bookings
       ]);
 
       const vendorVehicles = vehiclesRes.data.vehicles || [];
       const vendorBookings = bookingsRes.data.bookings || [];
+
+      console.log("Vendor Vehicles:", vendorVehicles); // Debug log
+      console.log("Vendor Bookings:", vendorBookings); // Debug log
 
       setVehicles(vendorVehicles);
       setBookings(vendorBookings);
@@ -285,7 +289,7 @@ export default function VendorDashboard() {
           ))}
         </div>
 
-        {/* Vehicles Tab */}
+        {/* Vehicles Tab - Now shows ONLY vendor's vehicles */}
         {activeTab === "vehicles" && (
           <motion.div
             initial={{ opacity: 0 }}
@@ -395,7 +399,7 @@ export default function VendorDashboard() {
           </motion.div>
         )}
 
-        {/* Bookings Tab */}
+        {/* Bookings Tab - Shows ONLY vendor's bookings */}
         {activeTab === "bookings" && (
           <motion.div
             initial={{ opacity: 0 }}
