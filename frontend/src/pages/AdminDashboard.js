@@ -8,18 +8,15 @@ import {
   CalendarIcon,
   CurrencyRupeeIcon,
   ChartBarIcon,
-  UserGroupIcon,
   BuildingStorefrontIcon,
   CheckCircleIcon,
   XCircleIcon,
   EyeIcon,
-  TrashIcon,
+  XMarkIcon,
 } from "@heroicons/react/24/outline";
 import {
   LineChart,
   Line,
-  BarChart,
-  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -30,7 +27,7 @@ import {
   Pie,
   Cell,
 } from "recharts";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
@@ -39,51 +36,27 @@ export default function AdminDashboard() {
   const [vendors, setVendors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("overview");
+  const [selectedVendor, setSelectedVendor] = useState(null);
+  const [showVendorModal, setShowVendorModal] = useState(false);
 
   useEffect(() => {
     fetchDashboardData();
   }, []);
 
-  // const fetchDashboardData = async () => {
-  //   try {
-  //     const [dashboardRes, usersRes, vendorsRes, vehiclesRes, bookingsRes] = await Promise.all([
-  //       adminAPI.getDashboard(),
-  //       adminAPI.getAllUsers({ role: "customer" }),
-  //       adminAPI.getAllUsers({ role: "vendor" }),
-  //       vehicleAPI.getAll({ limit: 100 }),
-  //       bookingAPI.getAll({ limit: 100 }),
-  //     ]);
-
-  //     setDashboardData(dashboardRes.data);
-  //     setUsers(usersRes.data.users || []);
-  //     setVendors(vendorsRes.data.users || []);
-  //     setDashboardData(prev => ({
-  //       ...prev,
-  //       totalVehicles: vehiclesRes.data.vehicles?.length || 0,
-  //       totalBookings: bookingsRes.data.bookings?.length || 0,
-  //     }));
-  //   } catch (error) {
-  //     console.error("Error fetching admin data:", error);
-  //     toast.error("Failed to load dashboard");
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-  // Update the fetchDashboardData function - change the vendors API call
   const fetchDashboardData = async () => {
     try {
       const [dashboardRes, usersRes, vendorsRes, vehiclesRes, bookingsRes] =
         await Promise.all([
           adminAPI.getDashboard(),
-          adminAPI.getAllUsers({ role: "customer" }), // ← Only customers
-          adminAPI.getAllUsers({ role: "vendor" }), // ← Only vendors (FIXED)
+          adminAPI.getAllUsers({ role: "customer" }),
+          adminAPI.getAllUsers({ role: "vendor" }),
           vehicleAPI.getAll({ limit: 100 }),
           bookingAPI.getAll({ limit: 100 }),
         ]);
 
       setDashboardData(dashboardRes.data);
       setUsers(usersRes.data.users || []);
-      setVendors(vendorsRes.data.users || []); // ← Now only vendors
+      setVendors(vendorsRes.data.users || []);
       setDashboardData((prev) => ({
         ...prev,
         totalVehicles: vehiclesRes.data.vehicles?.length || 0,
@@ -96,16 +69,23 @@ export default function AdminDashboard() {
       setLoading(false);
     }
   };
-  const toggleUserStatus = async (userId, currentStatus) => {
+
+  const toggleVendorStatus = async (vendorId, currentStatus) => {
     try {
-      await adminAPI.toggleUserActive(userId);
+      // Call your existing API - adjust based on what your backend expects
+      await adminAPI.toggleUserActive(vendorId);
       toast.success(
-        `User ${currentStatus ? "deactivated" : "activated"} successfully`,
+        `Vendor ${currentStatus ? "deactivated" : "activated"} successfully`,
       );
       fetchDashboardData();
     } catch (error) {
-      toast.error("Failed to update user status");
+      toast.error("Failed to update vendor status");
     }
+  };
+
+  const viewVendorDetails = (vendor) => {
+    setSelectedVendor(vendor);
+    setShowVendorModal(true);
   };
 
   const statsCards = [
@@ -218,7 +198,6 @@ export default function AdminDashboard() {
 
         {/* Charts Row */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          {/* Revenue Chart */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -245,7 +224,6 @@ export default function AdminDashboard() {
             </ResponsiveContainer>
           </motion.div>
 
-          {/* Category Distribution */}
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -367,7 +345,7 @@ export default function AdminDashboard() {
                       <td className="px-6 py-4">
                         <button
                           onClick={() =>
-                            toggleUserStatus(user._id, user.isActive)
+                            toggleVendorStatus(user._id, user.isActive)
                           }
                           className={`text-sm ${user.isActive ? "text-red-500 hover:text-red-600" : "text-green-500 hover:text-green-600"}`}
                         >
@@ -382,7 +360,7 @@ export default function AdminDashboard() {
           </motion.div>
         )}
 
-        {/* Vendors List */}
+        {/* Vendors List - Fixed without broken link */}
         {activeTab === "vendors" && (
           <motion.div
             initial={{ opacity: 0 }}
@@ -446,14 +424,26 @@ export default function AdminDashboard() {
                         </span>
                       </td>
                       <td className="px-6 py-4">
-                        <button
-                          onClick={() =>
-                            navigate(`/admin/vendors/${vendor._id}`)
-                          }
-                          className="text-amber-500 hover:text-amber-600"
-                        >
-                          View Details
-                        </button>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => viewVendorDetails(vendor)}
+                            className="text-amber-500 hover:text-amber-600 text-sm flex items-center gap-1"
+                          >
+                            <EyeIcon className="w-4 h-4" />
+                            View
+                          </button>
+                          <button
+                            onClick={() =>
+                              toggleVendorStatus(
+                                vendor._id,
+                                vendor.isVendorApproved,
+                              )
+                            }
+                            className={`text-sm ${vendor.isVendorApproved ? "text-red-500 hover:text-red-600" : "text-green-500 hover:text-green-600"}`}
+                          >
+                            {vendor.isVendorApproved ? "Deactivate" : "Approve"}
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -463,6 +453,91 @@ export default function AdminDashboard() {
           </motion.div>
         )}
       </div>
+
+      {/* Vendor Details Modal */}
+      <AnimatePresence>
+        {showVendorModal && selectedVendor && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowVendorModal(false)}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="fixed inset-x-4 top-1/2 -translate-y-1/2 max-w-2xl mx-auto bg-white dark:bg-gray-900 rounded-2xl shadow-2xl z-50 max-h-[85vh] overflow-y-auto"
+            >
+              <div className="sticky top-0 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 px-6 py-4 flex items-center justify-between">
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                  Vendor Details
+                </h2>
+                <button
+                  onClick={() => setShowVendorModal(false)}
+                  className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
+                >
+                  <XMarkIcon className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="p-6">
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="w-16 h-16 bg-gradient-to-r from-amber-500 to-amber-600 rounded-full flex items-center justify-center text-2xl font-bold text-white">
+                    {selectedVendor.name?.[0]?.toUpperCase()}
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                      {selectedVendor.name}
+                    </h3>
+                    <p className="text-gray-500">{selectedVendor.email}</p>
+                    {selectedVendor.businessName && (
+                      <p className="text-sm text-amber-600 dark:text-amber-400 mt-1">
+                        {selectedVendor.businessName}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                    <p className="text-xs text-gray-500">Phone Number</p>
+                    <p className="font-medium">
+                      {selectedVendor.phone || "Not provided"}
+                    </p>
+                  </div>
+                  <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                    <p className="text-xs text-gray-500">Registered On</p>
+                    <p className="font-medium">
+                      {new Date(selectedVendor.createdAt).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                    <p className="text-xs text-gray-500">Status</p>
+                    <span
+                      className={`inline-block mt-1 px-2 py-0.5 rounded-full text-xs font-semibold ${
+                        selectedVendor.isVendorApproved
+                          ? "bg-green-100 text-green-700"
+                          : "bg-yellow-100 text-yellow-700"
+                      }`}
+                    >
+                      {selectedVendor.isVendorApproved
+                        ? "Approved"
+                        : "Pending Approval"}
+                    </span>
+                  </div>
+                  <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                    <p className="text-xs text-gray-500">User Type</p>
+                    <p className="font-medium capitalize">
+                      {selectedVendor.role || "Vendor"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
