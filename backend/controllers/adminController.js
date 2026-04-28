@@ -99,30 +99,27 @@ exports.getDashboardStats = async (req, res, next) => {
     next(err);
   }
 };
-
-exports.getAllUsers = async (req, res, next) => {
+exports.getAllUsers = async (req, res) => {
   try {
-    const { search, role, flagged, page = 1, limit = 20 } = req.query;
+    const { role } = req.query;
     const query = {};
-    if (role) query.role = role;
-    if (flagged === "true") query.flaggedForReview = true;
-    if (search) {
-      query.$or = [
-        { name: new RegExp(search, "i") },
-        { email: new RegExp(search, "i") },
-      ];
+
+    // ✅ Filter by role if provided
+    if (role) {
+      query.role = role;
     }
-    const skip = (Number(page) - 1) * Number(limit);
-    const [users, total] = await Promise.all([
-      User.find(query).sort({ createdAt: -1 }).skip(skip).limit(Number(limit)),
-      User.countDocuments(query),
-    ]);
-    res.json({ success: true, users, total });
-  } catch (err) {
-    next(err);
+
+    const users = await User.find(query).select("-password");
+
+    res.json({
+      success: true,
+      count: users.length,
+      users,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
   }
 };
-
 exports.toggleUserActive = async (req, res, next) => {
   try {
     const user = await User.findById(req.params.id);

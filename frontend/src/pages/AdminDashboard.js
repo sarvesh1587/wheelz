@@ -42,21 +42,20 @@ export default function AdminDashboard() {
   useEffect(() => {
     fetchDashboardData();
   }, []);
-
   const fetchDashboardData = async () => {
     try {
       const [dashboardRes, usersRes, vendorsRes, vehiclesRes, bookingsRes] =
         await Promise.all([
           adminAPI.getDashboard(),
-          adminAPI.getAllUsers({ role: "customer" }),
-          adminAPI.getAllUsers({ role: "vendor" }),
+          adminAPI.getAllUsers({ role: "customer" }), // ✅ Only customers
+          adminAPI.getAllUsers({ role: "vendor" }), // ✅ Only vendors (FIXED)
           vehicleAPI.getAll({ limit: 100 }),
           bookingAPI.getAll({ limit: 100 }),
         ]);
 
       setDashboardData(dashboardRes.data);
-      setUsers(usersRes.data.users || []);
-      setVendors(vendorsRes.data.users || []);
+      setUsers(usersRes.data?.users || []);
+      setVendors(vendorsRes.data?.users || []); // ✅ Now only vendors
       setDashboardData((prev) => ({
         ...prev,
         totalVehicles: vehiclesRes.data.vehicles?.length || 0,
@@ -69,7 +68,6 @@ export default function AdminDashboard() {
       setLoading(false);
     }
   };
-
   const toggleVendorStatus = async (vendorId, currentStatus) => {
     try {
       // Call your existing API - adjust based on what your backend expects
@@ -87,17 +85,16 @@ export default function AdminDashboard() {
     setSelectedVendor(vendor);
     setShowVendorModal(true);
   };
-
   const statsCards = [
     {
       label: "Total Users",
-      value: users.length,
+      value: users.length, // ✅ Only customers
       icon: UsersIcon,
       color: "from-blue-500 to-blue-600",
     },
     {
       label: "Total Vendors",
-      value: vendors.length,
+      value: vendors.length, // ✅ Only vendors (now correct!)
       icon: BuildingStorefrontIcon,
       color: "from-green-500 to-green-600",
     },
@@ -126,7 +123,6 @@ export default function AdminDashboard() {
       color: "from-emerald-500 to-emerald-600",
     },
   ];
-
   const revenueData = [
     { month: "Jan", revenue: 120000 },
     { month: "Feb", revenue: 150000 },

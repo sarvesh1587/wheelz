@@ -129,21 +129,13 @@ export const aiAPI = {
     api.put(`/ai/fraud-alerts/${id}/resolve`, data),
 };
 
-// ─── Admin ────────────────────────────────────────────────────────────────────
-// export const adminAPI = {
-//   getDashboard: () => api.get("/admin/dashboard"),
-//   getAllUsers: (params) => api.get("/admin/users", { params }),
-//   toggleUserActive: (id) => api.put(`/admin/users/${id}/toggle-active`),
-//   getRevenueBreakdown: () => api.get("/admin/revenue/breakdown"),
-// };
-// Add to adminAPI object in api.js
 export const adminAPI = {
   getDashboard: () => api.get("/admin/dashboard"),
-  getAllUsers: (params) => api.get("/admin/users", { params }),
-  getUserById: (id) => api.get(`/admin/users/${id}`), // ← Add this
+  getAllUsers: (params) => api.get("/admin/users", { params }), // ✅ Should accept role param
+  getUserById: (id) => api.get(`/admin/users/${id}`),
   toggleUserActive: (id) => api.put(`/admin/users/${id}/toggle-active`),
   toggleVendorStatus: (id, status) =>
-    api.put(`/admin/vendors/${id}/status`, { approved: status }), // ← Add this
+    api.put(`/admin/vendors/${id}/status`, { approved: status }),
   getRevenueBreakdown: () => api.get("/admin/revenue/breakdown"),
 };
 // ─── Reviews ──────────────────────────────────────────────────────────────────
