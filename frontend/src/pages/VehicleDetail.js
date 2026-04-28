@@ -101,7 +101,25 @@ export default function VehicleDetail() {
       isInWishlist(id) ? "Removed from wishlist" : "Added to wishlist ❤️",
     );
   };
+  // Add this function inside your component
+  const refreshReviews = async () => {
+    console.log("Refreshing reviews...");
+    try {
+      const rRes = await reviewAPI.getByVehicle(id);
+      console.log("Fetched reviews:", rRes.data.reviews);
+      setReviews(rRes.data.reviews || []);
+    } catch (error) {
+      console.error("Error fetching reviews:", error);
+    }
+  };
 
+  // Update the ReviewModal component
+  <ReviewModal
+    isOpen={showReviewModal}
+    onClose={() => setShowReviewModal(false)}
+    vehicle={vehicle}
+    onReviewSubmitted={refreshReviews} // ← Pass refresh function
+  />;
   const callVendor = () => {
     if (!vehicle) return;
     const vendorPhone =

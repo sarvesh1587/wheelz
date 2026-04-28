@@ -8,7 +8,7 @@ export default function ReviewModal({
   isOpen,
   onClose,
   vehicle,
-  onSubmitSuccess,
+  onReviewSubmitted,
 }) {
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
@@ -34,46 +34,32 @@ export default function ReviewModal({
       const response = await reviewAPI.create({
         vehicleId: vehicle._id,
         rating,
-        title: title || undefined,
-        comment,
+        title: title || "",
+        comment: comment.trim(),
       });
 
-      console.log("Review submit response:", response.data);
+      console.log("Review response:", response.data);
 
       if (response.data.success) {
         toast.success("Review submitted successfully! 🎉");
 
-        // ✅ Force refresh the page to show new review
-        if (onSubmitSuccess) {
-          await onSubmitSuccess();
+        // Callback to refresh reviews
+        if (onReviewSubmitted) {
+          onReviewSubmitted();
         }
 
-        // ✅ Close modal
+        // Close modal and reset form
         onClose();
-
-        // ✅ Reset form
         setRating(0);
         setTitle("");
         setComment("");
-
-        // ✅ Optional: Reload page after 1 second
-        setTimeout(() => {
-          window.location.reload();
-        }, 1000);
       }
     } catch (error) {
       console.error("Review error:", error);
-      console.error("Error response:", error.response?.data);
       toast.error(error.response?.data?.message || "Failed to submit review");
     } finally {
       setSubmitting(false);
     }
-  };
-
-  const resetForm = () => {
-    setRating(0);
-    setTitle("");
-    setComment("");
   };
 
   if (!isOpen) return null;
@@ -101,10 +87,7 @@ export default function ReviewModal({
           </p>
         </div>
 
-        <form
-          onSubmit={handleSubmit}
-          className="p-6 max-h-[70vh] overflow-y-auto"
-        >
+        <form onSubmit={handleSubmit} className="p-6">
           <div className="text-center mb-5">
             <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
               Your Rating
@@ -117,7 +100,7 @@ export default function ReviewModal({
                   onClick={() => setRating(star)}
                   onMouseEnter={() => setHoverRating(star)}
                   onMouseLeave={() => setHoverRating(0)}
-                  className="focus:outline-none transition-transform hover:scale-110"
+                  className="focus:outline-none"
                 >
                   {(hoverRating || rating) >= star ? (
                     <StarSolid className="w-8 h-8 text-amber-500" />
@@ -127,15 +110,6 @@ export default function ReviewModal({
                 </button>
               ))}
             </div>
-            {rating > 0 && (
-              <p className="text-xs text-amber-500 mt-1">
-                {rating === 5 && "🌟 Excellent! Loved it!"}
-                {rating === 4 && "👍 Very Good!"}
-                {rating === 3 && "😐 Good, but could be better"}
-                {rating === 2 && "😕 Not satisfied"}
-                {rating === 1 && "😡 Very Poor"}
-              </p>
-            )}
           </div>
 
           <div className="mb-4">
@@ -147,7 +121,7 @@ export default function ReviewModal({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g., Amazing experience!"
-              className="w-full px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-amber-500"
+              className="w-full px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
             />
           </div>
 
@@ -160,35 +134,15 @@ export default function ReviewModal({
               onChange={(e) => setComment(e.target.value)}
               rows={4}
               placeholder="Share your experience..."
-              className="w-full px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-amber-500 resize-none"
+              className="w-full px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 resize-none"
               required
             />
-          </div>
-
-          <div className="flex items-center gap-2 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg mb-5">
-            <svg
-              className="w-5 h-5 text-green-500"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-            <span className="text-sm text-green-700 dark:text-green-400">
-              ✅ Verified Booking - You can only review vehicles you've booked
-              and paid for
-            </span>
           </div>
 
           <button
             type="submit"
             disabled={submitting}
-            className="w-full py-3 bg-gradient-to-r from-amber-500 to-amber-600 text-white font-semibold rounded-lg hover:shadow-lg transition-all disabled:opacity-50"
+            className="w-full py-3 bg-gradient-to-r from-amber-500 to-amber-600 text-white font-semibold rounded-lg disabled:opacity-50"
           >
             {submitting ? "Submitting..." : "Submit Review"}
           </button>
