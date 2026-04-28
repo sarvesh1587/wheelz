@@ -101,45 +101,103 @@ export default function Dashboard() {
     setSelectedBooking(booking);
     setShowBookingModal(true);
   };
-
-  // ✅ Process Payment Function
+  // ✅ Process Payment Function - Fixed Version
   const processPayment = async (booking) => {
     setProcessingPayment(true);
     try {
-      // Load Razorpay script
-      const isLoaded = await loadRazorpayScript();
-      if (!isLoaded) {
-        toast.error(
-          "Payment system unavailable. Please refresh and try again.",
-        );
+      // Check if Razorpay is loaded
+      if (!window.Razorpay) {
+        toast.error("Payment system is loading. Please try again.");
         setProcessingPayment(false);
         return;
       }
 
       // Create order on backend
-      const response = await paymentAPI.createOrder(booking._id);
+      toast.loading("Creating payment order...", { id: "payment" });
 
-      // Initialize payment
-      await initRazorpayPayment({
-        amount: response.data.amount,
-        orderId: response.data.orderId,
+      const orderResponse = await paymentAPI.createOrder(booking._id);
+
+      toast.dismiss("payment");
+
+      if (!orderResponse.data.orderId) {
+        toast.error("Failed to create payment order");
+        setProcessingPayment(false);
+        return;
+      }
+
+      const options = {
+        key: orderResponse.data.keyId,
+        amount: orderResponse.data.amount,
+        currency: orderResponse.data.currency,
+        name: "Wheelz",
         description: `Booking: ${booking.bookingRef}`,
-        customerName: user?.name,
-        customerEmail: user?.email,
-        customerPhone: user?.phone,
-      });
+        order_id: orderResponse.data.orderId,
+        handler: async (paymentResponse) => {
+          toast.loading("Verifying payment...", { id: "verify" });
 
-      // Verify payment after success
-      toast.success("Payment successful! Booking confirmed.");
-      fetchDashboardData();
+          try {
+            // ✅ Verify payment on backend
+            const verifyResponse = await paymentAPI.verifyPayment({
+              bookingId: booking._id,
+              razorpayOrderId: paymentResponse.razorpay_order_id,
+              razorpayPaymentId: paymentResponse.razorpay_payment_id,
+              razorpaySignature: paymentResponse.razorpay_signature,
+            });
+
+            toast.dismiss("verify");
+
+            if (verifyResponse.data.success) {
+              toast.success("✅ Payment successful! Booking confirmed.");
+
+              // ✅ IMPORTANT: Wait a moment then refresh all data
+              setTimeout(() => {
+                fetchDashboardData();
+              }, 500);
+
+              // ✅ Close modal if open
+              setShowBookingModal(false);
+              setSelectedBooking(null);
+            } else {
+              toast.error(
+                "Payment verification failed. Please contact support.",
+              );
+            }
+          } catch (error) {
+            console.error("Verification error:", error);
+            toast.dismiss("verify");
+            toast.error(
+              error.response?.data?.message || "Payment verification failed",
+            );
+          }
+        },
+        prefill: {
+          name: user?.name,
+          email: user?.email,
+          contact: user?.phone,
+        },
+        theme: {
+          color: "#f59e0b",
+        },
+        modal: {
+          ondismiss: () => {
+            setProcessingPayment(false);
+            toast.error("Payment cancelled");
+          },
+        },
+      };
+
+      const razorpay = new window.Razorpay(options);
+      razorpay.open();
     } catch (error) {
       console.error("Payment error:", error);
-      toast.error(error.message || "Payment failed. Please try again.");
+      toast.dismiss("payment");
+      toast.error(
+        error.response?.data?.message || "Payment failed. Please try again.",
+      );
     } finally {
       setProcessingPayment(false);
     }
   };
-
   // ✅ PDF Download Function (Only for paid/bookings)
   const downloadBookingPDF = (booking) => {
     // Only allow download if payment is paid or booking is confirmed
