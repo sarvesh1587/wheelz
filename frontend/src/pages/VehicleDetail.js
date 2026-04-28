@@ -120,22 +120,26 @@ export default function VehicleDetail() {
     toast.success("Link copied!");
   };
 
-  // const handleReviewSuccess = async () => {
-  //   setHasReviewed(true);
-  //   // Refresh reviews
-  //   const rRes = await reviewAPI.getByVehicle(id);
-  //   setReviews(rRes.data.reviews);
-  //   toast.success("Thank you for your review! 🌟");
-  // };
-  // Add this function inside your component
+  // Replace your handleReviewSuccess function with this:
   const handleReviewSuccess = async () => {
-    // Refresh reviews
+    console.log("Review submitted, refreshing...");
+
+    // Method 1: Fetch fresh reviews
     try {
       const rRes = await reviewAPI.getByVehicle(id);
+      console.log("Fetched reviews:", rRes.data.reviews);
       setReviews(rRes.data.reviews);
       toast.success("Thank you for your review! 🌟");
     } catch (error) {
       console.error("Error refreshing reviews:", error);
+    }
+
+    // Method 2: Also fetch vehicle to update rating
+    try {
+      const vRes = await vehicleAPI.getOne(id);
+      setVehicle(vRes.data.vehicle);
+    } catch (error) {
+      console.error("Error refreshing vehicle:", error);
     }
   };
 

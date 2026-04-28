@@ -16,46 +16,16 @@ export default function ReviewModal({
   const [comment, setComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  // const handleSubmit = async (e) => {
-  //   e.preventDefault();
-
-  //   if (rating === 0) {
-  //     toast.error("Please select a rating");
-  //     return;
-  //   }
-
-  //   if (!comment.trim()) {
-  //     toast.error("Please write a review");
-  //     return;
-  //   }
-
-  //   setSubmitting(true);
-  //   try {
-  //     await reviewAPI.create({
-  //       vehicleId: vehicle._id,
-  //       rating,
-  //       title: title || undefined,
-  //       comment,
-  //     });
-
-  //     toast.success("Review submitted successfully! 🎉");
-  //     if (onSubmitSuccess) onSubmitSuccess();
-  //     onClose();
-  //     setRating(0);
-  //     setTitle("");
-  //     setComment("");
-  //   } catch (error) {
-  //     console.error("Review error:", error);
-  //     toast.error(error.response?.data?.message || "Failed to submit review");
-  //   } finally {
-  //     setSubmitting(false);
-  //   }
-  // };
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (rating === 0) {
       toast.error("Please select a rating");
+      return;
+    }
+
+    if (!comment.trim()) {
+      toast.error("Please write a review");
       return;
     }
 
@@ -68,25 +38,44 @@ export default function ReviewModal({
         comment,
       });
 
-      console.log("Review submit response:", response.data); // ✅ Debug
+      console.log("Review submit response:", response.data);
 
-      toast.success("Review submitted successfully! 🎉");
+      if (response.data.success) {
+        toast.success("Review submitted successfully! 🎉");
 
-      // ✅ Call the success callback to refresh reviews
-      if (onSubmitSuccess) {
-        onSubmitSuccess();
+        // ✅ Force refresh the page to show new review
+        if (onSubmitSuccess) {
+          await onSubmitSuccess();
+        }
+
+        // ✅ Close modal
+        onClose();
+
+        // ✅ Reset form
+        setRating(0);
+        setTitle("");
+        setComment("");
+
+        // ✅ Optional: Reload page after 1 second
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
       }
-
-      onClose();
-      resetForm();
     } catch (error) {
       console.error("Review error:", error);
-      console.error("Error response:", error.response?.data); // ✅ Debug
+      console.error("Error response:", error.response?.data);
       toast.error(error.response?.data?.message || "Failed to submit review");
     } finally {
       setSubmitting(false);
     }
   };
+
+  const resetForm = () => {
+    setRating(0);
+    setTitle("");
+    setComment("");
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -128,6 +117,7 @@ export default function ReviewModal({
                   onClick={() => setRating(star)}
                   onMouseEnter={() => setHoverRating(star)}
                   onMouseLeave={() => setHoverRating(0)}
+                  className="focus:outline-none transition-transform hover:scale-110"
                 >
                   {(hoverRating || rating) >= star ? (
                     <StarSolid className="w-8 h-8 text-amber-500" />
@@ -137,6 +127,15 @@ export default function ReviewModal({
                 </button>
               ))}
             </div>
+            {rating > 0 && (
+              <p className="text-xs text-amber-500 mt-1">
+                {rating === 5 && "🌟 Excellent! Loved it!"}
+                {rating === 4 && "👍 Very Good!"}
+                {rating === 3 && "😐 Good, but could be better"}
+                {rating === 2 && "😕 Not satisfied"}
+                {rating === 1 && "😡 Very Poor"}
+              </p>
+            )}
           </div>
 
           <div className="mb-4">
@@ -148,7 +147,7 @@ export default function ReviewModal({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g., Amazing experience!"
-              className="w-full px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
+              className="w-full px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-amber-500"
             />
           </div>
 
@@ -161,7 +160,7 @@ export default function ReviewModal({
               onChange={(e) => setComment(e.target.value)}
               rows={4}
               placeholder="Share your experience..."
-              className="w-full px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 resize-none"
+              className="w-full px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-amber-500 resize-none"
               required
             />
           </div>
@@ -181,14 +180,15 @@ export default function ReviewModal({
               />
             </svg>
             <span className="text-sm text-green-700 dark:text-green-400">
-              ✅ Verified Booking
+              ✅ Verified Booking - You can only review vehicles you've booked
+              and paid for
             </span>
           </div>
 
           <button
             type="submit"
             disabled={submitting}
-            className="w-full py-3 bg-gradient-to-r from-amber-500 to-amber-600 text-white font-semibold rounded-lg disabled:opacity-50"
+            className="w-full py-3 bg-gradient-to-r from-amber-500 to-amber-600 text-white font-semibold rounded-lg hover:shadow-lg transition-all disabled:opacity-50"
           >
             {submitting ? "Submitting..." : "Submit Review"}
           </button>
