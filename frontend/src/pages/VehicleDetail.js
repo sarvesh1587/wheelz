@@ -1,9 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { vehicleAPI, reviewAPI, wishlistAPI } from "../services/api";
+import {
+  vehicleAPI,
+  reviewAPI,
+  wishlistAPI,
+  bookingAPI,
+} from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import { StarRating } from "../components/common/LoadingSpinner";
 import LoadingSpinner from "../components/common/LoadingSpinner";
+import ReviewModal from "../components/ReviewModal";
 import {
   MapPinIcon,
   HeartIcon,
@@ -11,28 +17,78 @@ import {
   CheckCircleIcon,
   CalendarDaysIcon,
   PhoneIcon,
+  StarIcon as StarOutline,
 } from "@heroicons/react/24/outline";
-import { HeartIcon as HeartSolid } from "@heroicons/react/24/solid";
+import {
+  HeartIcon as HeartSolid,
+  StarIcon as StarSolid,
+} from "@heroicons/react/24/solid";
 import toast from "react-hot-toast";
 
 export default function VehicleDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { isAuthenticated, isInWishlist, toggleWishlist } = useAuth();
+  const { isAuthenticated, isInWishlist, toggleWishlist, user } = useAuth();
   const [vehicle, setVehicle] = useState(null);
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeImg, setActiveImg] = useState(0);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [canReview, setCanReview] = useState(false);
+  const [hasReviewed, setHasReviewed] = useState(false);
 
   useEffect(() => {
-    Promise.all([vehicleAPI.getOne(id), reviewAPI.getByVehicle(id)])
-      .then(([vRes, rRes]) => {
-        setVehicle(vRes.data.vehicle);
-        setReviews(rRes.data.reviews);
-      })
-      .catch(() => navigate("/vehicles"))
-      .finally(() => setLoading(false));
+    loadVehicleData();
   }, [id, navigate]);
+
+  const loadVehicleData = async () => {
+    try {
+      const [vRes, rRes] = await Promise.all([
+        vehicleAPI.getOne(id),
+        reviewAPI.getByVehicle(id),
+      ]);
+      setVehicle(vRes.data.vehicle);
+      setReviews(rRes.data.reviews);
+
+      // Check if user can review after loading data
+      if (isAuthenticated) {
+        await checkCanReview(vRes.data.vehicle);
+      }
+    } catch (error) {
+      console.error("Error loading vehicle:", error);
+      navigate("/vehicles");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Check if user can review this vehicle
+  const checkCanReview = async (vehicleData) => {
+    if (!isAuthenticated || !vehicleData) return;
+
+    try {
+      // Get user's bookings
+      const bookingsRes = await bookingAPI.getAll();
+      const userBookings = bookingsRes.data.bookings || [];
+
+      // Check if user has a completed/paid booking for this vehicle
+      const hasPaidBooking = userBookings.some(
+        (booking) =>
+          booking.vehicle?._id === id &&
+          booking.paymentStatus === "paid" &&
+          booking.status === "confirmed" &&
+          new Date(booking.endDate) < new Date(), // Trip completed
+      );
+
+      setCanReview(hasPaidBooking);
+
+      // Check if user already reviewed
+      const userReview = reviews.find((r) => r.user?._id === user?._id);
+      setHasReviewed(!!userReview);
+    } catch (error) {
+      console.error("Error checking review eligibility:", error);
+    }
+  };
 
   const handleWishlist = async () => {
     if (!isAuthenticated) {
@@ -62,6 +118,14 @@ export default function VehicleDetail() {
   const copyLink = () => {
     navigator.clipboard.writeText(window.location.href);
     toast.success("Link copied!");
+  };
+
+  const handleReviewSuccess = async () => {
+    setHasReviewed(true);
+    // Refresh reviews
+    const rRes = await reviewAPI.getByVehicle(id);
+    setReviews(rRes.data.reviews);
+    toast.success("Thank you for your review! 🌟");
   };
 
   if (loading) return <LoadingSpinner />;
@@ -249,6 +313,25 @@ export default function VehicleDetail() {
                   {isAuthenticated ? "Book Now" : "Login to Book"}
                 </button>
 
+                {/* ✅ Review Button - Only for paid users who haven't reviewed */}
+                {canReview && !hasReviewed && (
+                  <button
+                    onClick={() => setShowReviewModal(true)}
+                    className="w-full flex items-center justify-center gap-2 py-3 bg-purple-500 hover:bg-purple-600 text-white rounded-xl transition-all duration-200 font-medium mb-2"
+                  >
+                    <StarOutline className="w-5 h-5" />
+                    Write a Review
+                  </button>
+                )}
+
+                {/* ✅ Already Reviewed Message */}
+                {hasReviewed && (
+                  <div className="w-full text-center py-2 text-green-600 dark:text-green-400 text-sm flex items-center justify-center gap-2">
+                    <CheckCircleIcon className="w-4 h-4" />
+                    Thank you for your review! 🌟
+                  </div>
+                )}
+
                 <button
                   onClick={callVendor}
                   className="w-full flex items-center justify-center gap-2 py-3 bg-green-500 hover:bg-green-600 text-white rounded-xl transition-all duration-200 font-medium"
@@ -273,6 +356,7 @@ export default function VehicleDetail() {
         </div>
       </div>
 
+      {/* Reviews Section */}
       <div className="mt-14">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
           Reviews ({reviews.length})
@@ -297,7 +381,21 @@ export default function VehicleDetail() {
                     <p className="font-semibold text-sm text-gray-900 dark:text-white">
                       {r.user?.name}
                     </p>
-                    <StarRating rating={r.rating} />
+                    <div className="flex items-center gap-1">
+                      {[1, 2, 3, 4, 5].map((star) =>
+                        star <= r.rating ? (
+                          <StarSolid
+                            key={star}
+                            className="w-3 h-3 text-amber-500"
+                          />
+                        ) : (
+                          <StarOutline
+                            key={star}
+                            className="w-3 h-3 text-gray-300"
+                          />
+                        ),
+                      )}
+                    </div>
                   </div>
                   <span className="ml-auto text-xs text-gray-400">
                     {new Date(r.createdAt).toLocaleDateString("en-IN")}
@@ -321,6 +419,14 @@ export default function VehicleDetail() {
           </div>
         )}
       </div>
+
+      {/* Review Modal */}
+      <ReviewModal
+        isOpen={showReviewModal}
+        onClose={() => setShowReviewModal(false)}
+        vehicle={vehicle}
+        onSubmitSuccess={handleReviewSuccess}
+      />
     </div>
   );
 }
