@@ -8,6 +8,7 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 const helmet = require("helmet");
 const morgan = require("morgan");
+const reviewRoutes = require("./routes/reviewRoutes");
 require("dotenv").config();
 
 const app = express();
@@ -51,6 +52,7 @@ app.use("/api/wishlist", require("./routes/wishlist"));
 app.use("/api/notifications", require("./routes/notifications"));
 app.use("/api/auth/google", require("./routes/googleAuth"));
 app.use("/api/auth/google", require("./routes/googleAuth"));
+app.use("/api/reviews", reviewRoutes);
 // ─── Health Check ───────────────────────────────────────────────────────────
 app.get("/api/health", (req, res) => {
   res.json({
