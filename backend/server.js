@@ -8,7 +8,6 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 const helmet = require("helmet");
 const morgan = require("morgan");
-const reviewRoutes = require("./routes/reviewRoutes");
 require("dotenv").config();
 
 const app = express();
@@ -45,14 +44,13 @@ app.use("/api/users", require("./routes/users"));
 app.use("/api/vehicles", require("./routes/vehicles"));
 app.use("/api/bookings", require("./routes/bookings"));
 app.use("/api/payments", require("./routes/payments"));
-app.use("/api/reviews", require("./routes/reviews"));
+app.use("/api/reviews", require("./routes/reviewRoutes")); // ✅ FIXED
 app.use("/api/admin", require("./routes/admin"));
 app.use("/api/ai", require("./routes/ai"));
 app.use("/api/wishlist", require("./routes/wishlist"));
 app.use("/api/notifications", require("./routes/notifications"));
 app.use("/api/auth/google", require("./routes/googleAuth"));
-app.use("/api/auth/google", require("./routes/googleAuth"));
-app.use("/api/reviews", reviewRoutes);
+
 // ─── Health Check ───────────────────────────────────────────────────────────
 app.get("/api/health", (req, res) => {
   res.json({
