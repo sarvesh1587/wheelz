@@ -42,20 +42,37 @@ export default function AdminDashboard() {
   useEffect(() => {
     fetchDashboardData();
   }, []);
+
   const fetchDashboardData = async () => {
     try {
-      const [dashboardRes, usersRes, vendorsRes, vehiclesRes, bookingsRes] =
+      // ✅ Get ALL users first, then filter on frontend
+      const [dashboardRes, allUsersRes, vehiclesRes, bookingsRes] =
         await Promise.all([
           adminAPI.getDashboard(),
-          adminAPI.getAllUsers({ role: "customer" }), // ✅ Only customers
-          adminAPI.getAllUsers({ role: "vendor" }), // ✅ Only vendors (FIXED)
+          adminAPI.getAllUsers(), // Get all users without role filter
           vehicleAPI.getAll({ limit: 100 }),
           bookingAPI.getAll({ limit: 100 }),
         ]);
 
+      const allUsers = allUsersRes.data?.users || [];
+
+      // ✅ Filter users by role on frontend
+      const customers = allUsers.filter((user) => user.role === "customer");
+      const vendorsList = allUsers.filter((user) => user.role === "vendor");
+
+      console.log("=== Admin Dashboard Debug ===");
+      console.log("Total users in DB:", allUsers.length);
+      console.log("Customers (role=customer):", customers.length);
+      console.log("Vendors (role=vendor):", vendorsList.length);
+
+      // Log first few users to see their roles
+      allUsers.slice(0, 5).forEach((u) => {
+        console.log(`User: ${u.name}, Role: ${u.role}`);
+      });
+
       setDashboardData(dashboardRes.data);
-      setUsers(usersRes.data?.users || []);
-      setVendors(vendorsRes.data?.users || []); // ✅ Now only vendors
+      setUsers(customers);
+      setVendors(vendorsList);
       setDashboardData((prev) => ({
         ...prev,
         totalVehicles: vehiclesRes.data.vehicles?.length || 0,
@@ -68,9 +85,9 @@ export default function AdminDashboard() {
       setLoading(false);
     }
   };
+
   const toggleVendorStatus = async (vendorId, currentStatus) => {
     try {
-      // Call your existing API - adjust based on what your backend expects
       await adminAPI.toggleUserActive(vendorId);
       toast.success(
         `Vendor ${currentStatus ? "deactivated" : "activated"} successfully`,
@@ -85,16 +102,17 @@ export default function AdminDashboard() {
     setSelectedVendor(vendor);
     setShowVendorModal(true);
   };
+
   const statsCards = [
     {
       label: "Total Users",
-      value: users.length, // ✅ Only customers
+      value: users.length,
       icon: UsersIcon,
       color: "from-blue-500 to-blue-600",
     },
     {
       label: "Total Vendors",
-      value: vendors.length, // ✅ Only vendors (now correct!)
+      value: vendors.length, // ✅ Now correct!
       icon: BuildingStorefrontIcon,
       color: "from-green-500 to-green-600",
     },
@@ -123,6 +141,7 @@ export default function AdminDashboard() {
       color: "from-emerald-500 to-emerald-600",
     },
   ];
+
   const revenueData = [
     { month: "Jan", revenue: 120000 },
     { month: "Feb", revenue: 150000 },
@@ -356,7 +375,7 @@ export default function AdminDashboard() {
           </motion.div>
         )}
 
-        {/* Vendors List - Fixed without broken link */}
+        {/* Vendors List */}
         {activeTab === "vendors" && (
           <motion.div
             initial={{ opacity: 0 }}
