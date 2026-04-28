@@ -120,14 +120,32 @@ export default function VehicleDetail() {
     toast.success("Link copied!");
   };
 
+  // const handleReviewSuccess = async () => {
+  //   setHasReviewed(true);
+  //   // Refresh reviews
+  //   const rRes = await reviewAPI.getByVehicle(id);
+  //   setReviews(rRes.data.reviews);
+  //   toast.success("Thank you for your review! 🌟");
+  // };
+  // Add this function inside your component
   const handleReviewSuccess = async () => {
-    setHasReviewed(true);
     // Refresh reviews
-    const rRes = await reviewAPI.getByVehicle(id);
-    setReviews(rRes.data.reviews);
-    toast.success("Thank you for your review! 🌟");
+    try {
+      const rRes = await reviewAPI.getByVehicle(id);
+      setReviews(rRes.data.reviews);
+      toast.success("Thank you for your review! 🌟");
+    } catch (error) {
+      console.error("Error refreshing reviews:", error);
+    }
   };
 
+  // Update the ReviewModal component
+  <ReviewModal
+    isOpen={showReviewModal}
+    onClose={() => setShowReviewModal(false)}
+    vehicle={vehicle}
+    onSubmitSuccess={handleReviewSuccess} // ✅ Make sure this is passed
+  />;
   if (loading) return <LoadingSpinner />;
   if (!vehicle) return null;
 

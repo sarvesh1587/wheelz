@@ -16,6 +16,41 @@ export default function ReviewModal({
   const [comment, setComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+
+  //   if (rating === 0) {
+  //     toast.error("Please select a rating");
+  //     return;
+  //   }
+
+  //   if (!comment.trim()) {
+  //     toast.error("Please write a review");
+  //     return;
+  //   }
+
+  //   setSubmitting(true);
+  //   try {
+  //     await reviewAPI.create({
+  //       vehicleId: vehicle._id,
+  //       rating,
+  //       title: title || undefined,
+  //       comment,
+  //     });
+
+  //     toast.success("Review submitted successfully! 🎉");
+  //     if (onSubmitSuccess) onSubmitSuccess();
+  //     onClose();
+  //     setRating(0);
+  //     setTitle("");
+  //     setComment("");
+  //   } catch (error) {
+  //     console.error("Review error:", error);
+  //     toast.error(error.response?.data?.message || "Failed to submit review");
+  //   } finally {
+  //     setSubmitting(false);
+  //   }
+  // };
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -24,34 +59,34 @@ export default function ReviewModal({
       return;
     }
 
-    if (!comment.trim()) {
-      toast.error("Please write a review");
-      return;
-    }
-
     setSubmitting(true);
     try {
-      await reviewAPI.create({
+      const response = await reviewAPI.create({
         vehicleId: vehicle._id,
         rating,
         title: title || undefined,
         comment,
       });
 
+      console.log("Review submit response:", response.data); // ✅ Debug
+
       toast.success("Review submitted successfully! 🎉");
-      if (onSubmitSuccess) onSubmitSuccess();
+
+      // ✅ Call the success callback to refresh reviews
+      if (onSubmitSuccess) {
+        onSubmitSuccess();
+      }
+
       onClose();
-      setRating(0);
-      setTitle("");
-      setComment("");
+      resetForm();
     } catch (error) {
       console.error("Review error:", error);
+      console.error("Error response:", error.response?.data); // ✅ Debug
       toast.error(error.response?.data?.message || "Failed to submit review");
     } finally {
       setSubmitting(false);
     }
   };
-
   if (!isOpen) return null;
 
   return (
