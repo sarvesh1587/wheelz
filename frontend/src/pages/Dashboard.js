@@ -1,7 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { bookingAPI, wishlistAPI, vehicleAPI } from "../services/api";
+import {
+  bookingAPI,
+  wishlistAPI,
+  vehicleAPI,
+  paymentAPI,
+} from "../services/api";
 import toast from "react-hot-toast";
 import {
   CalendarIcon,
@@ -31,6 +36,7 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("bookings");
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [showBookingModal, setShowBookingModal] = useState(false);
+  const [processingPayment, setProcessingPayment] = useState(false);
 
   useEffect(() => {
     fetchDashboardData();
@@ -95,9 +101,60 @@ export default function Dashboard() {
     setShowBookingModal(true);
   };
 
-  // PDF Download Function for Customer
-  const downloadBookingPDF = () => {
-    if (!selectedBooking) return;
+  // ✅ Process Payment Function
+  const processPayment = async (booking) => {
+    setProcessingPayment(true);
+    try {
+      // Call your payment API
+      const response = await paymentAPI.createOrder(booking._id);
+
+      // Initialize Razorpay
+      const options = {
+        key: process.env.REACT_APP_RAZORPAY_KEY_ID,
+        amount: response.data.amount,
+        currency: "INR",
+        name: "Wheelz",
+        description: `Booking: ${booking.bookingRef}`,
+        order_id: response.data.orderId,
+        handler: async (paymentResponse) => {
+          // Verify payment
+          await paymentAPI.verifyPayment({
+            bookingId: booking._id,
+            paymentId: paymentResponse.razorpay_payment_id,
+            orderId: paymentResponse.razorpay_order_id,
+            signature: paymentResponse.razorpay_signature,
+          });
+
+          toast.success("Payment successful! Booking confirmed.");
+          fetchDashboardData();
+        },
+        prefill: {
+          name: user?.name,
+          email: user?.email,
+          contact: user?.phone,
+        },
+        theme: {
+          color: "#f59e0b",
+        },
+      };
+
+      const razorpay = new window.Razorpay(options);
+      razorpay.open();
+    } catch (error) {
+      console.error("Payment error:", error);
+      toast.error("Payment failed. Please try again.");
+    } finally {
+      setProcessingPayment(false);
+    }
+  };
+
+  // ✅ PDF Download Function (Only for paid/bookings)
+  const downloadBookingPDF = (booking) => {
+    // Only allow download if payment is paid or booking is confirmed
+    if (booking.paymentStatus !== "paid" && booking.status !== "confirmed") {
+      toast.error("Please complete payment first to download receipt");
+      return;
+    }
 
     const pdfContent = document.createElement("div");
     pdfContent.style.padding = "20px";
@@ -112,9 +169,16 @@ export default function Dashboard() {
             <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #f59e0b, #d97706); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold; color: white;">W</div>
             <h1 style="color: #f59e0b; margin: 0;">WHEELZ</h1>
           </div>
-          <h2 style="margin: 10px 0 5px; color: #333;">Booking Confirmation</h2>
-          <p style="color: #666; margin: 0;">Booking ID: ${selectedBooking.bookingRef}</p>
+          <h2 style="margin: 10px 0 5px; color: #333;">Payment Receipt & Booking Confirmation</h2>
+          <p style="color: #666; margin: 0;">Booking ID: ${booking.bookingRef}</p>
           <p style="color: #666; margin: 5px 0 0;">Date: ${new Date().toLocaleDateString("en-IN")}</p>
+        </div>
+
+        <!-- Success Badge -->
+        <div style="text-align: center; margin-bottom: 20px;">
+          <div style="display: inline-block; background: #d1fae5; color: #065f46; padding: 8px 20px; border-radius: 30px; font-weight: bold;">
+            ✅ PAYMENT SUCCESSFUL | BOOKING CONFIRMED
+          </div>
         </div>
 
         <!-- Customer Details -->
@@ -123,15 +187,15 @@ export default function Dashboard() {
           <table style="width: 100%; border-collapse: collapse;">
             <tr style="border-bottom: 1px solid #eee;">
               <td style="padding: 8px; font-weight: bold; width: 120px;">Full Name</td>
-              <td style="padding: 8px;">${selectedBooking.user?.name || selectedBooking.customerDetails?.name || user?.name || "N/A"}</td>
+              <td style="padding: 8px;">${booking.user?.name || booking.customerDetails?.name || user?.name || "N/A"}</td>
             </tr>
             <tr style="border-bottom: 1px solid #eee;">
               <td style="padding: 8px; font-weight: bold;">Email</td>
-              <td style="padding: 8px;">${selectedBooking.user?.email || selectedBooking.customerDetails?.email || user?.email || "N/A"}</td>
+              <td style="padding: 8px;">${booking.user?.email || booking.customerDetails?.email || user?.email || "N/A"}</td>
             </tr>
             <tr style="border-bottom: 1px solid #eee;">
               <td style="padding: 8px; font-weight: bold;">Phone</td>
-              <td style="padding: 8px;">${selectedBooking.user?.phone || selectedBooking.customerDetails?.phone || "N/A"}</td>
+              <td style="padding: 8px;">${booking.user?.phone || booking.customerDetails?.phone || "N/A"}</td>
             </tr>
           </table>
         </div>
@@ -142,88 +206,57 @@ export default function Dashboard() {
           <table style="width: 100%; border-collapse: collapse;">
             <tr style="border-bottom: 1px solid #eee;">
               <td style="padding: 8px; font-weight: bold; width: 120px;">Vehicle Name</td>
-              <td style="padding: 8px;">${selectedBooking.vehicle?.name || "N/A"}</td>
+              <td style="padding: 8px;">${booking.vehicle?.name || "N/A"}</td>
             </tr>
             <tr style="border-bottom: 1px solid #eee;">
               <td style="padding: 8px; font-weight: bold;">Brand</td>
-              <td style="padding: 8px;">${selectedBooking.vehicle?.brand || "N/A"}</td>
+              <td style="padding: 8px;">${booking.vehicle?.brand || "N/A"}</td>
             </tr>
             <tr style="border-bottom: 1px solid #eee;">
               <td style="padding: 8px; font-weight: bold;">Year</td>
-              <td style="padding: 8px;">${selectedBooking.vehicle?.year || "N/A"}</td>
-            </tr>
-            <tr style="border-bottom: 1px solid #eee;">
-              <td style="padding: 8px; font-weight: bold;">Price/Day</td>
-              <td style="padding: 8px;">₹${selectedBooking.pricePerDay?.toLocaleString() || 0}</td>
+              <td style="padding: 8px;">${booking.vehicle?.year || "N/A"}</td>
             </tr>
           </table>
         </div>
 
         <!-- Booking Details -->
         <div style="margin-bottom: 20px;">
-          <h3 style="color: #f59e0b; margin-bottom: 10px; border-left: 3px solid #f59e0b; padding-left: 10px;">📅 Booking Information</h3>
+          <h3 style="color: #f59e0b; margin-bottom: 10px; border-left: 3px solid #f59e0b; padding-left: 10px;">📅 Booking Details</h3>
           <table style="width: 100%; border-collapse: collapse;">
             <tr style="border-bottom: 1px solid #eee;">
               <td style="padding: 8px; font-weight: bold; width: 120px;">Pickup Date</td>
-              <td style="padding: 8px;">${new Date(selectedBooking.startDate).toLocaleDateString("en-IN", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</td>
+              <td style="padding: 8px;">${new Date(booking.startDate).toLocaleDateString("en-IN", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</td>
             </tr>
             <tr style="border-bottom: 1px solid #eee;">
               <td style="padding: 8px; font-weight: bold;">Return Date</td>
-              <td style="padding: 8px;">${new Date(selectedBooking.endDate).toLocaleDateString("en-IN", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</td>
+              <td style="padding: 8px;">${new Date(booking.endDate).toLocaleDateString("en-IN", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</td>
             </tr>
             <tr style="border-bottom: 1px solid #eee;">
               <td style="padding: 8px; font-weight: bold;">Total Days</td>
-              <td style="padding: 8px;">${selectedBooking.totalDays} days</td>
+              <td style="padding: 8px;">${booking.totalDays} days</td>
             </tr>
             <tr style="border-bottom: 1px solid #eee;">
               <td style="padding: 8px; font-weight: bold;">Pickup Location</td>
-              <td style="padding: 8px;">${selectedBooking.pickupLocation || "N/A"}</td>
+              <td style="padding: 8px;">${booking.pickupLocation || "N/A"}</td>
             </tr>
           </table>
         </div>
 
         <!-- Price Breakdown -->
         <div style="margin-bottom: 20px;">
-          <h3 style="color: #f59e0b; margin-bottom: 10px; border-left: 3px solid #f59e0b; padding-left: 10px;">💰 Price Breakdown</h3>
+          <h3 style="color: #f59e0b; margin-bottom: 10px; border-left: 3px solid #f59e0b; padding-left: 10px;">💰 Payment Details</h3>
           <table style="width: 100%; border-collapse: collapse;">
             <tr style="border-bottom: 1px solid #eee;">
-              <td style="padding: 8px; font-weight: bold;">Price per day</td>
-              <td style="padding: 8px;">₹${selectedBooking.pricePerDay?.toLocaleString()}</td>
+              <td style="padding: 8px; font-weight: bold;">Base Price</td>
+              <td style="padding: 8px;">₹${(booking.pricePerDay * booking.totalDays).toLocaleString()}</td>
             </tr>
             <tr style="border-bottom: 1px solid #eee;">
-              <td style="padding: 8px; font-weight: bold;">Number of days</td>
-              <td style="padding: 8px;">${selectedBooking.totalDays} days</td>
+              <td style="padding: 8px; font-weight: bold;">Total Days</td>
+              <td style="padding: 8px;">${booking.totalDays} days</td>
             </tr>
-            ${
-              selectedBooking.extras
-                ? Object.entries(selectedBooking.extras)
-                    .filter(([_, v]) => v)
-                    .map(([key]) => {
-                      const extraNames = {
-                        insurance: "Zero Dep Insurance",
-                        gps: "GPS Navigation",
-                        childSeat: "Child Seat",
-                        driver: "Professional Driver",
-                      };
-                      const extraPrices = {
-                        insurance: 200,
-                        gps: 100,
-                        childSeat: 150,
-                        driver: 500,
-                      };
-                      return `
-                <tr style="border-bottom: 1px solid #eee;">
-                  <td style="padding: 8px; padding-left: 20px; font-weight: bold;">• ${extraNames[key]}</td>
-                  <td style="padding: 8px;">+₹${extraPrices[key]}/day</td>
-                </tr>
-              `;
-                    })
-                    .join("")
-                : ""
-            }
-            <tr style="border-top: 2px solid #f59e0b;">
-              <td style="padding: 12px 8px; font-weight: bold; font-size: 16px;">Total Amount</td>
-              <td style="padding: 12px 8px; font-size: 20px; font-weight: bold; color: #f59e0b;">₹${selectedBooking.finalAmount?.toLocaleString() || selectedBooking.totalAmount?.toLocaleString()}</td>
+            <tr style="border-top: 2px solid #f59e0b; background: #fef3c7;">
+              <td style="padding: 12px 8px; font-weight: bold; font-size: 16px;">Total Paid</td>
+              <td style="padding: 12px 8px; font-size: 20px; font-weight: bold; color: #f59e0b;">₹${booking.finalAmount?.toLocaleString() || booking.totalAmount?.toLocaleString()}</td>
             </tr>
           </table>
         </div>
@@ -234,11 +267,15 @@ export default function Dashboard() {
           <table style="width: 100%; border-collapse: collapse;">
             <tr style="border-bottom: 1px solid #eee;">
               <td style="padding: 8px; font-weight: bold; width: 120px;">Booking Status</td>
-              <td style="padding: 8px;"><span style="background: #d1fae5; color: #065f46; padding: 4px 12px; border-radius: 20px;">${selectedBooking.status?.toUpperCase()}</span></td>
+              <td style="padding: 8px;"><span style="background: #d1fae5; color: #065f46; padding: 4px 12px; border-radius: 20px;">CONFIRMED ✅</span></td>
             </tr>
             <tr style="border-bottom: 1px solid #eee;">
               <td style="padding: 8px; font-weight: bold;">Payment Status</td>
-              <td style="padding: 8px;"><span style="background: #fed7aa; color: #92400e; padding: 4px 12px; border-radius: 20px;">${selectedBooking.paymentStatus?.toUpperCase()}</span></td>
+              <td style="padding: 8px;"><span style="background: #d1fae5; color: #065f46; padding: 4px 12px; border-radius: 20px;">PAID ✅</span></td>
+            </tr>
+            <tr style="border-bottom: 1px solid #eee;">
+              <td style="padding: 8px; font-weight: bold;">Payment Date</td>
+              <td style="padding: 8px;">${new Date(booking.paidAt || new Date()).toLocaleDateString("en-IN")}</td>
             </tr>
           </table>
         </div>
@@ -249,15 +286,11 @@ export default function Dashboard() {
           <table style="width: 100%; border-collapse: collapse;">
             <tr style="border-bottom: 1px solid #eee;">
               <td style="padding: 8px; font-weight: bold; width: 120px;">Vendor Name</td>
-              <td style="padding: 8px;">${selectedBooking.vendorDetails?.businessName || selectedBooking.vendorDetails?.name || "Wheelz"}</td>
+              <td style="padding: 8px;">${booking.vendorDetails?.businessName || booking.vendorDetails?.name || "Wheelz"}</td>
             </tr>
             <tr style="border-bottom: 1px solid #eee;">
               <td style="padding: 8px; font-weight: bold;">Phone</td>
-              <td style="padding: 8px;">${selectedBooking.vendorDetails?.phone || "9876543210"}</td>
-            </tr>
-            <tr style="border-bottom: 1px solid #eee;">
-              <td style="padding: 8px; font-weight: bold;">Pickup Instructions</td>
-              <td style="padding: 8px;">${selectedBooking.vendorDetails?.pickupInstructions || "Please contact vendor for pickup"}</td>
+              <td style="padding: 8px;">${booking.vendorDetails?.phone || "9876543210"}</td>
             </tr>
           </table>
         </div>
@@ -266,21 +299,21 @@ export default function Dashboard() {
         <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; color: #666; font-size: 12px;">
           <p>Thank you for choosing Wheelz!</p>
           <p>For any queries, contact us at support@wheelz.com | 9876543210</p>
-          <p>This is a system generated document. No signature required.</p>
+          <p>This is a system generated receipt. No signature required.</p>
         </div>
       </div>
     `;
 
     const opt = {
       margin: [0.5, 0.5, 0.5, 0.5],
-      filename: `Booking_${selectedBooking.bookingRef}.pdf`,
+      filename: `Payment_Receipt_${booking.bookingRef}.pdf`,
       image: { type: "jpeg", quality: 0.98 },
       html2canvas: { scale: 2, useCORS: true },
       jsPDF: { unit: "in", format: "a4", orientation: "portrait" },
     };
 
     html2pdf().set(opt).from(pdfContent).save();
-    toast.success("PDF downloaded successfully!");
+    toast.success("Payment receipt downloaded successfully!");
   };
 
   const statsCards = [
@@ -413,100 +446,110 @@ export default function Dashboard() {
                 </button>
               </div>
             ) : (
-              bookings.map((booking, idx) => (
-                <motion.div
-                  key={booking._id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: idx * 0.05 }}
-                  onClick={() => viewBookingDetails(booking)}
-                  className="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-md hover:shadow-xl transition-all cursor-pointer group"
-                >
-                  <div className="flex flex-col sm:flex-row gap-4">
-                    <img
-                      src={booking.vehicle?.images?.[0]}
-                      alt={booking.vehicle?.name}
-                      className="w-24 h-24 rounded-xl object-cover"
-                    />
-                    <div className="flex-1">
-                      <div className="flex flex-wrap items-start justify-between gap-2">
-                        <div>
-                          <h3 className="font-bold text-gray-900 dark:text-white group-hover:text-amber-500 transition-colors">
-                            {booking.vehicle?.name}
-                          </h3>
-                          <p className="text-sm text-gray-500">
-                            {booking.vehicle?.brand} • {booking.vehicle?.year}
-                          </p>
-                          <div className="flex items-center gap-2 mt-1">
-                            <span
-                              className={`text-xs px-2 py-0.5 rounded-full ${getStatusBadge(booking.status)}`}
-                            >
-                              {booking.status?.toUpperCase()}
-                            </span>
-                            <span
-                              className={`text-xs px-2 py-0.5 rounded-full ${getPaymentStatusBadge(booking.paymentStatus)}`}
-                            >
-                              {booking.paymentStatus?.toUpperCase()}
-                            </span>
+              bookings.map((booking, idx) => {
+                const isPaid =
+                  booking.paymentStatus === "paid" ||
+                  booking.status === "confirmed";
+
+                return (
+                  <motion.div
+                    key={booking._id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: idx * 0.05 }}
+                    className="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-md hover:shadow-xl transition-all"
+                  >
+                    <div className="flex flex-col sm:flex-row gap-4">
+                      <img
+                        src={booking.vehicle?.images?.[0]}
+                        alt={booking.vehicle?.name}
+                        className="w-24 h-24 rounded-xl object-cover"
+                      />
+                      <div className="flex-1">
+                        <div className="flex flex-wrap items-start justify-between gap-2">
+                          <div>
+                            <h3 className="font-bold text-gray-900 dark:text-white">
+                              {booking.vehicle?.name}
+                            </h3>
+                            <p className="text-sm text-gray-500">
+                              {booking.vehicle?.brand} • {booking.vehicle?.year}
+                            </p>
+                            <div className="flex items-center gap-2 mt-1">
+                              <span
+                                className={`text-xs px-2 py-0.5 rounded-full ${getStatusBadge(booking.status)}`}
+                              >
+                                {booking.status?.toUpperCase()}
+                              </span>
+                              <span
+                                className={`text-xs px-2 py-0.5 rounded-full ${getPaymentStatusBadge(booking.paymentStatus)}`}
+                              >
+                                {booking.paymentStatus?.toUpperCase()}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-xl font-bold text-amber-500">
+                              ₹{booking.totalAmount?.toLocaleString()}
+                            </p>
+                            <div className="flex items-center gap-2 mt-1">
+                              {/* ✅ Only show download button if payment is done */}
+                              {isPaid ? (
+                                <button
+                                  onClick={() => downloadBookingPDF(booking)}
+                                  className="text-xs bg-green-500 hover:bg-green-600 text-white px-3 py-1.5 rounded-lg flex items-center gap-1 transition-colors"
+                                >
+                                  <DocumentArrowDownIcon className="w-4 h-4" />
+                                  Download Receipt
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={() => processPayment(booking)}
+                                  disabled={processingPayment}
+                                  className="text-xs bg-amber-500 hover:bg-amber-600 text-white px-3 py-1.5 rounded-lg flex items-center gap-1 transition-colors"
+                                >
+                                  <CreditCardIcon className="w-4 h-4" />
+                                  {processingPayment
+                                    ? "Processing..."
+                                    : "Pay Now"}
+                                </button>
+                              )}
+                              <button
+                                onClick={() => viewBookingDetails(booking)}
+                                className="text-xs bg-gray-500 hover:bg-gray-600 text-white px-3 py-1.5 rounded-lg flex items-center gap-1 transition-colors"
+                              >
+                                <EyeIcon className="w-4 h-4" />
+                                View Details
+                              </button>
+                            </div>
                           </div>
                         </div>
-                        <div className="text-right">
-                          <p className="text-xl font-bold text-amber-500">
-                            ₹{booking.totalAmount?.toLocaleString()}
-                          </p>
-                          <div className="flex items-center gap-2 mt-1">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setSelectedBooking(booking);
-                                setTimeout(() => downloadBookingPDF(), 100);
-                              }}
-                              className="text-xs text-green-600 hover:text-green-700 flex items-center gap-1"
-                            >
-                              <DocumentArrowDownIcon className="w-4 h-4" />
-                              Download PDF
-                            </button>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                viewBookingDetails(booking);
-                              }}
-                              className="text-xs text-amber-500 hover:text-amber-600 flex items-center gap-1"
-                            >
-                              <EyeIcon className="w-4 h-4" />
-                              View Details
-                            </button>
+                        <div className="flex flex-wrap gap-4 mt-3 text-sm text-gray-600 dark:text-gray-400">
+                          <div className="flex items-center gap-1">
+                            <CalendarIcon className="w-4 h-4" />
+                            {new Date(
+                              booking.startDate,
+                            ).toLocaleDateString()} -{" "}
+                            {new Date(booking.endDate).toLocaleDateString()}
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <TruckIcon className="w-4 h-4" />
+                            {booking.pickupLocation}
                           </div>
                         </div>
+                        {booking.status === "pending" &&
+                          booking.paymentStatus !== "paid" && (
+                            <button
+                              onClick={() => cancelBooking(booking._id)}
+                              className="mt-3 text-sm text-red-500 hover:text-red-600 transition-colors"
+                            >
+                              Cancel Booking
+                            </button>
+                          )}
                       </div>
-                      <div className="flex flex-wrap gap-4 mt-3 text-sm text-gray-600 dark:text-gray-400">
-                        <div className="flex items-center gap-1">
-                          <CalendarIcon className="w-4 h-4" />
-                          {new Date(
-                            booking.startDate,
-                          ).toLocaleDateString()} -{" "}
-                          {new Date(booking.endDate).toLocaleDateString()}
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <TruckIcon className="w-4 h-4" />
-                          {booking.pickupLocation}
-                        </div>
-                      </div>
-                      {booking.status === "pending" && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            cancelBooking(booking._id);
-                          }}
-                          className="mt-3 text-sm text-red-500 hover:text-red-600 transition-colors"
-                        >
-                          Cancel Booking
-                        </button>
-                      )}
                     </div>
-                  </div>
-                </motion.div>
-              ))
+                  </motion.div>
+                );
+              })
             )}
           </motion.div>
         )}
@@ -660,13 +703,15 @@ export default function Dashboard() {
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <button
-                    onClick={downloadBookingPDF}
-                    className="p-2 rounded-full bg-green-500 hover:bg-green-600 text-white transition-colors"
-                    title="Download PDF"
-                  >
-                    <DocumentArrowDownIcon className="w-5 h-5" />
-                  </button>
+                  {selectedBooking.paymentStatus === "paid" && (
+                    <button
+                      onClick={() => downloadBookingPDF(selectedBooking)}
+                      className="p-2 rounded-full bg-green-500 hover:bg-green-600 text-white transition-colors"
+                      title="Download Receipt"
+                    >
+                      <DocumentArrowDownIcon className="w-5 h-5" />
+                    </button>
+                  )}
                   <button
                     onClick={() => setShowBookingModal(false)}
                     className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
@@ -677,7 +722,7 @@ export default function Dashboard() {
               </div>
 
               <div className="p-6">
-                {/* Vehicle Image & Name */}
+                {/* Vehicle Details */}
                 <div className="flex gap-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-xl mb-6">
                   <img
                     src={selectedBooking.vehicle?.images?.[0]}
@@ -737,7 +782,7 @@ export default function Dashboard() {
                   </div>
                 </div>
 
-                {/* Price Breakdown */}
+                {/* Price */}
                 <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800/50 dark:to-gray-900/50 rounded-xl p-4 mb-6">
                   <h3 className="font-semibold text-gray-900 dark:text-white mb-3">
                     Price Breakdown
