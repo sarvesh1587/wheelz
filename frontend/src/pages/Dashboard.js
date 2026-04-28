@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { loadRazorpayScript, initRazorpayPayment } from "../utils/razorpay";
 import {
   bookingAPI,
   wishlistAPI,
@@ -105,44 +106,35 @@ export default function Dashboard() {
   const processPayment = async (booking) => {
     setProcessingPayment(true);
     try {
-      // Call your payment API
+      // Load Razorpay script
+      const isLoaded = await loadRazorpayScript();
+      if (!isLoaded) {
+        toast.error(
+          "Payment system unavailable. Please refresh and try again.",
+        );
+        setProcessingPayment(false);
+        return;
+      }
+
+      // Create order on backend
       const response = await paymentAPI.createOrder(booking._id);
 
-      // Initialize Razorpay
-      const options = {
-        key: process.env.REACT_APP_RAZORPAY_KEY_ID,
+      // Initialize payment
+      await initRazorpayPayment({
         amount: response.data.amount,
-        currency: "INR",
-        name: "Wheelz",
+        orderId: response.data.orderId,
         description: `Booking: ${booking.bookingRef}`,
-        order_id: response.data.orderId,
-        handler: async (paymentResponse) => {
-          // Verify payment
-          await paymentAPI.verifyPayment({
-            bookingId: booking._id,
-            paymentId: paymentResponse.razorpay_payment_id,
-            orderId: paymentResponse.razorpay_order_id,
-            signature: paymentResponse.razorpay_signature,
-          });
+        customerName: user?.name,
+        customerEmail: user?.email,
+        customerPhone: user?.phone,
+      });
 
-          toast.success("Payment successful! Booking confirmed.");
-          fetchDashboardData();
-        },
-        prefill: {
-          name: user?.name,
-          email: user?.email,
-          contact: user?.phone,
-        },
-        theme: {
-          color: "#f59e0b",
-        },
-      };
-
-      const razorpay = new window.Razorpay(options);
-      razorpay.open();
+      // Verify payment after success
+      toast.success("Payment successful! Booking confirmed.");
+      fetchDashboardData();
     } catch (error) {
       console.error("Payment error:", error);
-      toast.error("Payment failed. Please try again.");
+      toast.error(error.message || "Payment failed. Please try again.");
     } finally {
       setProcessingPayment(false);
     }
