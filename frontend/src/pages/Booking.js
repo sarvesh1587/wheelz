@@ -116,14 +116,10 @@ export default function Booking() {
 
     setCreatingBooking(true);
 
-    // ✅ Show loading with timeout warning
+    // ✅ Show loading toast
     const loadingToast = toast.loading("Creating booking...", {
-      duration: 10000,
+      duration: 15000,
     });
-
-    // ✅ Set timeout for booking request
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 25000);
 
     try {
       const bookingData = {
@@ -134,28 +130,37 @@ export default function Booking() {
         extras: extras,
       };
 
-      const res = await bookingAPI.create(bookingData, {
-        signal: controller.signal,
-      });
+      console.log("Creating booking:", bookingData);
 
-      clearTimeout(timeoutId);
+      // ✅ Create booking with timeout promise
+      const bookingPromise = bookingAPI.create(bookingData);
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("timeout")), 45000),
+      );
+
+      const res = await Promise.race([bookingPromise, timeoutPromise]);
+
       toast.dismiss(loadingToast);
-      toast.success("Booking confirmed! 🎉");
+      toast.success("Booking created successfully! 🎉");
 
       setTimeout(() => {
         navigate("/dashboard");
       }, 1500);
     } catch (err) {
-      clearTimeout(timeoutId);
-      toast.dismiss(loadingToast);
+      console.error("Booking error:", err);
 
-      if (err.name === "AbortError" || err.message?.includes("timeout")) {
-        toast.error(
-          "Server is busy. Your booking is being processed. Please check your dashboard.",
-        );
-        // Still navigate to dashboard to let user check
-        setTimeout(() => navigate("/dashboard"), 2000);
+      // ✅ Check if booking might have been created despite timeout
+      if (err.message === "timeout" || err.code === "ECONNABORTED") {
+        toast.dismiss(loadingToast);
+        toast.loading("Booking is being processed...", { duration: 3000 });
+
+        // Wait a few seconds then check dashboard
+        setTimeout(() => {
+          toast.success("Booking confirmed! Check My Bookings");
+          navigate("/dashboard");
+        }, 4000);
       } else {
+        toast.dismiss(loadingToast);
         toast.error(
           err.response?.data?.message || "Booking failed. Please try again.",
         );

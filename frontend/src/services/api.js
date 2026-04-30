@@ -6,84 +6,94 @@ const API_BASE =
 
 console.log("API Base URL:", API_BASE);
 
-// Detect slow connection
-const isSlowConnection = () => {
-  if ("connection" in navigator) {
-    const conn = navigator.connection;
-    return (
-      conn?.saveData === true ||
-      conn?.effectiveType === "slow-2g" ||
-      conn?.effectiveType === "2g"
-    );
-  }
-  return false;
-};
-
 const api = axios.create({
   baseURL: API_BASE,
-  timeout: isSlowConnection() ? 90000 : 60000, // Longer timeout for slow connections
+  timeout: 60000, // 60 second timeout
   headers: { "Content-Type": "application/json" },
 });
 
-// Add retry logic
-api.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
-
-    // Retry timeout errors once
-    if (
-      (error.code === "ECONNABORTED" || error.message?.includes("timeout")) &&
-      !originalRequest._retry
-    ) {
-      originalRequest._retry = true;
-      console.log("Retrying request due to timeout...");
-      toast.loading("Retrying...", { id: "retry" });
-
-      try {
-        await new Promise((resolve) => setTimeout(resolve, 2000));
-        const response = await api(originalRequest);
-        toast.dismiss("retry");
-        return response;
-      } catch (retryError) {
-        toast.dismiss("retry");
-        toast.error("Server is busy. Please try again.");
-        return Promise.reject(retryError);
-      }
-    }
-
-    // Don't show toast for 404s
-    if (error.response?.status !== 404) {
-      const message =
-        error.response?.data?.message ||
-        error.message ||
-        "Something went wrong";
-      if (!error.message?.includes("timeout")) {
-        toast.error(message);
-      }
-    }
-
-    if (error.response?.status === 401) {
-      localStorage.removeItem("wheelz_token");
-      localStorage.removeItem("wheelz_user");
-      window.location.href = "/login";
-    }
-
-    return Promise.reject(error);
-  },
-);
+// Track pending requests
+let pendingRequests = new Map();
 
 // Attach JWT token to every request
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("wheelz_token");
     if (token) config.headers.Authorization = `Bearer ${token}`;
+
+    // Generate unique request key
+    const requestKey = `${config.method}:${config.url}`;
+
+    // Cancel duplicate pending requests (except bookings)
+    if (pendingRequests.has(requestKey) && !config.url.includes("/bookings")) {
+      const cancelToken = pendingRequests.get(requestKey);
+      cancelToken.cancel("Duplicate request cancelled");
+    }
+
+    // Create new cancel token
+    const cancelTokenSource = axios.CancelToken.source();
+    config.cancelToken = cancelTokenSource.token;
+    pendingRequests.set(requestKey, cancelTokenSource);
+
+    // Remove after request completes
+    config.requestKey = requestKey;
+
     return config;
   },
   (error) => Promise.reject(error),
 );
 
-// ─── Auth ─────────────────────────────────────────────────────────────────────
+// Cleanup pending requests after response
+api.interceptors.response.use(
+  (response) => {
+    if (response.config.requestKey) {
+      pendingRequests.delete(response.config.requestKey);
+    }
+    return response;
+  },
+  (error) => {
+    if (error.config && error.config.requestKey) {
+      pendingRequests.delete(error.config.requestKey);
+    }
+
+    // Don't show toast for cancelled requests
+    if (axios.isCancel(error)) {
+      console.log("Request cancelled:", error.message);
+      return Promise.reject(error);
+    }
+
+    console.error("API Error:", error.config?.url, error.message);
+
+    // ✅ Special handling for booking timeout - don't show error immediately
+    if (
+      error.config?.url?.includes("/bookings") &&
+      (error.code === "ECONNABORTED" || error.message?.includes("timeout"))
+    ) {
+      // Don't show error toast - let the component handle it
+      return Promise.reject({ ...error, isBookingTimeout: true });
+    }
+
+    if (error.code === "ECONNABORTED" || error.message?.includes("timeout")) {
+      toast.error(
+        "Server is taking longer than expected. Please check your dashboard.",
+      );
+      return Promise.reject(error);
+    }
+
+    const message =
+      error.response?.data?.message || error.message || "Something went wrong";
+    if (error.response?.status === 401) {
+      localStorage.removeItem("wheelz_token");
+      localStorage.removeItem("wheelz_user");
+      window.location.href = "/login";
+    } else if (error.response?.status !== 404) {
+      toast.error(message);
+    }
+    return Promise.reject(error);
+  },
+);
+
+// Rest of your api.js remains same...
 export const authAPI = {
   register: (data) => api.post("/auth/register", data),
   login: (data) => api.post("/auth/login", data),
@@ -96,7 +106,6 @@ export const authAPI = {
   googleLogin: (data) => api.post("/auth/google/google-login", data),
 };
 
-// ─── Vehicles ─────────────────────────────────────────────────────────────────
 export const vehicleAPI = {
   getAll: (params) => api.get("/vehicles", { params }),
   getOne: (id) => api.get(`/vehicles/${id}`),
@@ -109,7 +118,6 @@ export const vehicleAPI = {
   getVendorVehicles: () => api.get("/vehicles/vendor/my-vehicles"),
 };
 
-// ─── Bookings ─────────────────────────────────────────────────────────────────
 export const bookingAPI = {
   create: (data) => api.post("/bookings", data),
   getAll: (params) => api.get("/bookings", { params }),
@@ -120,7 +128,6 @@ export const bookingAPI = {
   getVendorBookings: () => api.get("/bookings/vendor/my-bookings"),
 };
 
-// ─── Payments ─────────────────────────────────────────────────────────────────
 export const paymentAPI = {
   createOrder: (bookingId) => api.post("/payments/create-order", { bookingId }),
   verifyPayment: (data) => api.post("/payments/verify", data),
@@ -132,7 +139,6 @@ export const paymentAPI = {
     api.post(`/payments/confirm/${bookingId}`, { method }),
 };
 
-// ─── AI ───────────────────────────────────────────────────────────────────────
 export const aiAPI = {
   chat: (message, history) =>
     api.post("/ai/chat", { message, conversationHistory: history }),
@@ -143,7 +149,6 @@ export const aiAPI = {
     api.put(`/ai/fraud-alerts/${id}/resolve`, data),
 };
 
-// ─── Admin ────────────────────────────────────────────────────────────────────
 export const adminAPI = {
   getDashboard: () => api.get("/admin/dashboard"),
   getAllUsers: (params) => api.get("/admin/users", { params }),
@@ -154,14 +159,12 @@ export const adminAPI = {
   getRevenueBreakdown: () => api.get("/admin/revenue/breakdown"),
 };
 
-// ─── Reviews ──────────────────────────────────────────────────────────────────
 export const reviewAPI = {
   getByVehicle: (vehicleId) => api.get(`/reviews/vehicle/${vehicleId}`),
   getFeatured: () => api.get("/reviews/featured"),
   create: (data) => api.post("/reviews", data),
 };
 
-// ─── Wishlist ─────────────────────────────────────────────────────────────────
 export const wishlistAPI = {
   get: () => api.get("/wishlist"),
   toggle: (vehicleId) => api.post(`/wishlist/${vehicleId}`),
