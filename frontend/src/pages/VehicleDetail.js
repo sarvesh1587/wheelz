@@ -5,6 +5,7 @@ import {
   reviewAPI,
   wishlistAPI,
   bookingAPI,
+  kycAPI, // ✅ Add KYC API
 } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import { StarRating } from "../components/common/LoadingSpinner";
@@ -144,7 +145,7 @@ export default function VehicleDetail() {
     toast.success("Thank you for your review! 🌟");
   };
 
-  // ✅ Handle book now with loading state
+  // ✅ NEW: Handle book now with KYC check
   const handleBookNow = async () => {
     if (!isAuthenticated) {
       navigate("/login");
@@ -152,11 +153,39 @@ export default function VehicleDetail() {
     }
 
     setIsBookingLoading(true);
-    // Small delay to show loading state
-    setTimeout(() => {
-      navigate(`/book/${id}`);
+
+    try {
+      // Check KYC status first
+      const kycRes = await kycAPI.getStatus();
+      const kycStatus = kycRes.data.kycStatus;
+
+      if (kycStatus === "verified") {
+        // KYC verified, proceed to booking
+        navigate(`/book/${id}`);
+      } else if (kycStatus === "pending") {
+        toast.error("Your KYC is under review. Please wait for verification.", {
+          duration: 5000,
+        });
+        navigate("/kyc");
+      } else if (kycStatus === "rejected") {
+        toast.error("Your KYC was rejected. Please re-upload documents.", {
+          duration: 5000,
+        });
+        navigate("/kyc");
+      } else {
+        // not_submitted
+        toast.error("Please complete KYC verification before booking", {
+          duration: 4000,
+        });
+        navigate("/kyc");
+      }
+    } catch (error) {
+      console.error("KYC check error:", error);
+      toast.error("Please complete KYC verification before booking");
+      navigate("/kyc");
+    } finally {
       setIsBookingLoading(false);
-    }, 300);
+    }
   };
 
   if (loading) return <LoadingSpinner />;
@@ -340,7 +369,7 @@ export default function VehicleDetail() {
                   {isBookingLoading ? (
                     <>
                       <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      Processing...
+                      Checking...
                     </>
                   ) : (
                     <>
@@ -349,6 +378,13 @@ export default function VehicleDetail() {
                     </>
                   )}
                 </button>
+
+                {/* KYC Warning - Show if user is authenticated but KYC not done */}
+                {isAuthenticated && (
+                  <p className="text-xs text-amber-600 dark:text-amber-400 text-center mb-2">
+                    ⚠️ KYC verification required before booking
+                  </p>
+                )}
 
                 {/* Review Button - Only for paid users who haven't reviewed */}
                 {canReview && !hasReviewed && (
@@ -457,7 +493,7 @@ export default function VehicleDetail() {
         )}
       </div>
 
-      {/* Review Modal - Only one, properly placed */}
+      {/* Review Modal */}
       <ReviewModal
         isOpen={showReviewModal}
         onClose={() => setShowReviewModal(false)}
