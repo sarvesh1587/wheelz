@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const KYC = require("../models/KYC");
 const kycUpload = require("../middleware/uploadKYC");
-const { protect, authorize } = require("../middleware/auth"); // ✅ Fixed
+const { protect, authorize } = require("../middleware/auth");
 
 // ─── USER ROUTES ───────────────────────────────────────────────
 
@@ -12,7 +12,6 @@ router.post("/submit", protect, kycUpload, async (req, res) => {
     const { licenseNumber, aadhaarNumber } = req.body;
     const files = req.files;
 
-    // Validate all files uploaded
     if (
       !files?.drivingLicenseFront ||
       !files?.drivingLicenseBack ||
@@ -32,7 +31,6 @@ router.post("/submit", protect, kycUpload, async (req, res) => {
       });
     }
 
-    // Validate Aadhaar format (12 digits)
     if (!/^\d{12}$/.test(aadhaarNumber)) {
       return res.status(400).json({
         success: false,
@@ -40,9 +38,7 @@ router.post("/submit", protect, kycUpload, async (req, res) => {
       });
     }
 
-    // Check if KYC already verified
     const existingKYC = await KYC.findOne({ user: req.user.id });
-
     if (existingKYC && existingKYC.status === "verified") {
       return res.status(400).json({
         success: false,
@@ -59,7 +55,6 @@ router.post("/submit", protect, kycUpload, async (req, res) => {
       licenseNumber,
       aadhaarNumber,
       status: "pending",
-      rejectionReason: null,
     };
 
     let kyc;

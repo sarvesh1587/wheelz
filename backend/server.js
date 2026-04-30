@@ -9,7 +9,7 @@ const cors = require("cors");
 const helmet = require("helmet");
 const morgan = require("morgan");
 require("dotenv").config();
-const kycRoutes = require("./routes/kyc");
+const kycRoutes = require("./routes/kycRoutes");
 const app = express();
 
 // ─── Security Middleware ────────────────────────────────────────────────────

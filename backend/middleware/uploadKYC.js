@@ -2,7 +2,7 @@ const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
 
-// Create uploads directory if it doesn't exist
+// Create uploads directory
 const uploadDir = path.join(__dirname, "../uploads/kyc");
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
@@ -38,7 +38,6 @@ const upload = multer({
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB max per file
 });
 
-// Expect these 4 fields
 const kycUpload = upload.fields([
   { name: "drivingLicenseFront", maxCount: 1 },
   { name: "drivingLicenseBack", maxCount: 1 },
