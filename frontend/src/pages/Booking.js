@@ -116,8 +116,14 @@ export default function Booking() {
 
     setCreatingBooking(true);
 
-    // ✅ Show loading toast
-    const loadingToast = toast.loading("Creating booking... Please wait");
+    // ✅ Show loading with timeout warning
+    const loadingToast = toast.loading("Creating booking...", {
+      duration: 10000,
+    });
+
+    // ✅ Set timeout for booking request
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 25000);
 
     try {
       const bookingData = {
@@ -128,29 +134,27 @@ export default function Booking() {
         extras: extras,
       };
 
-      console.log("Creating booking:", bookingData);
-
-      // ✅ Add timeout promise
-      const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error("Request timeout")), 45000);
+      const res = await bookingAPI.create(bookingData, {
+        signal: controller.signal,
       });
 
-      const bookingPromise = bookingAPI.create(bookingData);
-      const res = await Promise.race([bookingPromise, timeoutPromise]);
-
+      clearTimeout(timeoutId);
       toast.dismiss(loadingToast);
-      toast.success("Booking created successfully! 🎉");
+      toast.success("Booking confirmed! 🎉");
 
-      // Navigate to payment or success page
       setTimeout(() => {
         navigate("/dashboard");
       }, 1500);
     } catch (err) {
+      clearTimeout(timeoutId);
       toast.dismiss(loadingToast);
-      console.error("Booking error:", err);
 
-      if (err.message === "Request timeout") {
-        toast.error("Server is taking too long. Please try again.");
+      if (err.name === "AbortError" || err.message?.includes("timeout")) {
+        toast.error(
+          "Server is busy. Your booking is being processed. Please check your dashboard.",
+        );
+        // Still navigate to dashboard to let user check
+        setTimeout(() => navigate("/dashboard"), 2000);
       } else {
         toast.error(
           err.response?.data?.message || "Booking failed. Please try again.",

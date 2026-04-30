@@ -40,19 +40,20 @@ export default function VehicleDetail() {
 
   useEffect(() => {
     loadVehicleData();
-  }, [id, navigate]);
+  }, [id]);
 
   const loadVehicleData = async () => {
+    setLoading(true);
     try {
       const [vRes, rRes] = await Promise.all([
         vehicleAPI.getOne(id),
         reviewAPI.getByVehicle(id),
       ]);
       setVehicle(vRes.data.vehicle);
-      setReviews(rRes.data.reviews);
+      setReviews(rRes.data.reviews || []);
 
       // Check if user can review after loading data
-      if (isAuthenticated) {
+      if (isAuthenticated && vRes.data.vehicle) {
         await checkCanReview(vRes.data.vehicle);
       }
     } catch (error) {
@@ -77,8 +78,7 @@ export default function VehicleDetail() {
         (booking) =>
           booking.vehicle?._id === id &&
           booking.paymentStatus === "paid" &&
-          booking.status === "confirmed" &&
-          new Date(booking.endDate) < new Date(), // Trip completed
+          booking.status === "confirmed",
       );
 
       setCanReview(hasPaidBooking);
@@ -102,25 +102,23 @@ export default function VehicleDetail() {
       isInWishlist(id) ? "Removed from wishlist" : "Added to wishlist ❤️",
     );
   };
-  // Add this function inside your component
+
+  // ✅ Refresh reviews function
   const refreshReviews = async () => {
     console.log("Refreshing reviews...");
     try {
       const rRes = await reviewAPI.getByVehicle(id);
       console.log("Fetched reviews:", rRes.data.reviews);
       setReviews(rRes.data.reviews || []);
+
+      // Also refresh vehicle to update rating
+      const vRes = await vehicleAPI.getOne(id);
+      setVehicle(vRes.data.vehicle);
     } catch (error) {
       console.error("Error fetching reviews:", error);
     }
   };
 
-  // Update the ReviewModal component
-  <ReviewModal
-    isOpen={showReviewModal}
-    onClose={() => setShowReviewModal(false)}
-    vehicle={vehicle}
-    onReviewSubmitted={refreshReviews} // ← Pass refresh function
-  />;
   const callVendor = () => {
     if (!vehicle) return;
     const vendorPhone =
@@ -139,36 +137,28 @@ export default function VehicleDetail() {
     toast.success("Link copied!");
   };
 
-  // Replace your handleReviewSuccess function with this:
+  // ✅ Handle review success
   const handleReviewSuccess = async () => {
     console.log("Review submitted, refreshing...");
-
-    // Method 1: Fetch fresh reviews
-    try {
-      const rRes = await reviewAPI.getByVehicle(id);
-      console.log("Fetched reviews:", rRes.data.reviews);
-      setReviews(rRes.data.reviews);
-      toast.success("Thank you for your review! 🌟");
-    } catch (error) {
-      console.error("Error refreshing reviews:", error);
-    }
-
-    // Method 2: Also fetch vehicle to update rating
-    try {
-      const vRes = await vehicleAPI.getOne(id);
-      setVehicle(vRes.data.vehicle);
-    } catch (error) {
-      console.error("Error refreshing vehicle:", error);
-    }
+    await refreshReviews();
+    toast.success("Thank you for your review! 🌟");
   };
 
-  // Update the ReviewModal component
-  <ReviewModal
-    isOpen={showReviewModal}
-    onClose={() => setShowReviewModal(false)}
-    vehicle={vehicle}
-    onSubmitSuccess={handleReviewSuccess} // ✅ Make sure this is passed
-  />;
+  // ✅ Handle book now with loading state
+  const handleBookNow = async () => {
+    if (!isAuthenticated) {
+      navigate("/login");
+      return;
+    }
+
+    setIsBookingLoading(true);
+    // Small delay to show loading state
+    setTimeout(() => {
+      navigate(`/book/${id}`);
+      setIsBookingLoading(false);
+    }, 300);
+  };
+
   if (loading) return <LoadingSpinner />;
   if (!vehicle) return null;
 
@@ -343,18 +333,24 @@ export default function VehicleDetail() {
             {vehicle.isAvailable ? (
               <>
                 <button
-                  onClick={() =>
-                    isAuthenticated
-                      ? navigate(`/book/${id}`)
-                      : navigate("/login")
-                  }
+                  onClick={handleBookNow}
+                  disabled={isBookingLoading}
                   className="w-full btn-primary flex items-center justify-center gap-2 mb-3"
                 >
-                  <CalendarDaysIcon className="w-5 h-5" />
-                  {isAuthenticated ? "Book Now" : "Login to Book"}
+                  {isBookingLoading ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      <CalendarDaysIcon className="w-5 h-5" />
+                      Book Now
+                    </>
+                  )}
                 </button>
 
-                {/* ✅ Review Button - Only for paid users who haven't reviewed */}
+                {/* Review Button - Only for paid users who haven't reviewed */}
                 {canReview && !hasReviewed && (
                   <button
                     onClick={() => setShowReviewModal(true)}
@@ -365,7 +361,7 @@ export default function VehicleDetail() {
                   </button>
                 )}
 
-                {/* ✅ Already Reviewed Message */}
+                {/* Already Reviewed Message */}
                 {hasReviewed && (
                   <div className="w-full text-center py-2 text-green-600 dark:text-green-400 text-sm flex items-center justify-center gap-2">
                     <CheckCircleIcon className="w-4 h-4" />
@@ -461,12 +457,12 @@ export default function VehicleDetail() {
         )}
       </div>
 
-      {/* Review Modal */}
+      {/* Review Modal - Only one, properly placed */}
       <ReviewModal
         isOpen={showReviewModal}
         onClose={() => setShowReviewModal(false)}
         vehicle={vehicle}
-        onSubmitSuccess={handleReviewSuccess}
+        onReviewSubmitted={refreshReviews}
       />
     </div>
   );
