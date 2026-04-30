@@ -9,7 +9,7 @@ const cors = require("cors");
 const helmet = require("helmet");
 const morgan = require("morgan");
 require("dotenv").config();
-
+const kycRoutes = require("./routes/kyc");
 const app = express();
 
 // ─── Security Middleware ────────────────────────────────────────────────────
@@ -59,6 +59,8 @@ app.use("/api/ai", require("./routes/ai"));
 app.use("/api/wishlist", require("./routes/wishlist"));
 app.use("/api/notifications", require("./routes/notifications"));
 app.use("/api/auth/google", require("./routes/googleAuth"));
+app.use("/api/kyc", require("./routes/kycRoutes"));
+app.use("/uploads", express.static("uploads"));
 
 // ─── Health Check ───────────────────────────────────────────────────────────
 app.get("/api/health", (req, res) => {

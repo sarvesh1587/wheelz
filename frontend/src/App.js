@@ -30,6 +30,7 @@ import ChatBot from "./components/common/ChatBot";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import VendorEditVehicle from "./pages/VendorEditVehicle";
+import KYCUpload from "./pages/KYCUpload";
 
 // Lazy load pages
 const Home = lazy(() => import("./pages/Home"));
@@ -102,6 +103,14 @@ function AppRoutes() {
                 <PublicRoute>
                   <Register />
                 </PublicRoute>
+              }
+            />
+            <Route
+              path="/kyc"
+              element={
+                <PrivateRoute>
+                  <KYCUpload />
+                </PrivateRoute>
               }
             />
             <Route

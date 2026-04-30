@@ -169,5 +169,17 @@ export const wishlistAPI = {
   get: () => api.get("/wishlist"),
   toggle: (vehicleId) => api.post(`/wishlist/${vehicleId}`),
 };
-
+// Add at the bottom of the file
+export const kycAPI = {
+  submit: (formData) =>
+    api.post("/kyc/submit", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    }),
+  getStatus: () => api.get("/kyc/status"),
+  getAll: (params) => api.get("/kyc/admin/all", { params }),
+  getByUser: (userId) => api.get(`/kyc/admin/${userId}`),
+  verify: (userId) => api.put(`/kyc/admin/${userId}/verify`),
+  reject: (userId, reason) =>
+    api.put(`/kyc/admin/${userId}/reject`, { reason }),
+};
 export default api;
