@@ -36,7 +36,16 @@ if (process.env.NODE_ENV === "development") {
 
 // ─── Static Files ───────────────────────────────────────────────────────────
 app.use("/uploads", express.static("uploads"));
-
+// Add timeout middleware
+app.use((req, res, next) => {
+  req.setTimeout(60000, () => {
+    res.status(504).json({ success: false, message: "Request timeout" });
+  });
+  res.setTimeout(60000, () => {
+    res.status(504).json({ success: false, message: "Response timeout" });
+  });
+  next();
+});
 // ─── Routes ─────────────────────────────────────────────────────────────────
 app.use("/api/vendor", require("./routes/vendor"));
 app.use("/api/auth", require("./routes/auth"));

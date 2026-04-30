@@ -387,3 +387,17 @@ body {
     background: none;
   }
 }
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  button,
+  .btn-primary,
+  .btn-secondary {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  /* Disable double-tap zoom on buttons */
+  button {
+    touch-action: manipulation;
+  }
+}

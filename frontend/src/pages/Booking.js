@@ -115,6 +115,10 @@ export default function Booking() {
     }
 
     setCreatingBooking(true);
+
+    // ✅ Show loading toast
+    const loadingToast = toast.loading("Creating booking... Please wait");
+
     try {
       const bookingData = {
         vehicleId: id,
@@ -126,8 +130,15 @@ export default function Booking() {
 
       console.log("Creating booking:", bookingData);
 
-      const res = await bookingAPI.create(bookingData);
+      // ✅ Add timeout promise
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error("Request timeout")), 45000);
+      });
 
+      const bookingPromise = bookingAPI.create(bookingData);
+      const res = await Promise.race([bookingPromise, timeoutPromise]);
+
+      toast.dismiss(loadingToast);
       toast.success("Booking created successfully! 🎉");
 
       // Navigate to payment or success page
@@ -135,10 +146,16 @@ export default function Booking() {
         navigate("/dashboard");
       }, 1500);
     } catch (err) {
+      toast.dismiss(loadingToast);
       console.error("Booking error:", err);
-      toast.error(
-        err.response?.data?.message || "Booking failed. Please try again.",
-      );
+
+      if (err.message === "Request timeout") {
+        toast.error("Server is taking too long. Please try again.");
+      } else {
+        toast.error(
+          err.response?.data?.message || "Booking failed. Please try again.",
+        );
+      }
     } finally {
       setCreatingBooking(false);
     }

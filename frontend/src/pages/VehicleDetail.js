@@ -36,6 +36,7 @@ export default function VehicleDetail() {
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [canReview, setCanReview] = useState(false);
   const [hasReviewed, setHasReviewed] = useState(false);
+  const [isBookingLoading, setIsBookingLoading] = useState(false);
 
   useEffect(() => {
     loadVehicleData();

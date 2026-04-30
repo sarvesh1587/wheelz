@@ -13,7 +13,7 @@ console.log("API Base URL:", API_BASE);
 
 const api = axios.create({
   baseURL: API_BASE,
-  timeout: 30000,
+  timeout: 60000,
   headers: { "Content-Type": "application/json" },
 });
 
@@ -32,6 +32,12 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     console.error("API Error:", error.config?.url, error.message);
+    if (error.code === "ECONNABORTED" || error.message.includes("timeout")) {
+      toast.error(
+        "Request timeout. Please check your internet connection and try again.",
+      );
+      return Promise.reject(error);
+    }
     const message =
       error.response?.data?.message || error.message || "Something went wrong";
     if (error.response?.status === 401) {
