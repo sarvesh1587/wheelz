@@ -8,7 +8,7 @@ console.log("API Base URL:", API_BASE);
 
 const api = axios.create({
   baseURL: API_BASE,
-  timeout: 60000, // 60 second timeout
+  timeout: 60000,
   headers: { "Content-Type": "application/json" },
 });
 
@@ -21,21 +21,15 @@ api.interceptors.request.use(
     const token = localStorage.getItem("wheelz_token");
     if (token) config.headers.Authorization = `Bearer ${token}`;
 
-    // Generate unique request key
     const requestKey = `${config.method}:${config.url}`;
-
-    // Cancel duplicate pending requests (except bookings)
     if (pendingRequests.has(requestKey) && !config.url.includes("/bookings")) {
       const cancelToken = pendingRequests.get(requestKey);
       cancelToken.cancel("Duplicate request cancelled");
     }
 
-    // Create new cancel token
     const cancelTokenSource = axios.CancelToken.source();
     config.cancelToken = cancelTokenSource.token;
     pendingRequests.set(requestKey, cancelTokenSource);
-
-    // Remove after request completes
     config.requestKey = requestKey;
 
     return config;
@@ -56,7 +50,6 @@ api.interceptors.response.use(
       pendingRequests.delete(error.config.requestKey);
     }
 
-    // Don't show toast for cancelled requests
     if (axios.isCancel(error)) {
       console.log("Request cancelled:", error.message);
       return Promise.reject(error);
@@ -64,12 +57,10 @@ api.interceptors.response.use(
 
     console.error("API Error:", error.config?.url, error.message);
 
-    // ✅ Special handling for booking timeout - don't show error immediately
     if (
       error.config?.url?.includes("/bookings") &&
       (error.code === "ECONNABORTED" || error.message?.includes("timeout"))
     ) {
-      // Don't show error toast - let the component handle it
       return Promise.reject({ ...error, isBookingTimeout: true });
     }
 
@@ -93,7 +84,7 @@ api.interceptors.response.use(
   },
 );
 
-// Rest of your api.js remains same...
+// ─── Auth ─────────────────────────────────────────────────────────────────────
 export const authAPI = {
   register: (data) => api.post("/auth/register", data),
   login: (data) => api.post("/auth/login", data),
@@ -106,6 +97,7 @@ export const authAPI = {
   googleLogin: (data) => api.post("/auth/google/google-login", data),
 };
 
+// ─── Vehicles ─────────────────────────────────────────────────────────────────
 export const vehicleAPI = {
   getAll: (params) => api.get("/vehicles", { params }),
   getOne: (id) => api.get(`/vehicles/${id}`),
@@ -118,6 +110,7 @@ export const vehicleAPI = {
   getVendorVehicles: () => api.get("/vehicles/vendor/my-vehicles"),
 };
 
+// ─── Bookings ─────────────────────────────────────────────────────────────────
 export const bookingAPI = {
   create: (data) => api.post("/bookings", data),
   getAll: (params) => api.get("/bookings", { params }),
@@ -128,6 +121,7 @@ export const bookingAPI = {
   getVendorBookings: () => api.get("/bookings/vendor/my-bookings"),
 };
 
+// ─── Payments ─────────────────────────────────────────────────────────────────
 export const paymentAPI = {
   createOrder: (bookingId) => api.post("/payments/create-order", { bookingId }),
   verifyPayment: (data) => api.post("/payments/verify", data),
@@ -139,6 +133,7 @@ export const paymentAPI = {
     api.post(`/payments/confirm/${bookingId}`, { method }),
 };
 
+// ─── AI ───────────────────────────────────────────────────────────────────────
 export const aiAPI = {
   chat: (message, history) =>
     api.post("/ai/chat", { message, conversationHistory: history }),
@@ -149,6 +144,7 @@ export const aiAPI = {
     api.put(`/ai/fraud-alerts/${id}/resolve`, data),
 };
 
+// ─── Admin ────────────────────────────────────────────────────────────────────
 export const adminAPI = {
   getDashboard: () => api.get("/admin/dashboard"),
   getAllUsers: (params) => api.get("/admin/users", { params }),
@@ -159,17 +155,20 @@ export const adminAPI = {
   getRevenueBreakdown: () => api.get("/admin/revenue/breakdown"),
 };
 
+// ─── Reviews ──────────────────────────────────────────────────────────────────
 export const reviewAPI = {
   getByVehicle: (vehicleId) => api.get(`/reviews/vehicle/${vehicleId}`),
   getFeatured: () => api.get("/reviews/featured"),
   create: (data) => api.post("/reviews", data),
 };
 
+// ─── Wishlist ─────────────────────────────────────────────────────────────────
 export const wishlistAPI = {
   get: () => api.get("/wishlist"),
   toggle: (vehicleId) => api.post(`/wishlist/${vehicleId}`),
 };
-// Add at the bottom of the file
+
+// ─── KYC ─────────────────────────────────────────────────────────────────────
 export const kycAPI = {
   submit: (formData) =>
     api.post("/kyc/submit", formData, {
@@ -182,16 +181,5 @@ export const kycAPI = {
   reject: (userId, reason) =>
     api.put(`/kyc/admin/${userId}/reject`, { reason }),
 };
-export const kycAPI = {
-  submit: (formData) =>
-    api.post("/kyc/submit", formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    }),
-  getStatus: () => api.get("/kyc/status"),
-  getAll: (params) => api.get("/kyc/admin/all", { params }),
-  getByUser: (userId) => api.get(`/kyc/admin/${userId}`),
-  verify: (userId) => api.put(`/kyc/admin/${userId}/verify`),
-  reject: (userId, reason) =>
-    api.put(`/kyc/admin/${userId}/reject`, { reason }),
-};
+
 export default api;
