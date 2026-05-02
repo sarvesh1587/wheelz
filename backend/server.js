@@ -3,7 +3,8 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 const helmet = require("helmet");
 const morgan = require("morgan");
-const path = require("path"); // ✅ Add this
+const path = require("path");
+const fs = require("fs");
 require("dotenv").config();
 
 const app = express();
@@ -78,7 +79,19 @@ app.use((err, req, res, next) => {
 
 // ─── Database Connection & Server Start ─────────────────────────────────────
 const PORT = process.env.PORT || 5000;
-
+const uploadDirs = [
+  "uploads",
+  "uploads/kyc",
+  "uploads/selfies",
+  "uploads/certificates",
+];
+uploadDirs.forEach((dir) => {
+  const dirPath = path.join(__dirname, dir);
+  if (!fs.existsSync(dirPath)) {
+    fs.mkdirSync(dirPath, { recursive: true });
+    console.log(`✅ Created directory: ${dir}`);
+  }
+});
 mongoose
   .connect(process.env.MONGO_URI || "mongodb://localhost:27017/wheelz")
   .then(() => {
