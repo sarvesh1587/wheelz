@@ -93,11 +93,12 @@ exports.submitKYC = async (req, res) => {
 };
 
 // Get current user's KYC status
+// Get current user's KYC status
 exports.getKYCStatus = async (req, res) => {
   try {
-    const kyc = await KYC.findOne({ user: req.user.id }).select(
-      "status rejectionReason createdAt verifiedAt",
-    );
+    const kyc = await KYC.findOne({ user: req.user.id })
+      .select("status rejectionReason createdAt verifiedAt")
+      .lean(); // ✅ Add .lean()
 
     if (!kyc) {
       return res.json({ success: true, kycStatus: "not_submitted" });
@@ -156,18 +157,50 @@ exports.getAllKYC = async (req, res) => {
         .populate("user", "name email phone role")
         .sort({ createdAt: -1 })
         .skip(skip)
-        .limit(parseInt(limit)),
+        .limit(parseInt(limit))
+        .lean(), // ✅ Add .lean() to get plain JavaScript objects
       KYC.countDocuments(query),
     ]);
 
-    // Add full image URLs
-    const kycsWithUrls = kycs.map((kyc) => ({
-      ...kyc.toObject(),
-      drivingLicenseFrontUrl: getFullImageUrl(req, kyc.drivingLicenseFront),
-      drivingLicenseBackUrl: getFullImageUrl(req, kyc.drivingLicenseBack),
-      aadhaarFrontUrl: getFullImageUrl(req, kyc.aadhaarFront),
-      aadhaarBackUrl: getFullImageUrl(req, kyc.aadhaarBack),
-    }));
+    // Get base URL for images - ✅ Define outside the map
+    const baseUrl =
+      process.env.RENDER_EXTERNAL_URL ||
+      `http://localhost:${process.env.PORT || 5000}`;
+
+    // Add full image URLs - ✅ Safely process each KYC
+    const kycsWithUrls = kycs.map((kyc) => {
+      // Extract filename from path safely
+      const getFileName = (filePath) => {
+        if (!filePath) return null;
+        const parts = filePath.split(/[\\\/]/);
+        return parts[parts.length - 1];
+      };
+
+      return {
+        _id: kyc._id,
+        user: kyc.user,
+        licenseNumber: kyc.licenseNumber,
+        aadhaarNumber: kyc.aadhaarNumber,
+        status: kyc.status,
+        rejectionReason: kyc.rejectionReason,
+        createdAt: kyc.createdAt,
+        updatedAt: kyc.updatedAt,
+        verifiedAt: kyc.verifiedAt,
+        verifiedBy: kyc.verifiedBy,
+        drivingLicenseFrontUrl: kyc.drivingLicenseFront
+          ? `${baseUrl}/uploads/kyc/${getFileName(kyc.drivingLicenseFront)}`
+          : null,
+        drivingLicenseBackUrl: kyc.drivingLicenseBack
+          ? `${baseUrl}/uploads/kyc/${getFileName(kyc.drivingLicenseBack)}`
+          : null,
+        aadhaarFrontUrl: kyc.aadhaarFront
+          ? `${baseUrl}/uploads/kyc/${getFileName(kyc.aadhaarFront)}`
+          : null,
+        aadhaarBackUrl: kyc.aadhaarBack
+          ? `${baseUrl}/uploads/kyc/${getFileName(kyc.aadhaarBack)}`
+          : null,
+      };
+    });
 
     res.json({
       success: true,
@@ -181,27 +214,71 @@ exports.getAllKYC = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+// Get single KYC submission by user ID (admin)
+// exports.getKYCByUserId = async (req, res) => {
+//   try {
+//     const { userId } = req.params;
+//     const kyc = await KYC.findOne({ user: userId }).populate(
+//       "user",
+//       "name email phone",
+//     );
 
+//     if (!kyc) {
+//       return res.status(404).json({ success: false, message: "KYC not found" });
+//     }
+
+//     // Add full image URLs
+//     const kycWithUrls = {
+//       ...kyc.toObject(),
+//       drivingLicenseFrontUrl: getFullImageUrl(req, kyc.drivingLicenseFront),
+//       drivingLicenseBackUrl: getFullImageUrl(req, kyc.drivingLicenseBack),
+//       aadhaarFrontUrl: getFullImageUrl(req, kyc.aadhaarFront),
+//       aadhaarBackUrl: getFullImageUrl(req, kyc.aadhaarBack),
+//     };
+
+//     res.json({ success: true, kyc: kycWithUrls });
+//   } catch (error) {
+//     console.error("Get KYC by ID error:", error);
+//     res.status(500).json({ success: false, message: error.message });
+//   }
+// };
 // Get single KYC submission by user ID (admin)
 exports.getKYCByUserId = async (req, res) => {
   try {
     const { userId } = req.params;
-    const kyc = await KYC.findOne({ user: userId }).populate(
-      "user",
-      "name email phone",
-    );
+    const kyc = await KYC.findOne({ user: userId })
+      .populate("user", "name email phone")
+      .lean(); // ✅ Add .lean()
 
     if (!kyc) {
       return res.status(404).json({ success: false, message: "KYC not found" });
     }
 
-    // Add full image URLs
+    // Get base URL
+    const baseUrl =
+      process.env.RENDER_EXTERNAL_URL ||
+      `http://localhost:${process.env.PORT || 5000}`;
+
+    const getFileName = (filePath) => {
+      if (!filePath) return null;
+      const parts = filePath.split(/[\\\/]/);
+      return parts[parts.length - 1];
+    };
+
     const kycWithUrls = {
-      ...kyc.toObject(),
-      drivingLicenseFrontUrl: getFullImageUrl(req, kyc.drivingLicenseFront),
-      drivingLicenseBackUrl: getFullImageUrl(req, kyc.drivingLicenseBack),
-      aadhaarFrontUrl: getFullImageUrl(req, kyc.aadhaarFront),
-      aadhaarBackUrl: getFullImageUrl(req, kyc.aadhaarBack),
+      ...kyc,
+      drivingLicenseFrontUrl: kyc.drivingLicenseFront
+        ? `${baseUrl}/uploads/kyc/${getFileName(kyc.drivingLicenseFront)}`
+        : null,
+      drivingLicenseBackUrl: kyc.drivingLicenseBack
+        ? `${baseUrl}/uploads/kyc/${getFileName(kyc.drivingLicenseBack)}`
+        : null,
+      aadhaarFrontUrl: kyc.aadhaarFront
+        ? `${baseUrl}/uploads/kyc/${getFileName(kyc.aadhaarFront)}`
+        : null,
+      aadhaarBackUrl: kyc.aadhaarBack
+        ? `${baseUrl}/uploads/kyc/${getFileName(kyc.aadhaarBack)}`
+        : null,
     };
 
     res.json({ success: true, kyc: kycWithUrls });
@@ -210,7 +287,6 @@ exports.getKYCByUserId = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
-
 // Verify KYC (admin)
 exports.verifyKYC = async (req, res) => {
   try {
