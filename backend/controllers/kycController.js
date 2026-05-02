@@ -2,10 +2,24 @@ const KYC = require("../models/KYC");
 const User = require("../models/User");
 
 // Helper function to get full image URL
+// const getFullImageUrl = (req, filePath) => {
+//   if (!filePath) return null;
+//   const baseUrl = `${req.protocol}://${req.get("host")}`;
+//   return `${baseUrl}/${filePath.replace(/\\/g, "/")}`;
+// };
+// ✅ FIXED: Get full image URL
 const getFullImageUrl = (req, filePath) => {
   if (!filePath) return null;
-  const baseUrl = `${req.protocol}://${req.get("host")}`;
-  return `${baseUrl}/${filePath.replace(/\\/g, "/")}`;
+
+  // Extract just the filename from the path
+  const parts = filePath.split("/");
+  const filename = parts[parts.length - 1];
+
+  // Return proper URL
+  const baseUrl =
+    process.env.RENDER_EXTERNAL_URL ||
+    `http://localhost:${process.env.PORT || 5000}`;
+  return `${baseUrl}/uploads/kyc/${filename}`;
 };
 
 // ─── USER ROUTES ───────────────────────────────────────────────

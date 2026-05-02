@@ -1,24 +1,20 @@
-/**
- * Wheelz Rental Management System - Express Server
- * Entry point for the backend API
- */
-
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const helmet = require("helmet");
 const morgan = require("morgan");
+const path = require("path"); // ✅ Add this
 require("dotenv").config();
-const kycRoutes = require("./routes/kycRoutes");
+
 const app = express();
 
 // ─── Security Middleware ────────────────────────────────────────────────────
 app.use(helmet());
 
-// Simplified CORS - Allow all origins (for testing)
+// Simplified CORS
 app.use(
   cors({
-    origin: true, // Allows any origin
+    origin: true,
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
@@ -34,27 +30,20 @@ if (process.env.NODE_ENV === "development") {
   app.use(morgan("dev"));
 }
 
-// ─── Static Files ───────────────────────────────────────────────────────────
-app.use("/uploads", express.static("uploads"));
-// Add timeout middleware
-app.use((req, res, next) => {
-  req.setTimeout(60000, () => {
-    res.status(504).json({ success: false, message: "Request timeout" });
-  });
-  res.setTimeout(60000, () => {
-    res.status(504).json({ success: false, message: "Response timeout" });
-  });
-  next();
-});
+// ✅ FIXED: Serve static files from uploads directory
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
+// Also serve from root if needed
+app.use("/backend/uploads", express.static(path.join(__dirname, "uploads")));
+
 // ─── Routes ─────────────────────────────────────────────────────────────────
-app.use("/uploads", express.static("uploads"));
 app.use("/api/vendor", require("./routes/vendor"));
 app.use("/api/auth", require("./routes/auth"));
 app.use("/api/users", require("./routes/users"));
 app.use("/api/vehicles", require("./routes/vehicles"));
 app.use("/api/bookings", require("./routes/bookings"));
 app.use("/api/payments", require("./routes/payments"));
-app.use("/api/reviews", require("./routes/reviewRoutes")); // ✅ FIXED
+app.use("/api/reviews", require("./routes/reviewRoutes"));
 app.use("/api/admin", require("./routes/admin"));
 app.use("/api/ai", require("./routes/ai"));
 app.use("/api/wishlist", require("./routes/wishlist"));
@@ -81,32 +70,9 @@ app.use((req, res) => {
 // ─── Global Error Handler ───────────────────────────────────────────────────
 app.use((err, req, res, next) => {
   console.error("Global Error:", err.stack);
-
-  // Mongoose validation error
-  if (err.name === "ValidationError") {
-    const messages = Object.values(err.errors).map((e) => e.message);
-    return res
-      .status(400)
-      .json({ success: false, message: messages.join(", ") });
-  }
-
-  // Mongoose duplicate key error
-  if (err.code === 11000) {
-    const field = Object.keys(err.keyValue)[0];
-    return res
-      .status(400)
-      .json({ success: false, message: `${field} already exists` });
-  }
-
-  // JWT errors
-  if (err.name === "JsonWebTokenError") {
-    return res.status(401).json({ success: false, message: "Invalid token" });
-  }
-
   res.status(err.statusCode || 500).json({
     success: false,
     message: err.message || "Internal Server Error",
-    ...(process.env.NODE_ENV === "development" && { stack: err.stack }),
   });
 });
 
@@ -118,9 +84,7 @@ mongoose
   .then(() => {
     console.log("✅ MongoDB connected");
     app.listen(PORT, () => {
-      console.log(
-        `🚀 Wheelz API running on port ${PORT} [${process.env.NODE_ENV}]`,
-      );
+      console.log(`🚀 Wheelz API running on port ${PORT}`);
     });
   })
   .catch((err) => {
