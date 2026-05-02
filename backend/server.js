@@ -47,6 +47,7 @@ app.use((req, res, next) => {
   next();
 });
 // ─── Routes ─────────────────────────────────────────────────────────────────
+app.use("/uploads", express.static("uploads"));
 app.use("/api/vendor", require("./routes/vendor"));
 app.use("/api/auth", require("./routes/auth"));
 app.use("/api/users", require("./routes/users"));
@@ -60,7 +61,6 @@ app.use("/api/wishlist", require("./routes/wishlist"));
 app.use("/api/notifications", require("./routes/notifications"));
 app.use("/api/auth/google", require("./routes/googleAuth"));
 app.use("/api/kyc", require("./routes/kycRoutes"));
-app.use("/uploads", express.static("uploads"));
 
 // ─── Health Check ───────────────────────────────────────────────────────────
 app.get("/api/health", (req, res) => {

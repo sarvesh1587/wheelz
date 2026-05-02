@@ -313,7 +313,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* ✅ KYC Verification Tab */}
-        {activeTab === "kyc" && (
+        {/* {activeTab === "kyc" && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -425,8 +425,198 @@ export default function AdminDashboard() {
               )}
             </div>
           </motion.div>
-        )}
+        )} */}
+        {/* ✅ KYC Verification Tab with Image Previews */}
+        {activeTab === "kyc" && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="space-y-4"
+          >
+            <div className="bg-white dark:bg-gray-800 rounded-2xl overflow-hidden shadow-lg">
+              <div className="p-4 bg-amber-50 dark:bg-amber-900/20 border-b">
+                <h2 className="font-semibold text-gray-900 dark:text-white">
+                  Pending KYC Submissions
+                </h2>
+                <p className="text-sm text-gray-500">
+                  Review and verify user documents
+                </p>
+              </div>
 
+              {kycSubmissions.length === 0 ? (
+                <div className="text-center py-12">
+                  <IdentificationIcon className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    No Pending KYC
+                  </h3>
+                  <p className="text-gray-500">
+                    All KYC submissions have been processed.
+                  </p>
+                </div>
+              ) : (
+                <div className="divide-y divide-gray-200 dark:divide-gray-700">
+                  {kycSubmissions.map((kyc) => (
+                    <div
+                      key={kyc._id}
+                      className="p-5 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
+                    >
+                      <div className="flex flex-wrap justify-between items-start gap-4">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-2">
+                            <div className="w-10 h-10 bg-amber-100 dark:bg-amber-900/30 rounded-full flex items-center justify-center font-bold text-amber-600">
+                              {kyc.user?.name?.[0]?.toUpperCase()}
+                            </div>
+                            <div>
+                              <p className="font-semibold text-gray-900 dark:text-white">
+                                {kyc.user?.name}
+                              </p>
+                              <p className="text-sm text-gray-500">
+                                {kyc.user?.email}
+                              </p>
+                            </div>
+                            <span className="ml-auto text-xs text-gray-400">
+                              Submitted:{" "}
+                              {new Date(kyc.createdAt).toLocaleDateString()}
+                            </span>
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3 text-sm">
+                            <div>
+                              <span className="text-gray-500">
+                                License Number:
+                              </span>
+                              <span className="ml-2 font-medium">
+                                {kyc.licenseNumber}
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-gray-500">
+                                Aadhaar Number:
+                              </span>
+                              <span className="ml-2 font-medium">
+                                {kyc.aadhaarNumber}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* ✅ Image Previews */}
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4">
+                            {/* Driving License Front */}
+                            <div className="relative group">
+                              <div className="text-xs text-gray-500 mb-1">
+                                Driving License (Front)
+                              </div>
+                              {kyc.drivingLicenseFrontUrl ? (
+                                <img
+                                  src={kyc.drivingLicenseFrontUrl}
+                                  alt="DL Front"
+                                  className="w-full h-24 object-cover rounded-lg border cursor-pointer hover:opacity-90 transition-opacity"
+                                  onClick={() =>
+                                    window.open(
+                                      kyc.drivingLicenseFrontUrl,
+                                      "_blank",
+                                    )
+                                  }
+                                />
+                              ) : (
+                                <div className="w-full h-24 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center text-gray-400">
+                                  No Image
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Driving License Back */}
+                            <div>
+                              <div className="text-xs text-gray-500 mb-1">
+                                Driving License (Back)
+                              </div>
+                              {kyc.drivingLicenseBackUrl ? (
+                                <img
+                                  src={kyc.drivingLicenseBackUrl}
+                                  alt="DL Back"
+                                  className="w-full h-24 object-cover rounded-lg border cursor-pointer hover:opacity-90 transition-opacity"
+                                  onClick={() =>
+                                    window.open(
+                                      kyc.drivingLicenseBackUrl,
+                                      "_blank",
+                                    )
+                                  }
+                                />
+                              ) : (
+                                <div className="w-full h-24 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center text-gray-400">
+                                  No Image
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Aadhaar Front */}
+                            <div>
+                              <div className="text-xs text-gray-500 mb-1">
+                                Aadhaar (Front)
+                              </div>
+                              {kyc.aadhaarFrontUrl ? (
+                                <img
+                                  src={kyc.aadhaarFrontUrl}
+                                  alt="Aadhaar Front"
+                                  className="w-full h-24 object-cover rounded-lg border cursor-pointer hover:opacity-90 transition-opacity"
+                                  onClick={() =>
+                                    window.open(kyc.aadhaarFrontUrl, "_blank")
+                                  }
+                                />
+                              ) : (
+                                <div className="w-full h-24 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center text-gray-400">
+                                  No Image
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Aadhaar Back */}
+                            <div>
+                              <div className="text-xs text-gray-500 mb-1">
+                                Aadhaar (Back)
+                              </div>
+                              {kyc.aadhaarBackUrl ? (
+                                <img
+                                  src={kyc.aadhaarBackUrl}
+                                  alt="Aadhaar Back"
+                                  className="w-full h-24 object-cover rounded-lg border cursor-pointer hover:opacity-90 transition-opacity"
+                                  onClick={() =>
+                                    window.open(kyc.aadhaarBackUrl, "_blank")
+                                  }
+                                />
+                              ) : (
+                                <div className="w-full h-24 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center text-gray-400">
+                                  No Image
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleVerifyKYC(kyc.user._id)}
+                            className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors flex items-center gap-1"
+                          >
+                            <CheckCircleIcon className="w-4 h-4" />
+                            Verify
+                          </button>
+                          <button
+                            onClick={() => handleRejectKYC(kyc.user._id)}
+                            className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors flex items-center gap-1"
+                          >
+                            <XCircleIcon className="w-4 h-4" />
+                            Reject
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
         {/* Users List Tab */}
         {activeTab === "users" && (
           // ... your existing users table code ...
