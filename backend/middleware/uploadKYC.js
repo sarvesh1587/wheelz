@@ -1,20 +1,25 @@
 const multer = require("multer");
-const path = require("path");
-const fs = require("fs");
+const { CloudinaryStorage } = require("multer-storage-cloudinary");
+const cloudinary = require("cloudinary").v2;
 
-// Create uploads directory
-const uploadDir = path.join(__dirname, "../uploads/kyc");
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
+// Configure Cloudinary with YOUR credentials
+cloudinary.config({
+  cloud_name: "563879755855487", // ✅ Your cloud name
+  api_key: "NtVwMWB7aD5OoImsqw7_CooDE2g", // ✅ Your API key
+  api_secret: "YOUR_API_SECRET_HERE", // ⚠️ Replace with your actual API secret
+});
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadDir);
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = `${req.user.id}-${Date.now()}-${file.fieldname}`;
-    cb(null, uniqueSuffix + path.extname(file.originalname));
+// Create Cloudinary storage
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: "wheelz-kyc",
+    allowed_formats: ["jpg", "jpeg", "png", "pdf"],
+    transformation: [{ width: 800, height: 600, crop: "limit" }],
+    public_id: (req, file) => {
+      const uniqueSuffix = `${req.user.id}-${Date.now()}-${file.fieldname}`;
+      return uniqueSuffix;
+    },
   },
 });
 
@@ -33,9 +38,9 @@ const fileFilter = (req, file, cb) => {
 };
 
 const upload = multer({
-  storage,
-  fileFilter,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB max per file
+  storage: storage,
+  fileFilter: fileFilter,
+  limits: { fileSize: 5 * 1024 * 1024 },
 });
 
 const kycUpload = upload.fields([
