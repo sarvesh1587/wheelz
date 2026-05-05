@@ -97,11 +97,10 @@ export const authAPI = {
   googleLogin: (data) => api.post("/auth/google/google-login", data),
 };
 export const otpAPI = {
-  send: (data) => api.post("/otp/send", data),
+  send: (data) => api.post("/otp/send", data, { timeout: 120000 }), // 120 seconds
   verify: (data) => api.post("/otp/verify", data),
   resend: (data) => api.post("/otp/resend", data),
   check: (email) => api.get(`/otp/check?email=${email}`),
-  verifyBooking: (data) => api.post("/otp/verify-booking", data),
 };
 // ─── Vehicles ─────────────────────────────────────────────────────────────────
 export const vehicleAPI = {
