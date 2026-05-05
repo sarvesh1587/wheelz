@@ -96,7 +96,13 @@ export const authAPI = {
     api.post(`/auth/reset-password/${token}`, data),
   googleLogin: (data) => api.post("/auth/google/google-login", data),
 };
-
+export const otpAPI = {
+  send: (data) => api.post("/otp/send", data),
+  verify: (data) => api.post("/otp/verify", data),
+  resend: (data) => api.post("/otp/resend", data),
+  check: (email) => api.get(`/otp/check?email=${email}`),
+  verifyBooking: (data) => api.post("/otp/verify-booking", data),
+};
 // ─── Vehicles ─────────────────────────────────────────────────────────────────
 export const vehicleAPI = {
   getAll: (params) => api.get("/vehicles", { params }),

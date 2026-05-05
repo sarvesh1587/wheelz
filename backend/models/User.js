@@ -55,7 +55,14 @@ const UserSchema = new mongoose.Schema(
       maxBudget: { type: Number, default: 5000 },
     },
     wishlist: [{ type: mongoose.Schema.Types.ObjectId, ref: "Vehicle" }],
-
+    isEmailVerified: {
+      type: Boolean,
+      default: false,
+    },
+    emailVerifiedAt: {
+      type: Date,
+      default: null,
+    },
     // Fraud Detection Fields
     fraudScore: { type: Number, default: 0 },
     cancellationCount: { type: Number, default: 0 },
