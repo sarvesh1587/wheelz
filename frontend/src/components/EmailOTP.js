@@ -11,14 +11,15 @@ export default function EmailOTP({
 }) {
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
-  const [resendTimer, setResendTimer] = useState(0);
+  const [resendTimer, setResendTimer] = useState(60);
   const [error, setError] = useState("");
 
   useEffect(() => {
+    let timer;
     if (resendTimer > 0) {
-      const timer = setTimeout(() => setResendTimer(resendTimer - 1), 1000);
-      return () => clearTimeout(timer);
+      timer = setTimeout(() => setResendTimer(resendTimer - 1), 1000);
     }
+    return () => clearTimeout(timer);
   }, [resendTimer]);
 
   const handleVerify = async (e) => {
@@ -36,7 +37,6 @@ export default function EmailOTP({
       onSuccess();
     } catch (err) {
       setError(err.response?.data?.message || "Invalid OTP");
-      toast.error(err.response?.data?.message || "Verification failed");
     } finally {
       setLoading(false);
     }
