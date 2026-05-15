@@ -1,25 +1,10 @@
 import React, { Suspense, lazy } from "react";
-import About from "./pages/About";
-import Contact from "./pages/Contact";
-import Offers from "./pages/Offers";
-import EditVehicle from "./pages/EditVehicle";
-import AdminReports from "./pages/AdminReports";
-import AdminVendors from "./pages/AdminVendors";
-import AddVehicle from "./pages/AddVehicle";
-import BookingDetails from "./pages/BookingDetails";
-import VendorDashboard from "./pages/VendorDashboard";
-import VendorAddVehicle from "./pages/VendorAddVehicle";
-import VendorBookings from "./pages/VendorBookings";
-import VendorVehicles from "./pages/VendorVehicles";
-import AdminVendorDetails from "./pages/AdminVendorDetails";
 import {
   BrowserRouter as Router,
   Routes,
   Route,
   Navigate,
 } from "react-router-dom";
-import VendorRegister from "./pages/VendorRegister";
-import VendorPending from "./pages/VendorPending";
 import { Toaster } from "react-hot-toast";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { ThemeProvider } from "./context/ThemeContext";
@@ -27,9 +12,16 @@ import Navbar from "./components/common/Navbar";
 import Footer from "./components/common/Footer";
 import LoadingSpinner from "./components/common/LoadingSpinner";
 import ChatBot from "./components/common/ChatBot";
+
+// Pages
+import About from "./pages/About";
+import Contact from "./pages/Contact";
+import Offers from "./pages/Offers";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
-import VendorEditVehicle from "./pages/VendorEditVehicle";
+import NotFound from "./pages/NotFound";
 import KYCUpload from "./pages/KYCUpload";
 
 // Lazy load pages
@@ -39,62 +31,53 @@ const VehicleDetail = lazy(() => import("./pages/VehicleDetail"));
 const Booking = lazy(() => import("./pages/Booking"));
 const BookingSuccess = lazy(() => import("./pages/BookingSuccess"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
-const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
-const AdminVehicles = lazy(() => import("./pages/AdminVehicles"));
-const Login = lazy(() => import("./pages/Login"));
-const Register = lazy(() => import("./pages/Register"));
 const Profile = lazy(() => import("./pages/Profile"));
 const Wishlist = lazy(() => import("./pages/Wishlist"));
-const NotFound = lazy(() => import("./pages/NotFound"));
+const BookingDetails = lazy(() => import("./pages/BookingDetails"));
 
-// const PrivateRoute = ({ children }) => {
-//   const { isAuthenticated, loading } = useAuth();
-//   if (loading) return <LoadingSpinner />;
-//   return isAuthenticated ? children : <Navigate to="/login" replace />;
-// };
+// Admin Pages
+const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
+const AdminVehicles = lazy(() => import("./pages/AdminVehicles"));
+const AdminVendors = lazy(() => import("./pages/AdminVendors"));
+const AdminReports = lazy(() => import("./pages/AdminReports"));
+const AdminVendorDetails = lazy(() => import("./pages/AdminVendorDetails"));
+const AddVehicle = lazy(() => import("./pages/AddVehicle"));
+const EditVehicle = lazy(() => import("./pages/EditVehicle"));
+
+// Vendor Pages
+const VendorDashboard = lazy(() => import("./pages/VendorDashboard"));
+const VendorVehicles = lazy(() => import("./pages/VendorVehicles"));
+const VendorAddVehicle = lazy(() => import("./pages/VendorAddVehicle"));
+const VendorEditVehicle = lazy(() => import("./pages/VendorEditVehicle"));
+const VendorBookings = lazy(() => import("./pages/VendorBookings"));
+const VendorRegister = lazy(() => import("./pages/VendorRegister"));
+const VendorPending = lazy(() => import("./pages/VendorPending"));
+
+// ========== ROUTE GUARDS ==========
+
 const PrivateRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
-
   if (loading) return <LoadingSpinner />;
-
-  // ✅ If not authenticated, redirect to login
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
-
-  return children;
+  return isAuthenticated ? children : <Navigate to="/login" replace />;
 };
 
-const PublicRoute = ({ children }) => {
-  const { isAuthenticated, loading } = useAuth();
-
-  if (loading) return <LoadingSpinner />;
-
-  // ✅ If authenticated, redirect to dashboard
-  if (isAuthenticated) {
-    return <Navigate to="/dashboard" replace />;
-  }
-
-  return children;
-};
 const AdminRoute = ({ children }) => {
   const { isAuthenticated, isAdmin, loading } = useAuth();
   if (loading) return <LoadingSpinner />;
   if (!isAuthenticated) return <Navigate to="/login" replace />;
-  if (!isAdmin) return <Navigate to="/" replace />;
+  if (!isAdmin) return <Navigate to="/dashboard" replace />;
   return children;
 };
 
+// ✅ KEEP ONLY THIS ONE PublicRoute
 const PublicRoute = ({ children }) => {
-  const { isAuthenticated, isAdmin } = useAuth();
-  if (isAuthenticated) {
-    if (isAdmin) {
-      return <Navigate to="/admin" replace />;
-    }
-    return <Navigate to="/dashboard" replace />;
-  }
+  const { isAuthenticated, loading } = useAuth();
+  if (loading) return <LoadingSpinner />;
+  if (isAuthenticated) return <Navigate to="/dashboard" replace />;
   return children;
 };
+
+// ========== APP ROUTES ==========
 
 function AppRoutes() {
   return (
@@ -110,7 +93,6 @@ function AppRoutes() {
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/offers" element={<Offers />} />
-            <Route path="/support" element={<Contact />} />
 
             {/* Auth Routes */}
             <Route
@@ -129,6 +111,8 @@ function AppRoutes() {
                 </PublicRoute>
               }
             />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password/:token" element={<ResetPassword />} />
             <Route
               path="/kyc"
               element={
@@ -137,22 +121,62 @@ function AppRoutes() {
                 </PrivateRoute>
               }
             />
-            <Route
-              path="/vendor/vehicles/edit/:id"
-              element={
-                <PrivateRoute>
-                  <VendorEditVehicle />
-                </PrivateRoute>
-              }
-            />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/reset-password/:token" element={<ResetPassword />} />
 
-            {/* Vendor Registration Routes */}
+            {/* Vendor Registration */}
             <Route path="/vendor/register" element={<VendorRegister />} />
             <Route path="/vendor-pending" element={<VendorPending />} />
 
-            {/* ✅ Vendor Dashboard Routes */}
+            {/* Customer Routes */}
+            <Route
+              path="/dashboard"
+              element={
+                <PrivateRoute>
+                  <Dashboard />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/profile"
+              element={
+                <PrivateRoute>
+                  <Profile />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/wishlist"
+              element={
+                <PrivateRoute>
+                  <Wishlist />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/book/:id"
+              element={
+                <PrivateRoute>
+                  <Booking />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/booking/success/:id"
+              element={
+                <PrivateRoute>
+                  <BookingSuccess />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/bookings/:id"
+              element={
+                <PrivateRoute>
+                  <BookingDetails />
+                </PrivateRoute>
+              }
+            />
+
+            {/* Vendor Routes */}
             <Route
               path="/vendor/dashboard"
               element={
@@ -178,6 +202,14 @@ function AppRoutes() {
               }
             />
             <Route
+              path="/vendor/vehicles/edit/:id"
+              element={
+                <PrivateRoute>
+                  <VendorEditVehicle />
+                </PrivateRoute>
+              }
+            />
+            <Route
               path="/vendor/bookings"
               element={
                 <PrivateRoute>
@@ -186,65 +218,7 @@ function AppRoutes() {
               }
             />
 
-            {/* Customer Routes */}
-            <Route
-              path="/book/:id"
-              element={
-                <PrivateRoute>
-                  <Booking />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/booking/success/:id"
-              element={
-                <PrivateRoute>
-                  <BookingSuccess />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/dashboard"
-              element={
-                <PrivateRoute>
-                  <Dashboard />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/profile"
-              element={
-                <PrivateRoute>
-                  <Profile />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/admin/vendors/:id"
-              element={
-                <AdminRoute>
-                  <AdminVendorDetails />
-                </AdminRoute>
-              }
-            />
-            <Route
-              path="/wishlist"
-              element={
-                <PrivateRoute>
-                  <Wishlist />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/bookings/:id"
-              element={
-                <PrivateRoute>
-                  <BookingDetails />
-                </PrivateRoute>
-              }
-            />
-
-            {/* ✅ Admin Routes */}
+            {/* Admin Routes */}
             <Route
               path="/admin"
               element={
@@ -286,6 +260,14 @@ function AppRoutes() {
               }
             />
             <Route
+              path="/admin/vendors/:id"
+              element={
+                <AdminRoute>
+                  <AdminVendorDetails />
+                </AdminRoute>
+              }
+            />
+            <Route
               path="/admin/reports"
               element={
                 <AdminRoute>
@@ -294,25 +276,14 @@ function AppRoutes() {
               }
             />
 
-            {/* 404 Route */}
+            {/* 404 */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
       </main>
       <Footer />
       <ChatBot />
-      <Toaster
-        position="top-right"
-        toastOptions={{
-          duration: 3500,
-          style: {
-            background: "var(--toast-bg, #1e293b)",
-            color: "#f1f5f9",
-            borderRadius: "12px",
-            border: "1px solid rgba(255,255,255,0.1)",
-          },
-        }}
-      />
+      <Toaster position="top-right" />
     </div>
   );
 }
