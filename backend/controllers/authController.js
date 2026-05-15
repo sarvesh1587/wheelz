@@ -28,32 +28,79 @@ const sendTokenResponse = (user, statusCode, res) => {
   });
 };
 
-exports.register = async (req, res, next) => {
+exports.register = async (req, res) => {
   try {
-    const { name, email, password, phone, role } = req.body;
-    const userRole = role === "admin" ? "customer" : role || "customer";
+    const { name, email, phone, password } = req.body;
+
+    console.log("📝 Registration request for:", email);
+
+    // Validation
+    if (!name || !email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Name, email and password are required",
+      });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: "Password must be at least 6 characters",
+      });
+    }
+
+    // Check if user already exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: "User already exists with this email",
+      });
+    }
+
+    // Create user
     const user = await User.create({
       name,
       email,
+      phone: phone || "",
       password,
-      phone,
-      role: userRole,
+      role: "customer",
     });
 
-    try {
-      await sendEmail({
-        to: user.email,
-        subject: "🚗 Welcome to Wheelz!",
-        template: "welcome",
-        data: { name: user.name },
+    console.log("✅ User created:", user._id);
+
+    // Generate token
+    const token = jwt.sign(
+      { id: user._id, role: user.role },
+      process.env.JWT_SECRET || "wheelz_secret",
+      { expiresIn: "30d" },
+    );
+
+    res.status(201).json({
+      success: true,
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        role: user.role,
+      },
+    });
+  } catch (error) {
+    console.error("❌ Register error:", error);
+
+    if (error.code === 11000) {
+      return res.status(400).json({
+        success: false,
+        message: "Email already registered",
       });
-    } catch (emailErr) {
-      console.warn("Welcome email failed:", emailErr.message);
     }
 
-    sendTokenResponse(user, 201, res);
-  } catch (err) {
-    next(err);
+    res.status(500).json({
+      success: false,
+      message: error.message || "Registration failed",
+    });
   }
 };
 

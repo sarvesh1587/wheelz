@@ -96,12 +96,12 @@ export const authAPI = {
     api.post(`/auth/reset-password/${token}`, data),
   googleLogin: (data) => api.post("/auth/google/google-login", data),
 };
-export const otpAPI = {
-  send: (data) => api.post("/otp/send", data, { timeout: 120000 }), // 120 seconds
-  verify: (data) => api.post("/otp/verify", data),
-  resend: (data) => api.post("/otp/resend", data),
-  check: (email) => api.get(`/otp/check?email=${email}`),
-};
+// export const otpAPI = {
+//   send: (data) => api.post("/otp/send", data, { timeout: 120000 }), // 120 seconds
+//   verify: (data) => api.post("/otp/verify", data),
+//   resend: (data) => api.post("/otp/resend", data),
+//   check: (email) => api.get(`/otp/check?email=${email}`),
+// };
 // ─── Vehicles ─────────────────────────────────────────────────────────────────
 export const vehicleAPI = {
   getAll: (params) => api.get("/vehicles", { params }),
