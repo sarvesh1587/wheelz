@@ -27,5 +27,5 @@ bookingRouter.get(
   authorize("vendor"),
   getVendorBookings,
 );
-
+bookingRouter.post("/", protect, requireKYC, createBooking);
 module.exports = bookingRouter;
