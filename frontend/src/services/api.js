@@ -12,67 +12,30 @@ const api = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 
-// Track pending requests
-let pendingRequests = new Map();
-
 // Attach JWT token to every request
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("wheelz_token");
     if (token) config.headers.Authorization = `Bearer ${token}`;
-
-    const requestKey = `${config.method}:${config.url}`;
-    if (pendingRequests.has(requestKey) && !config.url.includes("/bookings")) {
-      const cancelToken = pendingRequests.get(requestKey);
-      cancelToken.cancel("Duplicate request cancelled");
-    }
-
-    const cancelTokenSource = axios.CancelToken.source();
-    config.cancelToken = cancelTokenSource.token;
-    pendingRequests.set(requestKey, cancelTokenSource);
-    config.requestKey = requestKey;
-
     return config;
   },
   (error) => Promise.reject(error),
 );
 
-// Cleanup pending requests after response
+// Global response error handler
 api.interceptors.response.use(
-  (response) => {
-    if (response.config.requestKey) {
-      pendingRequests.delete(response.config.requestKey);
-    }
-    return response;
-  },
+  (response) => response,
   (error) => {
-    if (error.config && error.config.requestKey) {
-      pendingRequests.delete(error.config.requestKey);
-    }
-
-    if (axios.isCancel(error)) {
-      console.log("Request cancelled:", error.message);
-      return Promise.reject(error);
-    }
-
     console.error("API Error:", error.config?.url, error.message);
 
-    if (
-      error.config?.url?.includes("/bookings") &&
-      (error.code === "ECONNABORTED" || error.message?.includes("timeout"))
-    ) {
-      return Promise.reject({ ...error, isBookingTimeout: true });
-    }
-
     if (error.code === "ECONNABORTED" || error.message?.includes("timeout")) {
-      toast.error(
-        "Server is taking longer than expected. Please check your dashboard.",
-      );
+      toast.error("Server is taking longer than expected. Please try again.");
       return Promise.reject(error);
     }
 
     const message =
       error.response?.data?.message || error.message || "Something went wrong";
+
     if (error.response?.status === 401) {
       localStorage.removeItem("wheelz_token");
       localStorage.removeItem("wheelz_user");
@@ -96,12 +59,7 @@ export const authAPI = {
     api.post(`/auth/reset-password/${token}`, data),
   googleLogin: (data) => api.post("/auth/google/google-login", data),
 };
-// export const otpAPI = {
-//   send: (data) => api.post("/otp/send", data, { timeout: 120000 }), // 120 seconds
-//   verify: (data) => api.post("/otp/verify", data),
-//   resend: (data) => api.post("/otp/resend", data),
-//   check: (email) => api.get(`/otp/check?email=${email}`),
-// };
+
 // ─── Vehicles ─────────────────────────────────────────────────────────────────
 export const vehicleAPI = {
   getAll: (params) => api.get("/vehicles", { params }),

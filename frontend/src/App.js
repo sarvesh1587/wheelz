@@ -47,12 +47,36 @@ const Profile = lazy(() => import("./pages/Profile"));
 const Wishlist = lazy(() => import("./pages/Wishlist"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
+// const PrivateRoute = ({ children }) => {
+//   const { isAuthenticated, loading } = useAuth();
+//   if (loading) return <LoadingSpinner />;
+//   return isAuthenticated ? children : <Navigate to="/login" replace />;
+// };
 const PrivateRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
+
   if (loading) return <LoadingSpinner />;
-  return isAuthenticated ? children : <Navigate to="/login" replace />;
+
+  // ✅ If not authenticated, redirect to login
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return children;
 };
 
+const PublicRoute = ({ children }) => {
+  const { isAuthenticated, loading } = useAuth();
+
+  if (loading) return <LoadingSpinner />;
+
+  // ✅ If authenticated, redirect to dashboard
+  if (isAuthenticated) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return children;
+};
 const AdminRoute = ({ children }) => {
   const { isAuthenticated, isAdmin, loading } = useAuth();
   if (loading) return <LoadingSpinner />;
