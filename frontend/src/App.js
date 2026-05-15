@@ -57,8 +57,24 @@ const VendorPending = lazy(() => import("./pages/VendorPending"));
 
 const PrivateRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
-  if (loading) return <LoadingSpinner />;
-  return isAuthenticated ? children : <Navigate to="/login" replace />;
+
+  console.log(
+    "🔒 PrivateRoute - isAuthenticated:",
+    isAuthenticated,
+    "loading:",
+    loading,
+  );
+
+  if (loading) {
+    return <LoadingSpinner />;
+  }
+
+  if (!isAuthenticated) {
+    console.log("🔒 Not authenticated, redirecting to login");
+    return <Navigate to="/login" replace />;
+  }
+
+  return children;
 };
 
 const AdminRoute = ({ children }) => {

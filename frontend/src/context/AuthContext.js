@@ -17,10 +17,14 @@ export const AuthProvider = ({ children }) => {
     const token = localStorage.getItem("wheelz_token");
     const savedUser = localStorage.getItem("wheelz_user");
 
+    console.log("🔍 Checking auth - Token exists:", !!token);
+    console.log("🔍 Checking auth - Saved user exists:", !!savedUser);
+
     if (token && savedUser) {
       try {
         const userData = JSON.parse(savedUser);
         setUser(userData);
+        console.log("✅ User restored from localStorage:", userData.email);
       } catch (error) {
         console.error("Error parsing user data:", error);
         localStorage.removeItem("wheelz_token");
@@ -31,12 +35,15 @@ export const AuthProvider = ({ children }) => {
   };
 
   const login = (token, userData) => {
+    console.log("🔐 Login called with:", { token: !!token, userData });
     localStorage.setItem("wheelz_token", token);
     localStorage.setItem("wheelz_user", JSON.stringify(userData));
     setUser(userData);
+    console.log("✅ User logged in:", userData.email);
   };
 
   const logout = () => {
+    console.log("🚪 Logout called");
     localStorage.removeItem("wheelz_token");
     localStorage.removeItem("wheelz_user");
     setUser(null);

@@ -15,22 +15,27 @@ export default function Login() {
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
       const res = await authAPI.login(formData);
-      login(res.data.token, res.data.user);
-      toast.success("Login successful!");
-      navigate("/");
+      console.log("Login response:", res.data);
+
+      if (res.data.token && res.data.user) {
+        login(res.data.token, res.data.user);
+        toast.success("Login successful!");
+        navigate("/");
+      } else {
+        throw new Error("Invalid response from server");
+      }
     } catch (error) {
+      console.error("Login error:", error);
       toast.error(error.response?.data?.message || "Login failed");
     } finally {
       setLoading(false);
     }
   };
-
   // const handleGoogleSuccess = async (credentialResponse) => {
   //   try {
   //     const res = await authAPI.googleLogin({

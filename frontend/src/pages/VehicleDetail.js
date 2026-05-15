@@ -146,48 +146,60 @@ export default function VehicleDetail() {
   };
 
   // ✅ NEW: Handle book now with KYC check
-  const handleBookNow = async () => {
+  // const handleBookNow = async () => {
+  //   if (!isAuthenticated) {
+  //     navigate("/login");
+  //     return;
+  //   }
+
+  //   setIsBookingLoading(true);
+
+  //   try {
+  //     // Check KYC status first
+  //     const kycRes = await kycAPI.getStatus();
+  //     const kycStatus = kycRes.data.kycStatus;
+
+  //     if (kycStatus === "verified") {
+  //       // KYC verified, proceed to booking
+  //       navigate(`/book/${id}`);
+  //     } else if (kycStatus === "pending") {
+  //       toast.error("Your KYC is under review. Please wait for verification.", {
+  //         duration: 5000,
+  //       });
+  //       navigate("/kyc");
+  //     } else if (kycStatus === "rejected") {
+  //       toast.error("Your KYC was rejected. Please re-upload documents.", {
+  //         duration: 5000,
+  //       });
+  //       navigate("/kyc");
+  //     } else {
+  //       // not_submitted
+  //       toast.error("Please complete KYC verification before booking", {
+  //         duration: 4000,
+  //       });
+  //       navigate("/kyc");
+  //     }
+  //   } catch (error) {
+  //     console.error("KYC check error:", error);
+  //     toast.error("Please complete KYC verification before booking");
+  //     navigate("/kyc");
+  //   } finally {
+  //     setIsBookingLoading(false);
+  //   }
+  // };
+  const handleBookNow = () => {
+    console.log("📖 Book Now clicked, isAuthenticated:", isAuthenticated);
+
     if (!isAuthenticated) {
+      console.log("🔒 Not authenticated, redirecting to login");
+      toast.error("Please login to book a vehicle");
       navigate("/login");
       return;
     }
 
-    setIsBookingLoading(true);
-
-    try {
-      // Check KYC status first
-      const kycRes = await kycAPI.getStatus();
-      const kycStatus = kycRes.data.kycStatus;
-
-      if (kycStatus === "verified") {
-        // KYC verified, proceed to booking
-        navigate(`/book/${id}`);
-      } else if (kycStatus === "pending") {
-        toast.error("Your KYC is under review. Please wait for verification.", {
-          duration: 5000,
-        });
-        navigate("/kyc");
-      } else if (kycStatus === "rejected") {
-        toast.error("Your KYC was rejected. Please re-upload documents.", {
-          duration: 5000,
-        });
-        navigate("/kyc");
-      } else {
-        // not_submitted
-        toast.error("Please complete KYC verification before booking", {
-          duration: 4000,
-        });
-        navigate("/kyc");
-      }
-    } catch (error) {
-      console.error("KYC check error:", error);
-      toast.error("Please complete KYC verification before booking");
-      navigate("/kyc");
-    } finally {
-      setIsBookingLoading(false);
-    }
+    console.log("✅ Authenticated, proceeding to booking");
+    navigate(`/book/${id}`);
   };
-
   if (loading) return <LoadingSpinner />;
   if (!vehicle) return null;
 
