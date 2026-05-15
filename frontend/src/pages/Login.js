@@ -31,7 +31,22 @@ export default function Login() {
     }
   };
 
+  // const handleGoogleSuccess = async (credentialResponse) => {
+  //   try {
+  //     const res = await authAPI.googleLogin({
+  //       credential: credentialResponse.credential,
+  //     });
+  //     login(res.data.token, res.data.user);
+  //     toast.success("Google login successful!");
+  //     navigate("/");
+  //   } catch (error) {
+  //     console.error("Google login error:", error);
+  //     toast.error("Google login failed. Please try again.");
+  //   }
+  // };
   const handleGoogleSuccess = async (credentialResponse) => {
+    console.log("Google response:", credentialResponse);
+
     try {
       const res = await authAPI.googleLogin({
         credential: credentialResponse.credential,
@@ -41,10 +56,13 @@ export default function Login() {
       navigate("/");
     } catch (error) {
       console.error("Google login error:", error);
-      toast.error("Google login failed. Please try again.");
+      console.error("Error response:", error.response?.data);
+      toast.error(
+        error.response?.data?.message ||
+          "Google login failed. Please try again.",
+      );
     }
   };
-
   const handleGoogleError = () => {
     toast.error("Google login failed. Please try again.");
   };
