@@ -2,16 +2,14 @@ import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { authAPI } from "../services/api";
-import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
+import { GoogleLogin } from "@react-oauth/google";
+import { GoogleOAuthProvider } from "@react-oauth/google";
 import toast from "react-hot-toast";
 
 export default function Login() {
   const navigate = useNavigate();
   const { login } = useAuth();
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
+  const [formData, setFormData] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
@@ -27,7 +25,6 @@ export default function Login() {
       toast.success("Login successful!");
       navigate("/");
     } catch (error) {
-      console.error("Login error:", error);
       toast.error(error.response?.data?.message || "Login failed");
     } finally {
       setLoading(false);
@@ -66,6 +63,7 @@ export default function Login() {
               </p>
             </div>
 
+            {/* Email/Password Form */}
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -126,15 +124,16 @@ export default function Login() {
               </div>
             </div>
 
-            {/* ✅ Google Login Button */}
+            {/* ✅ Fixed Google Login Button */}
             <div className="flex justify-center">
               <GoogleLogin
                 onSuccess={handleGoogleSuccess}
                 onError={handleGoogleError}
-                useOneTap
-                theme="filled_blue"
+                width="250"
+                size="large"
+                text="continue_with"
                 shape="rectangular"
-                width="100%"
+                theme="filled_blue"
               />
             </div>
 
