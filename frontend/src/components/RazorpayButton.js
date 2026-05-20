@@ -31,9 +31,10 @@ export default function RazorpayButton({ bookingId, amount, onSuccess }) {
       const orderRes = await paymentAPI.createOrder(bookingId);
       const orderData = orderRes.data;
 
-      // ✅ CORRECTED OPTIONS
+      console.log("Order Data:", orderData);
+
       const options = {
-        key: "rzp_test_ShPo542q8R01pa", // ✅ Your test key ID (hardcoded for reliability)
+        key: orderData.keyId, // ✅ Now this will have the correct value
         amount: orderData.amount,
         currency: orderData.currency,
         name: "Wheelz",
@@ -41,7 +42,6 @@ export default function RazorpayButton({ bookingId, amount, onSuccess }) {
         order_id: orderData.orderId,
         handler: async (response) => {
           try {
-            // Verify payment
             const verifyRes = await paymentAPI.verifyPayment({
               bookingId: bookingId,
               razorpayOrderId: response.razorpay_order_id,
