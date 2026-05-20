@@ -31,10 +31,10 @@ export default function RazorpayButton({ bookingId, amount, onSuccess }) {
       const orderRes = await paymentAPI.createOrder(bookingId);
       const orderData = orderRes.data;
 
-      console.log("Order Data:", orderData);
+      console.log("📦 Order Data from Backend:", orderData);
 
       const options = {
-        key: orderData.keyId, // ✅ Now this will have the correct value
+        key: orderData.keyId,
         amount: orderData.amount,
         currency: orderData.currency,
         name: "Wheelz",
@@ -74,10 +74,13 @@ export default function RazorpayButton({ bookingId, amount, onSuccess }) {
         },
       };
 
+      console.log("🎯 Razorpay Options:", options);
+
       const razorpay = new window.Razorpay(options);
       razorpay.open();
     } catch (error) {
-      console.error("Payment error:", error);
+      console.error("❌ Payment error:", error);
+      console.error("❌ Error response:", error.response?.data);
       toast.error(
         error.response?.data?.message || "Payment failed. Please try again.",
       );
