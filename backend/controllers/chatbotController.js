@@ -297,6 +297,7 @@ exports.chat = async (req, res) => {
         endDate.setDate(endDate.getDate() + context.bookingData.days);
 
         // ✅ CORRECT - Booking.create is now a function
+        // ✅ CORRECT - Send both totalAmount AND finalAmount
         const booking = await Booking.create({
           user: userId,
           vehicle: context.selectedVehicle._id,
@@ -307,7 +308,8 @@ exports.chat = async (req, res) => {
           pricePerDay:
             context.selectedVehicle.currentPrice ||
             context.selectedVehicle.basePrice,
-          finalAmount: context.bookingData.totalAmount, // ❌ This is likely the problem
+          totalAmount: context.bookingData.totalAmount, // ✅ Required
+          finalAmount: context.bookingData.totalAmount, // ✅ Required - both needed
           extras: context.bookingData.extras || {},
           status: "pending",
           paymentStatus: "pending",
