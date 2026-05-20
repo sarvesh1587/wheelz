@@ -307,7 +307,7 @@ exports.chat = async (req, res) => {
           pricePerDay:
             context.selectedVehicle.currentPrice ||
             context.selectedVehicle.basePrice,
-          finalAmount: context.bookingData.totalAmount,
+          finalAmount: context.bookingData.totalAmount, // ❌ This is likely the problem
           extras: context.bookingData.extras || {},
           status: "pending",
           paymentStatus: "pending",
