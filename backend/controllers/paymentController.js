@@ -11,40 +11,35 @@ const razorpay = new Razorpay({
 });
 
 // Create a REAL Razorpay order
-// In your createOrder function
 exports.createOrder = async (req, res) => {
   try {
     const { bookingId } = req.body;
     const booking = await Booking.findById(bookingId);
 
-    if (!booking) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Booking not found" });
-    }
-
-    // ✅ CRITICAL: Convert amount to paise by multiplying by 100
-    const amountInPaise = Math.round(booking.finalAmount * 100);
+    console.log("🔍 Booking ID:", bookingId);
+    console.log("🔍 Final Amount (Rupees):", booking.finalAmount);
+    console.log("🔍 Amount in Paise:", Math.round(booking.finalAmount * 100));
 
     const options = {
-      amount: amountInPaise, // Send amount in paise
+      amount: Math.round(booking.finalAmount * 100),
       currency: "INR",
       receipt: `receipt_${bookingId}`,
-      notes: {
-        bookingId: bookingId.toString(),
-      },
     };
 
+    console.log("🔍 Razorpay Options:", options);
+
     const order = await razorpay.orders.create(options);
+    console.log("✅ Order created:", order.id);
 
     res.json({
       success: true,
       orderId: order.id,
-      amount: order.amount, // This will be in paise
+      amount: order.amount,
       currency: order.currency,
     });
   } catch (error) {
-    console.error("Razorpay order error:", error);
+    console.error("❌ Razorpay order error:", error);
+    console.error("❌ Error response:", error.response?.data);
     res.status(500).json({ success: false, message: error.message });
   }
 };
