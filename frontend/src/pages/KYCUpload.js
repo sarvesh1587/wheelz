@@ -1,11 +1,12 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom"; // ✅ Add this
 import axios from "axios";
 import toast from "react-hot-toast";
-import { useAuth } from "../context/AuthContext"; // ✅ Add this
-import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+
 const API =
   process.env.REACT_APP_API_URL || "https://wheelz-ldq2.onrender.com/api";
-const navigate = useNavigate();
+
 const FileUploadBox = ({ label, name, onChange, file }) => (
   <div className="flex flex-col gap-1">
     <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -71,7 +72,8 @@ const StatusBadge = ({ status }) => {
 };
 
 export default function KYCUpload() {
-  const { user } = useAuth(); // ✅ Use auth context
+  const { user } = useAuth(); // ✅ Now this will work
+  const navigate = useNavigate(); // ✅ Add navigate
   const [kycStatus, setKycStatus] = useState(null);
   const [rejectionReason, setRejectionReason] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -95,9 +97,7 @@ export default function KYCUpload() {
 
   const fetchKYCStatus = async () => {
     try {
-      // ✅ FIXED: Use correct token key
       const token = localStorage.getItem("wheelz_token");
-
       if (!token) {
         console.log("No token found");
         setLoading(false);
@@ -111,9 +111,6 @@ export default function KYCUpload() {
       setRejectionReason(data.rejectionReason);
     } catch (err) {
       console.error("Error fetching KYC status:", err);
-      if (err.response?.status === 401) {
-        toast.error("Please login again");
-      }
     } finally {
       setLoading(false);
     }
@@ -131,6 +128,7 @@ export default function KYCUpload() {
   const handleInputChange = (e) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -175,7 +173,6 @@ export default function KYCUpload() {
       toast.success("KYC submitted! We'll verify within 24 hours.");
       setKycStatus("pending");
 
-      // Reset form
       setForm({ licenseNumber: "", aadhaarNumber: "" });
       setFiles({
         drivingLicenseFront: null,
@@ -195,6 +192,7 @@ export default function KYCUpload() {
       setSubmitting(false);
     }
   };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen pt-20">
@@ -205,7 +203,6 @@ export default function KYCUpload() {
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-10 pt-24">
-      {/* Header */}
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
           KYC Verification
@@ -221,7 +218,6 @@ export default function KYCUpload() {
         </div>
       </div>
 
-      {/* Already Verified */}
       {kycStatus === "verified" && (
         <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-2xl p-6 text-center">
           <div className="text-5xl mb-3">🎉</div>
@@ -234,7 +230,6 @@ export default function KYCUpload() {
         </div>
       )}
 
-      {/* Pending */}
       {kycStatus === "pending" && (
         <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-2xl p-6 text-center">
           <div className="text-5xl mb-3">⏳</div>
@@ -248,7 +243,6 @@ export default function KYCUpload() {
         </div>
       )}
 
-      {/* Rejected Banner */}
       {kycStatus === "rejected" && (
         <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-2xl p-4 mb-6">
           <p className="text-red-700 dark:text-red-400 font-medium">
@@ -260,12 +254,10 @@ export default function KYCUpload() {
         </div>
       )}
 
-      {/* Upload Form — show if not submitted or rejected */}
       {(kycStatus === "not_submitted" ||
         kycStatus === "rejected" ||
         !kycStatus) && (
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Driving License Section */}
           <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-6 space-y-4">
             <h2 className="font-semibold text-gray-800 dark:text-white flex items-center gap-2">
               🪪 Driving License
@@ -300,7 +292,6 @@ export default function KYCUpload() {
             </div>
           </div>
 
-          {/* Aadhaar Section */}
           <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-6 space-y-4">
             <h2 className="font-semibold text-gray-800 dark:text-white flex items-center gap-2">
               📋 Aadhaar Card
@@ -336,7 +327,6 @@ export default function KYCUpload() {
             </div>
           </div>
 
-          {/* Privacy Note */}
           <p className="text-xs text-gray-400 dark:text-gray-500 text-center">
             🔒 Your documents are securely stored and only used for identity
             verification.
