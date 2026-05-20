@@ -12,19 +12,34 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     checkAuth();
   }, []);
-
   const checkAuth = async () => {
     const token = localStorage.getItem("wheelz_token");
     const savedUser = localStorage.getItem("wheelz_user");
 
-    console.log("🔍 Checking auth - Token exists:", !!token);
-    console.log("🔍 Checking auth - Saved user exists:", !!savedUser);
+    console.log("🔍 Checking auth - Token:", !!token);
+    console.log("🔍 Checking auth - Saved user:", !!savedUser);
 
     if (token && savedUser) {
       try {
         const userData = JSON.parse(savedUser);
-        setUser(userData);
-        console.log("✅ User restored from localStorage:", userData.email);
+
+        // Optional: Verify token with backend
+        try {
+          const response = await authAPI.getMe();
+          if (response.data?.user) {
+            console.log("✅ Token verified with backend");
+            setUser(response.data.user);
+            localStorage.setItem(
+              "wheelz_user",
+              JSON.stringify(response.data.user),
+            );
+          } else {
+            setUser(userData);
+          }
+        } catch (err) {
+          console.log("⚠️ Token verification failed, but using saved user");
+          setUser(userData);
+        }
       } catch (error) {
         console.error("Error parsing user data:", error);
         localStorage.removeItem("wheelz_token");
@@ -33,7 +48,6 @@ export const AuthProvider = ({ children }) => {
     }
     setLoading(false);
   };
-
   const login = (token, userData) => {
     console.log("🔐 Login called with:", { token: !!token, userData });
     localStorage.setItem("wheelz_token", token);

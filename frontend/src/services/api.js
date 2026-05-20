@@ -94,7 +94,6 @@ export const paymentAPI = {
   confirm: (bookingId, method) =>
     api.post(`/payments/confirm/${bookingId}`, { method }),
 };
-
 // ─── AI ───────────────────────────────────────────────────────────────────────
 export const aiAPI = {
   chat: (message, history) =>

@@ -145,10 +145,14 @@ export default function VehicleDetail() {
     toast.success("Thank you for your review! 🌟");
   };
 
-  // ✅ NEW: Handle book now with KYC check
-  // ✅ Handle book now with KYC check
   const handleBookNow = async () => {
+    console.log("📖 Book Now clicked");
+    console.log("isAuthenticated:", isAuthenticated);
+    console.log("User:", user);
+
     if (!isAuthenticated) {
+      console.log("❌ Not authenticated, redirecting to login");
+      toast.error("Please login to book a vehicle");
       navigate("/login");
       return;
     }
@@ -156,27 +160,39 @@ export default function VehicleDetail() {
     setIsBookingLoading(true);
 
     try {
+      // First, verify token is still valid
+      const token = localStorage.getItem("wheelz_token");
+      if (!token) {
+        console.log("❌ No token found");
+        toast.error("Session expired. Please login again.");
+        navigate("/login");
+        return;
+      }
+
       // Check KYC status
+      console.log("🔍 Checking KYC status...");
       const kycRes = await kycAPI.getStatus();
       const kycStatus = kycRes.data.kycStatus;
 
       console.log("KYC Status:", kycStatus);
 
       if (kycStatus === "verified") {
-        // KYC verified, proceed to booking
+        console.log("✅ KYC verified, proceeding to booking");
         navigate(`/book/${id}`);
       } else if (kycStatus === "pending") {
+        console.log("⏳ KYC pending");
         toast.error("Your KYC is under review. Please wait for verification.", {
-          duration: 5000,
+          duration: 4000,
         });
         navigate("/kyc");
       } else if (kycStatus === "rejected") {
+        console.log("❌ KYC rejected");
         toast.error("Your KYC was rejected. Please re-upload documents.", {
-          duration: 5000,
+          duration: 4000,
         });
         navigate("/kyc");
       } else {
-        // not_submitted
+        console.log("📋 KYC not submitted");
         toast.error(
           "KYC verification required. Please complete KYC before booking.",
           {
@@ -187,8 +203,18 @@ export default function VehicleDetail() {
       }
     } catch (error) {
       console.error("KYC check error:", error);
-      toast.error("Please complete KYC verification before booking");
-      navigate("/kyc");
+
+      // If 401 or 403, token might be invalid
+      if (error.response?.status === 401) {
+        console.log("❌ Token invalid, logging out");
+        localStorage.removeItem("wheelz_token");
+        localStorage.removeItem("wheelz_user");
+        toast.error("Session expired. Please login again.");
+        navigate("/login");
+      } else {
+        toast.error("Please complete KYC verification before booking");
+        navigate("/kyc");
+      }
     } finally {
       setIsBookingLoading(false);
     }

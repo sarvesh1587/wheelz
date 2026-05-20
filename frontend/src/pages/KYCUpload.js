@@ -2,10 +2,10 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { useAuth } from "../context/AuthContext"; // ✅ Add this
-
+import { useNavigate } from "react-router-dom";
 const API =
   process.env.REACT_APP_API_URL || "https://wheelz-ldq2.onrender.com/api";
-
+const navigate = useNavigate();
 const FileUploadBox = ({ label, name, onChange, file }) => (
   <div className="flex flex-col gap-1">
     <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -131,68 +131,6 @@ export default function KYCUpload() {
   const handleInputChange = (e) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
-
-  // const handleSubmit = async (e) => {
-  //   e.preventDefault();
-
-  //   // Validate all files
-  //   const requiredFiles = [
-  //     "drivingLicenseFront",
-  //     "drivingLicenseBack",
-  //     "aadhaarFront",
-  //     "aadhaarBack",
-  //   ];
-  //   for (const field of requiredFiles) {
-  //     if (!files[field]) {
-  //       toast.error("Please upload all required documents");
-  //       return;
-  //     }
-  //   }
-
-  //   if (!form.licenseNumber.trim()) {
-  //     toast.error("Please enter your driving license number");
-  //     return;
-  //   }
-
-  //   if (!/^\d{12}$/.test(form.aadhaarNumber)) {
-  //     toast.error("Aadhaar number must be exactly 12 digits");
-  //     return;
-  //   }
-
-  //   const formData = new FormData();
-  //   formData.append("licenseNumber", form.licenseNumber);
-  //   formData.append("aadhaarNumber", form.aadhaarNumber);
-  //   Object.entries(files).forEach(([key, file]) => formData.append(key, file));
-
-  //   try {
-  //     setSubmitting(true);
-  //     // ✅ FIXED: Use correct token key
-  //     const token = localStorage.getItem("wheelz_token");
-
-  //     await axios.post(`${API}/kyc/submit`, formData, {
-  //       headers: {
-  //         Authorization: `Bearer ${token}`,
-  //         "Content-Type": "multipart/form-data",
-  //       },
-  //     });
-  //     toast.success("KYC submitted! We'll verify within 24 hours.");
-  //     setKycStatus("pending");
-
-  //     // Reset form
-  //     setForm({ licenseNumber: "", aadhaarNumber: "" });
-  //     setFiles({
-  //       drivingLicenseFront: null,
-  //       drivingLicenseBack: null,
-  //       aadhaarFront: null,
-  //       aadhaarBack: null,
-  //     });
-  //   } catch (err) {
-  //     console.error("KYC submission error:", err);
-  //     toast.error(err.response?.data?.message || "Submission failed");
-  //   } finally {
-  //     setSubmitting(false);
-  //   }
-  // };
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -237,7 +175,7 @@ export default function KYCUpload() {
       toast.success("KYC submitted! We'll verify within 24 hours.");
       setKycStatus("pending");
 
-      // ✅ Reset form
+      // Reset form
       setForm({ licenseNumber: "", aadhaarNumber: "" });
       setFiles({
         drivingLicenseFront: null,
