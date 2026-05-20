@@ -5,13 +5,13 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
+import AIChatbot from "./components/AIChatbot";
 import { Toaster } from "react-hot-toast";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { ThemeProvider } from "./context/ThemeContext";
 import Navbar from "./components/common/Navbar";
 import Footer from "./components/common/Footer";
 import LoadingSpinner from "./components/common/LoadingSpinner";
-import ChatBot from "./components/common/ChatBot";
 
 // Pages
 import About from "./pages/About";
@@ -85,7 +85,6 @@ const AdminRoute = ({ children }) => {
   return children;
 };
 
-// ✅ KEEP ONLY THIS ONE PublicRoute
 const PublicRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
   if (loading) return <LoadingSpinner />;
@@ -298,7 +297,7 @@ function AppRoutes() {
         </Suspense>
       </main>
       <Footer />
-      <ChatBot />
+      <AIChatbot /> {/* ✅ Only ONE chatbot - the new AI one */}
       <Toaster position="top-right" />
     </div>
   );

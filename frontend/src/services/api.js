@@ -142,5 +142,8 @@ export const kycAPI = {
   reject: (userId, reason) =>
     api.put(`/kyc/admin/${userId}/reject`, { reason }),
 };
-
+export const chatbotAPI = {
+  chat: (data) => api.post("/chatbot/chat", data),
+  getMyBookings: () => api.get("/chatbot/my-bookings"),
+};
 export default api;

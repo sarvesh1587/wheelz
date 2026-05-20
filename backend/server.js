@@ -51,6 +51,7 @@ app.use("/api/wishlist", require("./routes/wishlist"));
 app.use("/api/notifications", require("./routes/notifications"));
 app.use("/api/auth/google", require("./routes/googleAuth"));
 app.use("/api/kyc", require("./routes/kycRoutes"));
+app.use("/api/chatbot", require("./routes/chatbotRoutes"));
 // app.use("/api/otp", require("./routes/otpRoutes"));
 // ─── Health Check ───────────────────────────────────────────────────────────
 app.get("/api/health", (req, res) => {
