@@ -11,6 +11,7 @@ const razorpay = new Razorpay({
 });
 
 // Create a REAL Razorpay order
+// In your createOrder function
 exports.createOrder = async (req, res) => {
   try {
     const { bookingId } = req.body;
@@ -22,13 +23,15 @@ exports.createOrder = async (req, res) => {
         .json({ success: false, message: "Booking not found" });
     }
 
+    // ✅ CRITICAL: Convert amount to paise by multiplying by 100
+    const amountInPaise = Math.round(booking.finalAmount * 100);
+
     const options = {
-      amount: Math.round(booking.finalAmount * 100),
+      amount: amountInPaise, // Send amount in paise
       currency: "INR",
       receipt: `receipt_${bookingId}`,
       notes: {
         bookingId: bookingId.toString(),
-        userId: req.user._id.toString(),
       },
     };
 
@@ -37,9 +40,8 @@ exports.createOrder = async (req, res) => {
     res.json({
       success: true,
       orderId: order.id,
-      amount: order.amount,
+      amount: order.amount, // This will be in paise
       currency: order.currency,
-      keyId: process.env.RAZORPAY_KEY_ID,
     });
   } catch (error) {
     console.error("Razorpay order error:", error);
