@@ -10,10 +10,12 @@ const {
   getVendorBookings,
 } = require("../controllers/bookingController");
 const { protect, authorize } = require("../middleware/auth");
-const requireKYC = require("../middleware/requireKYC"); // ✅ Add this
+const requireKYC = require("../middleware/requireKYC");
 
-// ✅ Add requireKYC middleware to POST route (booking creation)
+// ✅ All protected routes need authentication first
 bookingRouter.use(protect);
+
+// Public booking routes (after authentication)
 bookingRouter.post("/", requireKYC, createBooking); // ✅ KYC check before booking
 bookingRouter.get("/", getBookings);
 bookingRouter.get("/my-stats", getMyStats);
@@ -27,5 +29,5 @@ bookingRouter.get(
   authorize("vendor"),
   getVendorBookings,
 );
-bookingRouter.post("/", protect, requireKYC, createBooking);
+
 module.exports = bookingRouter;
