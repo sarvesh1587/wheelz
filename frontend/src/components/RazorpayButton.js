@@ -7,6 +7,10 @@ export default function RazorpayButton({ bookingId, amount, onSuccess }) {
 
   const loadRazorpayScript = () => {
     return new Promise((resolve) => {
+      if (window.Razorpay) {
+        resolve(true);
+        return;
+      }
       const script = document.createElement("script");
       script.src = "https://checkout.razorpay.com/v1/checkout.js";
       script.onload = () => resolve(true);
@@ -31,14 +35,14 @@ export default function RazorpayButton({ bookingId, amount, onSuccess }) {
       const orderRes = await paymentAPI.createOrder(bookingId);
       const orderData = orderRes.data;
 
-      console.log("📦 Order Data from Backend:", orderData);
+      console.log("Order Data:", orderData);
 
       const options = {
         key: orderData.keyId,
         amount: orderData.amount,
         currency: orderData.currency,
         name: "Wheelz",
-        description: `Booking: ${bookingId}`,
+        description: `Booking #${bookingId.slice(-8)}`,
         order_id: orderData.orderId,
         handler: async (response) => {
           try {
@@ -54,7 +58,7 @@ export default function RazorpayButton({ bookingId, amount, onSuccess }) {
               if (onSuccess) onSuccess();
             }
           } catch (error) {
-            console.error("Payment verification error:", error);
+            console.error("Verification error:", error);
             toast.error("Payment verification failed");
           }
         },
@@ -74,13 +78,10 @@ export default function RazorpayButton({ bookingId, amount, onSuccess }) {
         },
       };
 
-      console.log("🎯 Razorpay Options:", options);
-
       const razorpay = new window.Razorpay(options);
       razorpay.open();
     } catch (error) {
-      console.error("❌ Payment error:", error);
-      console.error("❌ Error response:", error.response?.data);
+      console.error("Payment error:", error);
       toast.error(
         error.response?.data?.message || "Payment failed. Please try again.",
       );

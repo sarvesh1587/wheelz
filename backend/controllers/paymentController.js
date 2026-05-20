@@ -11,10 +11,16 @@ const razorpay = new Razorpay({
 });
 
 // Create a REAL Razorpay order
-// Create a Razorpay order
 exports.createOrder = async (req, res) => {
   try {
     const { bookingId } = req.body;
+
+    if (!bookingId) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Booking ID is required" });
+    }
+
     const booking = await Booking.findById(bookingId);
 
     if (!booking) {
@@ -23,29 +29,34 @@ exports.createOrder = async (req, res) => {
         .json({ success: false, message: "Booking not found" });
     }
 
-    // ✅ 1. Calculate amount in paise from the booking's finalAmount
+    // ✅ Ensure amount is a positive integer in paise
     const amountInPaise = Math.round(booking.finalAmount * 100);
 
-    // ✅ 2. Create a short, valid receipt ID (under 40 chars)
-    const receiptId = `rcpt_${bookingId.slice(-10)}`; // e.g., rcpt_5d5715aba1
+    if (amountInPaise <= 0) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid amount" });
+    }
 
-    console.log("🔍 Creating Razorpay order for booking:", bookingId);
-    console.log("🔍 Amount (₹):", booking.finalAmount);
-    console.log("🔍 Amount (paise):", amountInPaise);
+    console.log("🔍 Creating Razorpay order:");
+    console.log("   Booking ID:", bookingId);
+    console.log("   Amount (₹):", booking.finalAmount);
+    console.log("   Amount (paise):", amountInPaise);
 
     const options = {
       amount: amountInPaise,
       currency: "INR",
-      receipt: receiptId, // ✅ Use the short receipt ID
+      receipt: `rcpt_${bookingId.toString().slice(-10)}`,
+      payment_capture: 1,
       notes: {
         bookingId: bookingId.toString(),
+        userId: req.user.id.toString(),
       },
     };
 
-    console.log("🔍 Sending options to Razorpay:", options);
-
     const order = await razorpay.orders.create(options);
-    console.log("✅ Razorpay order created:", order.id);
+
+    console.log("✅ Order created:", order.id);
 
     res.json({
       success: true,
@@ -55,11 +66,14 @@ exports.createOrder = async (req, res) => {
       keyId: process.env.RAZORPAY_KEY_ID,
     });
   } catch (error) {
-    console.error("❌ Razorpay order error:", error);
-    console.error("❌ Error details:", error.error);
+    console.error("❌ Razorpay error:", error);
+    console.error("   Error details:", error.error);
     res.status(500).json({
       success: false,
-      message: error.error?.description || error.message,
+      message:
+        error.error?.description ||
+        error.message ||
+        "Payment initialization failed",
     });
   }
 };
