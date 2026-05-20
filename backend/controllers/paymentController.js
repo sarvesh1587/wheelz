@@ -11,6 +11,7 @@ const razorpay = new Razorpay({
 });
 
 // Create a REAL Razorpay order
+// Create a Razorpay order
 exports.createOrder = async (req, res) => {
   try {
     const { bookingId } = req.body;
@@ -22,29 +23,26 @@ exports.createOrder = async (req, res) => {
         .json({ success: false, message: "Booking not found" });
     }
 
-    // Convert amount to paise
+    // ✅ 1. Calculate amount in paise from the booking's finalAmount
     const amountInPaise = Math.round(booking.finalAmount * 100);
+
+    // ✅ 2. Create a short, valid receipt ID (under 40 chars)
+    const receiptId = `rcpt_${bookingId.slice(-10)}`; // e.g., rcpt_5d5715aba1
 
     console.log("🔍 Creating Razorpay order for booking:", bookingId);
     console.log("🔍 Amount (₹):", booking.finalAmount);
     console.log("🔍 Amount (paise):", amountInPaise);
 
-    // ✅ Short receipt ID (max 40 characters)
-    // Take only last 10 chars of bookingId + timestamp (last 8 digits)
-    const shortId = bookingId.slice(-10);
-    const timestamp = Date.now().toString().slice(-8);
-    const receipt = `rcpt_${shortId}_${timestamp}`; // ~25 characters max
-
     const options = {
       amount: amountInPaise,
       currency: "INR",
-      receipt: receipt,
+      receipt: receiptId, // ✅ Use the short receipt ID
       notes: {
         bookingId: bookingId.toString(),
       },
     };
 
-    console.log("🔍 Razorpay Options:", options);
+    console.log("🔍 Sending options to Razorpay:", options);
 
     const order = await razorpay.orders.create(options);
     console.log("✅ Razorpay order created:", order.id);
