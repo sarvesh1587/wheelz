@@ -1,6 +1,5 @@
 const Vehicle = require("../models/Vehicle");
 const Booking = require("../models/Booking");
-const User = require("../models/User");
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 // Initialize Gemini AI
@@ -9,23 +8,28 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 // Conversation context storage
 const conversationContext = new Map();
 
-// Helper: Get available vehicles based on filters
+// Helper: Get available vehicles
 async function getAvailableVehicles(filters = {}) {
   const query = { isAvailable: true, isActive: true };
 
-  if (filters.category) query.category = filters.category;
-  if (filters.city) query.city = new RegExp(filters.city, "i");
-  if (filters.minPrice)
-    query.basePrice = { ...query.basePrice, $gte: filters.minPrice };
-  if (filters.maxPrice)
-    query.basePrice = { ...query.basePrice, $lte: filters.maxPrice };
-  if (filters.fuelType) query.fuelType = filters.fuelType;
+  if (filters.category && filters.category !== "any") {
+    query.category = filters.category;
+  }
+  if (filters.city && filters.city !== "any") {
+    query.city = new RegExp(filters.city, "i");
+  }
+  if (filters.maxPrice) {
+    query.basePrice = { $lte: filters.maxPrice };
+  }
+  if (filters.fuelType && filters.fuelType !== "any") {
+    query.fuelType = filters.fuelType;
+  }
 
   const vehicles = await Vehicle.find(query).limit(10);
   return vehicles;
 }
 
-// Helper: Format vehicle list for display
+// Format vehicle list
 function formatVehicleList(vehicles) {
   if (vehicles.length === 0) {
     return "🚗 No vehicles available matching your criteria. Try different preferences!";
@@ -39,55 +43,60 @@ function formatVehicleList(vehicles) {
     message += `   ⭐ Rating: ${v.averageRating || 0}/5\n\n`;
   });
   message +=
-    "Reply with the vehicle number to book, or type 'more' to see more options.";
+    "Reply with the vehicle number to book, or type 'search' to search again.";
   return message;
 }
 
-// Helper: Extract user intent and entities
-function extractIntent(message) {
-  const lowerMsg = message.toLowerCase();
+// Extract requirements using Gemini AI
+async function extractRequirements(message) {
+  try {
+    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    const prompt = `Extract vehicle rental requirements from this message: "${message}"
+    
+    Return ONLY a JSON object with these fields (use null if not mentioned):
+    {
+      "category": "car" or "bike" or null,
+      "city": city name or null,
+      "budget": number (max price per day) or null,
+      "fuelType": "petrol" or "diesel" or "electric" or null,
+      "days": number of days or null
+    }
+    
+    Example: "I need a car in Mumbai for 3 days under 1500" -> {"category":"car","city":"Mumbai","budget":1500,"fuelType":null,"days":3}`;
 
-  // Booking intent
-  if (
-    lowerMsg.includes("book") ||
-    lowerMsg.includes("rent") ||
-    lowerMsg.includes("want")
-  ) {
-    return "booking";
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const text = response.text();
+
+    // Extract JSON from response
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      return JSON.parse(jsonMatch[0]);
+    }
+    return {
+      category: null,
+      city: null,
+      budget: null,
+      fuelType: null,
+      days: null,
+    };
+  } catch (error) {
+    console.error("AI extraction error:", error);
+    return {
+      category: null,
+      city: null,
+      budget: null,
+      fuelType: null,
+      days: null,
+    };
   }
-
-  // Browse intent
-  if (
-    lowerMsg.includes("show") ||
-    lowerMsg.includes("see") ||
-    lowerMsg.includes("list") ||
-    lowerMsg.includes("available")
-  ) {
-    return "browse";
-  }
-
-  // Help intent
-  if (lowerMsg.includes("help") || lowerMsg.includes("how to")) {
-    return "help";
-  }
-
-  // Cancel intent
-  if (lowerMsg.includes("cancel")) {
-    return "cancel";
-  }
-
-  // Check status
-  if (lowerMsg.includes("status") || lowerMsg.includes("my booking")) {
-    return "status";
-  }
-
-  return "general";
 }
 
 // Main chat handler
 exports.chat = async (req, res) => {
   try {
-    const { message, userId, sessionId } = req.body;
+    const { message, sessionId } = req.body;
+    const userId = req.user.id;
 
     if (!message) {
       return res
@@ -101,82 +110,92 @@ exports.chat = async (req, res) => {
       filters: {},
       selectedVehicle: null,
       bookingData: {},
-      lastMessage: "",
     };
 
-    const userMessage = message.trim();
-    const intent = extractIntent(userMessage);
-
+    const userMessage = message.toLowerCase().trim();
     let reply = "";
     let action = null;
     let data = null;
 
-    // Handle different intents and conversation steps
+    // Handle different conversation steps
     if (context.step === "greeting") {
       reply = "👋 Namaste! Welcome to Wheelz AI Assistant!\n\n";
-      reply += "I can help you:\n";
-      reply += "🔍 Find the perfect car or bike for your needs\n";
-      reply += "💰 Get best prices and deals\n";
-      reply += "📅 Book instantly\n";
-      reply += "💳 Complete payment securely\n\n";
-      reply += "Tell me what you're looking for! For example:\n";
-      reply += "• 'I need a car in Mumbai for 3 days'\n";
-      reply += "• 'Show me bikes under ₹500 in Bangalore'\n";
-      reply += "• 'Book an SUV for this weekend'";
-      context.step = "collecting_requirements";
-    } else if (context.step === "collecting_requirements") {
-      // Extract requirements using AI
-      const extractionPrompt = `
-        Extract requirements from: "${userMessage}"
-        Return JSON format: { "category": "car/bike", "city": "city name", "days": number, "budget": number, "fuelType": "petrol/diesel/electric" }
-        If not specified, use null.
-      `;
+      reply +=
+        "I can help you find and book vehicles. What would you like to do?\n\n";
+      reply +=
+        "🔍 Tell me what you're looking for (e.g., 'car in Mumbai for 3 days under ₹1500')\n";
+      reply += "📋 Type 'my bookings' to see your bookings\n";
+      reply += "❓ Type 'help' for assistance";
+      context.step = "main_menu";
+    } else if (userMessage.includes("my bookings")) {
+      const bookings = await Booking.find({ user: userId })
+        .populate("vehicle", "name brand")
+        .sort("-createdAt")
+        .limit(5);
 
-      // Use Gemini to extract requirements
-      const model = genAI.getGenerativeModel({ model: "gemini-pro" });
-      const result = await model.generateContent(extractionPrompt);
-      const extracted = JSON.parse(result.response.text());
+      if (bookings.length === 0) {
+        reply =
+          "📋 You don't have any bookings yet. Would you like to search for vehicles?";
+      } else {
+        reply = "📋 **Your Recent Bookings:**\n\n";
+        bookings.forEach((b, i) => {
+          reply += `${i + 1}. ${b.vehicle?.name || "Vehicle"} - ${b.status}\n`;
+          reply += `   💰 ₹${b.finalAmount} | 📅 ${new Date(b.startDate).toLocaleDateString()}\n\n`;
+        });
+        reply += "Type 'search' to find new vehicles.";
+      }
+      context.step = "main_menu";
+    } else if (userMessage === "help") {
+      reply = "📖 **Help Guide**\n\n";
+      reply += "• Describe what you need (e.g., 'car in Delhi for 2 days')\n";
+      reply += "• Type 'my bookings' to see your bookings\n";
+      reply += "• Type 'search' to start over\n\n";
+      reply += "Example: 'Show me bikes in Bangalore under ₹800 for 5 days'";
+      context.step = "main_menu";
+    } else if (
+      context.step === "main_menu" &&
+      !userMessage.includes("my bookings") &&
+      !userMessage.includes("help")
+    ) {
+      // Extract requirements using AI
+      const requirements = await extractRequirements(message);
 
       context.filters = {
-        category: extracted.category || null,
-        city: extracted.city || null,
-        minPrice: extracted.budget ? extracted.budget - 500 : null,
-        maxPrice: extracted.budget || null,
-        fuelType: extracted.fuelType || null,
+        category: requirements.category,
+        city: requirements.city,
+        maxPrice: requirements.budget,
+        fuelType: requirements.fuelType,
       };
 
-      context.bookingData.days = extracted.days || null;
+      if (requirements.days) {
+        context.bookingData.days = requirements.days;
+      }
 
-      // Search for vehicles
       const vehicles = await getAvailableVehicles(context.filters);
       context.vehicles = vehicles;
-      context.selectedVehicleIndex = null;
 
       if (vehicles.length === 0) {
-        reply =
-          "😅 I couldn't find any vehicles matching your criteria. Let me show you all available options:\n\n";
+        reply = "😅 I couldn't find vehicles matching your criteria.\n\n";
+        reply += "Let me show you all available options:\n\n";
         const allVehicles = await getAvailableVehicles({});
         context.vehicles = allVehicles;
         reply += formatVehicleList(allVehicles);
-        context.step = "selecting_vehicle";
       } else {
         reply = formatVehicleList(vehicles);
-        context.step = "selecting_vehicle";
       }
+      context.step = "selecting_vehicle";
     } else if (context.step === "selecting_vehicle") {
-      // User selected a vehicle number
       const vehicleNum = parseInt(userMessage);
 
       if (
         !isNaN(vehicleNum) &&
         vehicleNum >= 1 &&
-        vehicleNum <= context.vehicles.length
+        vehicleNum <= context.vehicles?.length
       ) {
         context.selectedVehicle = context.vehicles[vehicleNum - 1];
-        context.selectedVehicleIndex = vehicleNum - 1;
 
         reply = `✅ Great choice! You selected **${context.selectedVehicle.name}**.\n\n`;
-        reply += `📋 Details:\n`;
+        reply += `📋 **Details:**\n`;
         reply += `🚗 ${context.selectedVehicle.brand} • ${context.selectedVehicle.year}\n`;
         reply += `📍 ${context.selectedVehicle.city}\n`;
         reply += `💰 ₹${context.selectedVehicle.currentPrice || context.selectedVehicle.basePrice}/day\n`;
@@ -187,91 +206,47 @@ exports.chat = async (req, res) => {
             (context.selectedVehicle.currentPrice ||
               context.selectedVehicle.basePrice) * context.bookingData.days;
           reply += `📅 Duration: ${context.bookingData.days} days\n`;
-          reply += `💵 Estimated Total: ₹${total}\n\n`;
-          reply += `Would you like to proceed with booking? (yes/no)`;
+          reply += `💰 Total: ₹${total}\n\n`;
+          reply += `Confirm booking? (yes/no)`;
+          context.bookingData.totalAmount = total;
           context.step = "confirm_booking";
         } else {
           reply += `How many days do you want to rent this vehicle?`;
           context.step = "asking_days";
         }
-      } else if (userMessage.toLowerCase() === "more") {
-        const moreVehicles = await getAvailableVehicles({});
-        reply = formatVehicleList(moreVehicles);
-        context.vehicles = moreVehicles;
+      } else if (userMessage === "search") {
+        reply =
+          "🔍 Tell me what you're looking for (e.g., 'car in Mumbai for 2 days')";
+        context.step = "main_menu";
+        context.filters = {};
       } else {
         reply =
-          "Please enter the vehicle number from the list above, or type 'more' to see more options.";
+          "Please enter the vehicle number from the list, or type 'search' to start over.";
       }
     } else if (context.step === "asking_days") {
       const days = parseInt(userMessage);
 
-      if (!isNaN(days) && days > 0) {
+      if (!isNaN(days) && days > 0 && days <= 30) {
         context.bookingData.days = days;
-        const total =
-          (context.selectedVehicle.currentPrice ||
-            context.selectedVehicle.basePrice) * days;
+        const price =
+          context.selectedVehicle.currentPrice ||
+          context.selectedVehicle.basePrice;
+        const total = price * days;
 
-        reply = `📅 ${days} days rental\n`;
+        reply = `📅 ${days} day(s) rental\n`;
         reply += `💰 Total amount: ₹${total}\n\n`;
-        reply += `Do you want to add any extras?\n`;
-        reply += `• GPS Navigation (+₹100/day)\n`;
-        reply += `• Zero Dep Insurance (+₹200/day)\n`;
-        reply += `• Child Seat (+₹150/day)\n`;
-        reply += `• Professional Driver (+₹500/day)\n\n`;
-        reply += `Reply with the extras you want, or type 'no' to skip.`;
-        context.step = "adding_extras";
+        reply += `Confirm booking? (yes/no)`;
+        context.bookingData.totalAmount = total;
+        context.step = "confirm_booking";
       } else {
-        reply = "Please enter a valid number of days (e.g., 3)";
+        reply = "Please enter a valid number of days (1-30)";
       }
-    } else if (context.step === "adding_extras") {
-      const lowerMsg = userMessage.toLowerCase();
-      const extras = {};
-
-      if (lowerMsg.includes("gps")) extras.gps = true;
-      if (lowerMsg.includes("insurance")) extras.insurance = true;
-      if (lowerMsg.includes("child")) extras.childSeat = true;
-      if (lowerMsg.includes("driver")) extras.driver = true;
-
-      context.bookingData.extras = extras;
-
-      let extrasCost = 0;
-      if (extras.gps) extrasCost += 100;
-      if (extras.insurance) extrasCost += 200;
-      if (extras.childSeat) extrasCost += 150;
-      if (extras.driver) extrasCost += 500;
-
-      const vehiclePrice =
-        context.selectedVehicle.currentPrice ||
-        context.selectedVehicle.basePrice;
-      const total = (vehiclePrice + extrasCost) * context.bookingData.days;
-
-      reply = `📋 Booking Summary:\n`;
-      reply += `🚗 Vehicle: ${context.selectedVehicle.name}\n`;
-      reply += `📅 Days: ${context.bookingData.days}\n`;
-      reply += `💰 Base Price: ₹${vehiclePrice * context.bookingData.days}\n`;
-      if (extrasCost > 0)
-        reply += `➕ Extras: +₹${extrasCost * context.bookingData.days}\n`;
-      reply += `💵 Total Amount: ₹${total}\n\n`;
-      reply += `Confirm your booking? (yes/no)`;
-      context.step = "confirm_booking";
-      context.bookingData.totalAmount = total;
     } else if (context.step === "confirm_booking") {
-      if (userMessage.toLowerCase() === "yes") {
-        // Create booking in database
+      if (userMessage === "yes") {
         const startDate = new Date();
-        startDate.setDate(startDate.getDate() + 1); // Tomorrow
+        startDate.setDate(startDate.getDate() + 1);
         const endDate = new Date(startDate);
         endDate.setDate(endDate.getDate() + context.bookingData.days);
-
-        const bookingData = {
-          vehicleId: context.selectedVehicle._id,
-          startDate: startDate.toISOString(),
-          endDate: endDate.toISOString(),
-          pickupLocation: context.selectedVehicle.city,
-          extras: context.bookingData.extras || {},
-          totalDays: context.bookingData.days,
-          totalAmount: context.bookingData.totalAmount,
-        };
 
         const booking = await Booking.create({
           user: userId,
@@ -284,17 +259,16 @@ exports.chat = async (req, res) => {
             context.selectedVehicle.currentPrice ||
             context.selectedVehicle.basePrice,
           finalAmount: context.bookingData.totalAmount,
-          extras: context.bookingData.extras || {},
           status: "pending",
           paymentStatus: "pending",
         });
 
         context.booking = booking;
 
-        reply = `✅ Booking created successfully!\n`;
+        reply = `✅ **Booking Created Successfully!**\n\n`;
         reply += `📝 Booking ID: ${booking._id}\n`;
-        reply += `💰 Amount to pay: ₹${context.bookingData.totalAmount}\n\n`;
-        reply += `Click the button below to complete payment 💳`;
+        reply += `💰 Amount to Pay: ₹${context.bookingData.totalAmount}\n\n`;
+        reply += `Click the button below to complete payment.`;
 
         action = "payment";
         data = {
@@ -302,40 +276,29 @@ exports.chat = async (req, res) => {
           amount: context.bookingData.totalAmount,
         };
         context.step = "payment";
-      } else if (userMessage.toLowerCase() === "no") {
-        reply =
-          "No problem! Let me know if you want to search for other vehicles or need any help.";
-        context.step = "collecting_requirements";
-        context.filters = {};
+      } else if (userMessage === "no") {
+        reply = "No problem! Type 'search' to find other vehicles.";
+        context.step = "main_menu";
         context.selectedVehicle = null;
         context.bookingData = {};
       } else {
-        reply = "Please reply with 'yes' to confirm booking or 'no' to cancel.";
+        reply = "Please reply with 'yes' to confirm or 'no' to cancel.";
       }
     } else if (context.step === "payment") {
       reply =
-        "Your booking is ready for payment. Use the payment button above to complete your booking.";
+        "Complete payment using the button below to confirm your booking.";
       action = "payment";
       data = {
         bookingId: context.booking._id,
         amount: context.bookingData.totalAmount,
       };
-    } else if (intent === "help") {
-      reply = "📖 **Help Guide**\n\n";
-      reply += "You can ask me to:\n";
-      reply += "• 'Show cars in Mumbai'\n";
-      reply += "• 'Find bikes under ₹500'\n";
-      reply += "• 'Book an SUV for 3 days'\n";
-      reply += "• 'Check my booking status'\n\n";
-      reply += "What would you like to do?";
     } else {
-      reply = "I'm here to help you find and book vehicles! 🚗\n\n";
-      reply +=
-        "Tell me what you're looking for, or type 'help' for assistance.";
-      context.step = "collecting_requirements";
+      reply =
+        "Type 'search' to find vehicles, 'my bookings' to see bookings, or 'help' for assistance.";
+      context.step = "main_menu";
     }
 
-    // Save updated context
+    // Save context
     conversationContext.set(sessionId || userId, context);
 
     res.json({
@@ -349,13 +312,12 @@ exports.chat = async (req, res) => {
     res.status(500).json({
       success: false,
       message: error.message,
-      reply:
-        "😅 Sorry, I'm having trouble processing your request. Please try again.",
+      reply: "😅 Sorry, I'm having trouble. Please try again.",
     });
   }
 };
 
-// Get user's bookings
+// Get user bookings
 exports.getUserBookings = async (req, res) => {
   try {
     const bookings = await Booking.find({ user: req.user.id })
