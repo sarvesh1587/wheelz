@@ -1,5 +1,6 @@
 const Vehicle = require("../models/Vehicle");
-const Booking = require("../models/Booking");
+const { Booking } = require("../models/Booking"); // ✅ CORRECT - Booking is a named export
+const User = require("../models/User");
 
 // Conversation context storage
 const conversationContext = new Map();
@@ -43,7 +44,7 @@ function formatVehicleList(vehicles) {
   return message;
 }
 
-// Extract requirements from message using simple pattern matching
+// Extract requirements from message
 function extractRequirements(message) {
   const lowerMsg = message.toLowerCase();
   const requirements = {
@@ -77,7 +78,7 @@ function extractRequirements(message) {
     }
   }
 
-  // Extract budget (numbers in message)
+  // Extract budget
   const budgetMatch = message.match(/\d{3,5}/);
   if (budgetMatch) {
     requirements.budget = parseInt(budgetMatch[0]);
@@ -210,7 +211,6 @@ exports.chat = async (req, res) => {
       }
       context.step = "selecting_vehicle";
     } else if (context.step === "collecting_requirements") {
-      // Extract requirements from user's message
       const requirements = extractRequirements(message);
 
       if (requirements.city) context.filters.city = requirements.city;
@@ -296,6 +296,7 @@ exports.chat = async (req, res) => {
         const endDate = new Date(startDate);
         endDate.setDate(endDate.getDate() + context.bookingData.days);
 
+        // ✅ CORRECT - Booking.create is now a function
         const booking = await Booking.create({
           user: userId,
           vehicle: context.selectedVehicle._id,
@@ -307,6 +308,7 @@ exports.chat = async (req, res) => {
             context.selectedVehicle.currentPrice ||
             context.selectedVehicle.basePrice,
           finalAmount: context.bookingData.totalAmount,
+          extras: context.bookingData.extras || {},
           status: "pending",
           paymentStatus: "pending",
         });
