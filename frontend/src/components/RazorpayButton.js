@@ -31,8 +31,9 @@ export default function RazorpayButton({ bookingId, amount, onSuccess }) {
       const orderRes = await paymentAPI.createOrder(bookingId);
       const orderData = orderRes.data;
 
+      // ✅ CORRECTED OPTIONS
       const options = {
-        key: orderData.keyId,
+        key: "rzp_test_ShPo542q8R01pa", // ✅ Your test key ID (hardcoded for reliability)
         amount: orderData.amount,
         currency: orderData.currency,
         name: "Wheelz",
