@@ -1,23 +1,13 @@
 const KYC = require("../models/KYC");
 const User = require("../models/User");
 
-// Helper function to get full image URL
-// Helper function - Cloudinary URLs are already full URLs
-const getFullImageUrl = (filePath) => {
-  if (!filePath) return null;
-  return filePath; // Cloudinary gives full URL directly
-};
-
-// ─── USER ROUTES ───────────────────────────────────────────────
-
-// Submit KYC documents
+// Submit KYC
 exports.submitKYC = async (req, res) => {
   try {
     const { licenseNumber, aadhaarNumber } = req.body;
     const files = req.files;
     const userId = req.user.id;
 
-    // Validate all files uploaded
     if (
       !files?.drivingLicenseFront ||
       !files?.drivingLicenseBack ||
@@ -26,35 +16,25 @@ exports.submitKYC = async (req, res) => {
     ) {
       return res.status(400).json({
         success: false,
-        message:
-          "Please upload all required documents (DL front, DL back, Aadhaar front, Aadhaar back)",
+        message: "Please upload all required documents",
       });
     }
 
     if (!licenseNumber || !aadhaarNumber) {
       return res.status(400).json({
         success: false,
-        message: "License number and Aadhaar number are required",
+        message: "License and Aadhaar numbers are required",
       });
     }
 
-    // Validate Aadhaar format (12 digits)
     if (!/^\d{12}$/.test(aadhaarNumber)) {
       return res.status(400).json({
         success: false,
-        message: "Aadhaar number must be exactly 12 digits",
+        message: "Aadhaar number must be 12 digits",
       });
     }
 
-    // Check if KYC already exists
     const existingKYC = await KYC.findOne({ user: userId });
-
-    if (existingKYC && existingKYC.status === "verified") {
-      return res.status(400).json({
-        success: false,
-        message: "Your KYC is already verified",
-      });
-    }
 
     const kycData = {
       user: userId,
@@ -65,12 +45,10 @@ exports.submitKYC = async (req, res) => {
       licenseNumber,
       aadhaarNumber,
       status: "pending",
-      rejectionReason: null,
     };
 
     let kyc;
     if (existingKYC) {
-      // Re-submission after rejection
       kyc = await KYC.findOneAndUpdate({ user: userId }, kycData, {
         new: true,
       });
@@ -78,13 +56,13 @@ exports.submitKYC = async (req, res) => {
       kyc = await KYC.create(kycData);
     }
 
-    // Update user's KYC status
+    // Update user KYC status
     await User.findByIdAndUpdate(userId, { kycStatus: "pending" });
 
     res.status(201).json({
       success: true,
-      message: "KYC submitted successfully. We'll verify within 24 hours.",
-      kyc: { status: kyc.status, submittedAt: kyc.createdAt },
+      message: "KYC submitted successfully",
+      kyc: { status: kyc.status },
     });
   } catch (error) {
     console.error("KYC Submit Error:", error);
@@ -92,13 +70,16 @@ exports.submitKYC = async (req, res) => {
   }
 };
 
-// Get current user's KYC status
-// Get current user's KYC status
+// Get KYC status
 exports.getKYCStatus = async (req, res) => {
   try {
-    const kyc = await KYC.findOne({ user: req.user.id })
-      .select("status rejectionReason createdAt verifiedAt")
-      .lean(); // ✅ Add .lean()
+    const user = await User.findById(req.user.id);
+
+    if (user?.kycStatus === "verified") {
+      return res.json({ success: true, kycStatus: "verified" });
+    }
+
+    const kyc = await KYC.findOne({ user: req.user.id });
 
     if (!kyc) {
       return res.json({ success: true, kycStatus: "not_submitted" });
@@ -108,8 +89,6 @@ exports.getKYCStatus = async (req, res) => {
       success: true,
       kycStatus: kyc.status,
       rejectionReason: kyc.rejectionReason,
-      submittedAt: kyc.createdAt,
-      verifiedAt: kyc.verifiedAt,
     });
   } catch (error) {
     console.error("KYC Status Error:", error);
@@ -117,176 +96,40 @@ exports.getKYCStatus = async (req, res) => {
   }
 };
 
-// Upload KYC documents (separate endpoint)
-exports.uploadKYCDocuments = async (req, res) => {
-  try {
-    const files = req.files || {};
-
-    const uploadedFiles = {
-      drivingLicenseFront: files.drivingLicenseFront?.[0]?.path || null,
-      drivingLicenseBack: files.drivingLicenseBack?.[0]?.path || null,
-      aadhaarFront: files.aadhaarFront?.[0]?.path || null,
-      aadhaarBack: files.aadhaarBack?.[0]?.path || null,
-    };
-
-    res.json({
-      success: true,
-      files: uploadedFiles,
-      message: "Documents uploaded successfully",
-    });
-  } catch (error) {
-    console.error("Upload error:", error);
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
-
-// ─── ADMIN ROUTES ───────────────────────────────────────────────
-
-// Get all KYC submissions (admin)
+// Get all KYC (admin)
 exports.getAllKYC = async (req, res) => {
   try {
-    const { status, page = 1, limit = 20 } = req.query;
-    const query = {};
+    const { status } = req.query;
+    const query = status ? { status } : {};
 
-    if (status) query.status = status;
+    const kycs = await KYC.find(query)
+      .populate("user", "name email phone")
+      .sort({ createdAt: -1 });
 
-    const skip = (parseInt(page) - 1) * parseInt(limit);
-
-    const [kycs, total] = await Promise.all([
-      KYC.find(query)
-        .populate("user", "name email phone role")
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(parseInt(limit))
-        .lean(), // ✅ Add .lean() to get plain JavaScript objects
-      KYC.countDocuments(query),
-    ]);
-
-    // Get base URL for images - ✅ Define outside the map
     const baseUrl =
-      process.env.RENDER_EXTERNAL_URL ||
-      `http://localhost:${process.env.PORT || 5000}`;
+      process.env.RENDER_EXTERNAL_URL || "https://wheelz-ldq2.onrender.com";
 
-    // Add full image URLs - ✅ Safely process each KYC
-    const kycsWithUrls = kycs.map((kyc) => {
-      // Extract filename from path safely
-      const getFileName = (filePath) => {
-        if (!filePath) return null;
-        const parts = filePath.split(/[\\\/]/);
-        return parts[parts.length - 1];
-      };
+    const kycsWithUrls = kycs.map((kyc) => ({
+      ...kyc.toObject(),
+      drivingLicenseFrontUrl: kyc.drivingLicenseFront
+        ? `${baseUrl}${kyc.drivingLicenseFront}`
+        : null,
+      drivingLicenseBackUrl: kyc.drivingLicenseBack
+        ? `${baseUrl}${kyc.drivingLicenseBack}`
+        : null,
+      aadhaarFrontUrl: kyc.aadhaarFront
+        ? `${baseUrl}${kyc.aadhaarFront}`
+        : null,
+      aadhaarBackUrl: kyc.aadhaarBack ? `${baseUrl}${kyc.aadhaarBack}` : null,
+    }));
 
-      return {
-        _id: kyc._id,
-        user: kyc.user,
-        licenseNumber: kyc.licenseNumber,
-        aadhaarNumber: kyc.aadhaarNumber,
-        status: kyc.status,
-        rejectionReason: kyc.rejectionReason,
-        createdAt: kyc.createdAt,
-        updatedAt: kyc.updatedAt,
-        verifiedAt: kyc.verifiedAt,
-        verifiedBy: kyc.verifiedBy,
-        drivingLicenseFrontUrl: kyc.drivingLicenseFront
-          ? `${baseUrl}/uploads/kyc/${getFileName(kyc.drivingLicenseFront)}`
-          : null,
-        drivingLicenseBackUrl: kyc.drivingLicenseBack
-          ? `${baseUrl}/uploads/kyc/${getFileName(kyc.drivingLicenseBack)}`
-          : null,
-        aadhaarFrontUrl: kyc.aadhaarFront
-          ? `${baseUrl}/uploads/kyc/${getFileName(kyc.aadhaarFront)}`
-          : null,
-        aadhaarBackUrl: kyc.aadhaarBack
-          ? `${baseUrl}/uploads/kyc/${getFileName(kyc.aadhaarBack)}`
-          : null,
-      };
-    });
-
-    res.json({
-      success: true,
-      kycs: kycsWithUrls,
-      total,
-      pages: Math.ceil(total / parseInt(limit)),
-      currentPage: parseInt(page),
-    });
+    res.json({ success: true, kycs: kycsWithUrls });
   } catch (error) {
     console.error("Get all KYC error:", error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
-// Get single KYC submission by user ID (admin)
-// exports.getKYCByUserId = async (req, res) => {
-//   try {
-//     const { userId } = req.params;
-//     const kyc = await KYC.findOne({ user: userId }).populate(
-//       "user",
-//       "name email phone",
-//     );
 
-//     if (!kyc) {
-//       return res.status(404).json({ success: false, message: "KYC not found" });
-//     }
-
-//     // Add full image URLs
-//     const kycWithUrls = {
-//       ...kyc.toObject(),
-//       drivingLicenseFrontUrl: getFullImageUrl(req, kyc.drivingLicenseFront),
-//       drivingLicenseBackUrl: getFullImageUrl(req, kyc.drivingLicenseBack),
-//       aadhaarFrontUrl: getFullImageUrl(req, kyc.aadhaarFront),
-//       aadhaarBackUrl: getFullImageUrl(req, kyc.aadhaarBack),
-//     };
-
-//     res.json({ success: true, kyc: kycWithUrls });
-//   } catch (error) {
-//     console.error("Get KYC by ID error:", error);
-//     res.status(500).json({ success: false, message: error.message });
-//   }
-// };
-// Get single KYC submission by user ID (admin)
-exports.getKYCByUserId = async (req, res) => {
-  try {
-    const { userId } = req.params;
-    const kyc = await KYC.findOne({ user: userId })
-      .populate("user", "name email phone")
-      .lean(); // ✅ Add .lean()
-
-    if (!kyc) {
-      return res.status(404).json({ success: false, message: "KYC not found" });
-    }
-
-    // Get base URL
-    const baseUrl =
-      process.env.RENDER_EXTERNAL_URL ||
-      `http://localhost:${process.env.PORT || 5000}`;
-
-    const getFileName = (filePath) => {
-      if (!filePath) return null;
-      const parts = filePath.split(/[\\\/]/);
-      return parts[parts.length - 1];
-    };
-
-    const kycWithUrls = {
-      ...kyc,
-      drivingLicenseFrontUrl: kyc.drivingLicenseFront
-        ? `${baseUrl}/uploads/kyc/${getFileName(kyc.drivingLicenseFront)}`
-        : null,
-      drivingLicenseBackUrl: kyc.drivingLicenseBack
-        ? `${baseUrl}/uploads/kyc/${getFileName(kyc.drivingLicenseBack)}`
-        : null,
-      aadhaarFrontUrl: kyc.aadhaarFront
-        ? `${baseUrl}/uploads/kyc/${getFileName(kyc.aadhaarFront)}`
-        : null,
-      aadhaarBackUrl: kyc.aadhaarBack
-        ? `${baseUrl}/uploads/kyc/${getFileName(kyc.aadhaarBack)}`
-        : null,
-    };
-
-    res.json({ success: true, kyc: kycWithUrls });
-  } catch (error) {
-    console.error("Get KYC by ID error:", error);
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
 // Verify KYC (admin)
 exports.verifyKYC = async (req, res) => {
   try {
@@ -307,13 +150,15 @@ exports.verifyKYC = async (req, res) => {
       return res.status(404).json({ success: false, message: "KYC not found" });
     }
 
-    // Update user's KYC status
-    await User.findByIdAndUpdate(userId, { kycStatus: "verified" });
+    // ✅ Update user model
+    await User.findByIdAndUpdate(userId, {
+      kycStatus: "verified",
+      isKycVerified: true,
+    });
 
     res.json({
       success: true,
       message: "KYC verified successfully",
-      kyc,
     });
   } catch (error) {
     console.error("KYC verify error:", error);
@@ -349,13 +194,15 @@ exports.rejectKYC = async (req, res) => {
       return res.status(404).json({ success: false, message: "KYC not found" });
     }
 
-    // Update user's KYC status
-    await User.findByIdAndUpdate(userId, { kycStatus: "rejected" });
+    // ✅ Update user model
+    await User.findByIdAndUpdate(userId, {
+      kycStatus: "rejected",
+      isKycVerified: false,
+    });
 
     res.json({
       success: true,
       message: "KYC rejected",
-      kyc,
     });
   } catch (error) {
     console.error("KYC reject error:", error);

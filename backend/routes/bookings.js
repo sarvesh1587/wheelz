@@ -12,11 +12,11 @@ const {
 const { protect, authorize } = require("../middleware/auth");
 const requireKYC = require("../middleware/requireKYC");
 
-// ✅ All protected routes need authentication first
+// All routes require authentication
 bookingRouter.use(protect);
 
-// Public booking routes (after authentication)
-bookingRouter.post("/", requireKYC, createBooking); // ✅ KYC check before booking
+// Booking creation with KYC check
+bookingRouter.post("/", requireKYC, createBooking);
 bookingRouter.get("/", getBookings);
 bookingRouter.get("/my-stats", getMyStats);
 bookingRouter.get("/:id", getBooking);

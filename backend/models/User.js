@@ -77,7 +77,15 @@ const UserSchema = new mongoose.Schema(
       enum: ["individual", "business"],
       default: null,
     },
-
+    kycStatus: {
+      type: String,
+      enum: ["not_submitted", "pending", "verified", "rejected"],
+      default: "not_submitted",
+    },
+    isKycVerified: {
+      type: Boolean,
+      default: false,
+    },
     // Individual Vendor Details
     individualDetails: {
       aadharNumber: { type: String, default: "" },
