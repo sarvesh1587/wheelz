@@ -29,14 +29,22 @@ exports.createOrder = async (req, res) => {
     console.log("🔍 Amount (₹):", booking.finalAmount);
     console.log("🔍 Amount (paise):", amountInPaise);
 
+    // ✅ Short receipt ID (max 40 characters)
+    // Take only last 10 chars of bookingId + timestamp (last 8 digits)
+    const shortId = bookingId.slice(-10);
+    const timestamp = Date.now().toString().slice(-8);
+    const receipt = `rcpt_${shortId}_${timestamp}`; // ~25 characters max
+
     const options = {
       amount: amountInPaise,
       currency: "INR",
-      receipt: `receipt_${bookingId}_${Date.now()}`,
+      receipt: receipt,
       notes: {
         bookingId: bookingId.toString(),
       },
     };
+
+    console.log("🔍 Razorpay Options:", options);
 
     const order = await razorpay.orders.create(options);
     console.log("✅ Razorpay order created:", order.id);
@@ -57,7 +65,6 @@ exports.createOrder = async (req, res) => {
     });
   }
 };
-
 // Verify payment
 exports.verifyPayment = async (req, res) => {
   try {
