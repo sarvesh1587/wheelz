@@ -2,6 +2,7 @@
   "name": "wheelz-frontend",
   "version": "1.0.0",
   "dependencies": {
+    "@google-recaptcha/react": "^2.4.2",
     "@heroicons/react": "^2.0.18",
     "axios": "^1.4.0",
     "framer-motion": "^10.12.0",
