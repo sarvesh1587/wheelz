@@ -48,8 +48,9 @@ api.interceptors.response.use(
 );
 
 // ─── Auth ─────────────────────────────────────────────────────────────────────
+// frontend/src/services/api.js
 export const authAPI = {
-  register: (data) => api.post("/auth/register", data),
+  register: (data) => api.post("/auth/register", data), // ✅ Already accepts data with recaptchaToken
   login: (data) => api.post("/auth/login", data),
   getMe: () => api.get("/auth/me"),
   updateProfile: (data) => api.put("/auth/profile", data),
@@ -57,7 +58,7 @@ export const authAPI = {
   forgotPassword: (data) => api.post("/auth/forgot-password", data),
   resetPassword: (token, data) =>
     api.post(`/auth/reset-password/${token}`, data),
-  googleLogin: (data) => api.post("/auth/google/google-login", data), // ✅ Make sure this exists
+  googleLogin: (data) => api.post("/auth/google/google-login", data),
 };
 // ─── Vehicles ─────────────────────────────────────────────────────────────────
 export const vehicleAPI = {
