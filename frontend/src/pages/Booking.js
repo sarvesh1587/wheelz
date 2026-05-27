@@ -1,3 +1,4 @@
+// frontend/src/pages/Booking.jsx
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { vehicleAPI, bookingAPI } from "../services/api";
@@ -11,7 +12,6 @@ import {
   ShieldCheckIcon,
   MapPinIcon,
   UserGroupIcon,
-  CreditCardIcon,
   SparklesIcon,
 } from "@heroicons/react/24/outline";
 
@@ -32,7 +32,6 @@ export default function Booking() {
   });
   const [creatingBooking, setCreatingBooking] = useState(false);
   const [checkingAvailability, setCheckingAvailability] = useState(false);
-  let toastId = null;
 
   useEffect(() => {
     vehicleAPI
@@ -92,7 +91,6 @@ export default function Booking() {
   const extrasTotal = extrasPerDay * totalDays;
   const total = subtotal + extrasTotal;
 
-  // ✅ FIXED: Optimistic booking - don't wait for response
   const handleCreateBooking = async () => {
     if (!startDate || !endDate) {
       toast.error("Please select both pickup and return dates");
@@ -105,9 +103,7 @@ export default function Booking() {
     }
 
     setCreatingBooking(true);
-
-    // Show loading toast
-    toastId = toast.loading("Creating booking...");
+    const toastId = toast.loading("Creating booking...");
 
     try {
       const bookingData = {
@@ -119,43 +115,18 @@ export default function Booking() {
       };
 
       console.log("Creating booking:", bookingData);
-
-      // ✅ Send request but don't wait indefinitely
-      const bookingPromise = bookingAPI.create(bookingData);
-
-      // ✅ Set a timeout - after 5 seconds, assume success and go to dashboard
-      const timeoutPromise = new Promise((resolve) => {
-        setTimeout(() => {
-          toast.dismiss(toastId);
-          toast.success("Booking created! Redirecting...", { duration: 2000 });
-          resolve({ success: true, fromTimeout: true });
-        }, 5000);
-      });
-
-      // Race between actual response and timeout
-      const result = await Promise.race([bookingPromise, timeoutPromise]);
+      const res = await bookingAPI.create(bookingData);
 
       toast.dismiss(toastId);
+      toast.success("Booking confirmed successfully! 🎉");
 
-      if (result.fromTimeout) {
-        // Already redirected by timeout
+      setTimeout(() => {
         navigate("/dashboard");
-      } else {
-        // Got actual response
-        toast.success("Booking confirmed successfully! 🎉");
-        setTimeout(() => {
-          navigate("/dashboard");
-        }, 1500);
-      }
+      }, 1500);
     } catch (err) {
       console.error("Booking error:", err);
       toast.dismiss(toastId);
-
-      // ✅ Even on error, navigate to dashboard to check
-      toast.loading("Checking your bookings...", { duration: 2000 });
-      setTimeout(() => {
-        navigate("/dashboard");
-      }, 2000);
+      toast.error(err.response?.data?.message || "Booking failed");
     } finally {
       setCreatingBooking(false);
     }
@@ -177,9 +148,7 @@ export default function Booking() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Column - Booking Form */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Vehicle Summary Card */}
             <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg border border-gray-100 dark:border-gray-700">
               <div className="flex gap-4">
                 <img
@@ -203,7 +172,6 @@ export default function Booking() {
               </div>
             </div>
 
-            {/* Date Selection Card */}
             <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg border border-gray-100 dark:border-gray-700">
               <h3 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                 <CalendarIcon className="w-5 h-5 text-amber-500" />
@@ -264,7 +232,6 @@ export default function Booking() {
               )}
             </div>
 
-            {/* Extras Card */}
             <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg border border-gray-100 dark:border-gray-700">
               <h3 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                 <SparklesIcon className="w-5 h-5 text-amber-500" />
@@ -276,28 +243,24 @@ export default function Booking() {
                     key: "insurance",
                     label: "Zero Dep Insurance",
                     price: 200,
-                    icon: ShieldCheckIcon,
                     description: "Full coverage",
                   },
                   {
                     key: "gps",
                     label: "GPS Navigation",
                     price: 100,
-                    icon: MapPinIcon,
                     description: "Never get lost",
                   },
                   {
                     key: "childSeat",
                     label: "Child Seat",
                     price: 150,
-                    icon: UserGroupIcon,
                     description: "Safe for kids",
                   },
                   {
                     key: "driver",
                     label: "Professional Driver",
                     price: 500,
-                    icon: UserGroupIcon,
                     description: "Experienced driver",
                   },
                 ].map((extra) => (
@@ -310,7 +273,6 @@ export default function Booking() {
                     }`}
                   >
                     <div className="flex items-center gap-3">
-                      <extra.icon className="w-5 h-5 text-amber-500" />
                       <div>
                         <div className="font-medium text-sm text-gray-900 dark:text-white">
                           {extra.label}
@@ -345,7 +307,6 @@ export default function Booking() {
             </div>
           </div>
 
-          {/* Right Column - Price Summary */}
           <div className="lg:col-span-1">
             <div className="sticky top-24 bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg border border-gray-100 dark:border-gray-700">
               <h3 className="font-semibold text-lg text-gray-900 dark:text-white mb-4">
@@ -404,7 +365,6 @@ export default function Booking() {
                 </div>
               </div>
 
-              {/* ✅ Book Now Button with better UX */}
               <button
                 onClick={handleCreateBooking}
                 disabled={
@@ -413,7 +373,7 @@ export default function Booking() {
                   !endDate ||
                   (availability && !availability.isAvailable)
                 }
-                className="w-full btn-primary mt-6 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full bg-gradient-to-r from-amber-500 to-amber-600 text-white py-3 rounded-xl font-semibold mt-6 disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg transition-all"
               >
                 {creatingBooking ? (
                   <div className="flex items-center justify-center gap-2">
@@ -427,16 +387,6 @@ export default function Booking() {
 
               <p className="text-xs text-center text-gray-500 mt-4">
                 You will be redirected to payment after booking
-              </p>
-
-              <p className="text-xs text-center text-gray-400 mt-2">
-                ⏱️ If it takes too long, check your{" "}
-                <button
-                  onClick={() => navigate("/dashboard")}
-                  className="text-amber-500 underline"
-                >
-                  My Bookings
-                </button>
               </p>
             </div>
           </div>

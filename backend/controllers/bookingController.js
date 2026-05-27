@@ -1,12 +1,8 @@
-/**
- * Booking Controller
- * Handles the full booking lifecycle with vendor-customer data sharing
- */
-
+// backend/controllers/bookingController.js
 const { Booking } = require("../models/Booking");
 const Vehicle = require("../models/Vehicle");
 const User = require("../models/User");
-const { sendEmail } = require("../services/emailService");
+const sendEmail = require("../services/emailService");
 
 const calcDays = (start, end) => {
   const ms = new Date(end) - new Date(start);
@@ -36,7 +32,6 @@ exports.createBooking = async (req, res, next) => {
       notes,
     } = req.body;
 
-    // Validation
     if (!vehicleId) {
       return res
         .status(400)
@@ -58,7 +53,6 @@ exports.createBooking = async (req, res, next) => {
         .json({ success: false, message: "Pickup location is required" });
     }
 
-    // Get vehicle with vendor details
     const vehicle = await Vehicle.findById(vehicleId).populate(
       "vendor",
       "name email phone vendorDetails businessDetails address",
@@ -83,12 +77,10 @@ exports.createBooking = async (req, res, next) => {
     const totalAmount = (pricePerDay + extrasCostPerDay) * totalDays;
     const finalAmount = totalAmount;
 
-    // ✅ Get customer details - THIS IS IMPORTANT
     const customer = await User.findById(req.user._id);
     console.log("📧 Customer email from database:", customer.email);
     console.log("👤 Customer name:", customer.name);
 
-    // Prepare vendor details for booking
     const vendorData = vehicle.vendor
       ? {
           name: vehicle.vendor.name,
@@ -112,7 +104,6 @@ exports.createBooking = async (req, res, next) => {
           pickupInstructions: `Please pickup at ${pickupLocation || vehicle.locationName}`,
         };
 
-    // Prepare customer details for booking
     const customerData = {
       name: customer.name,
       phone: customer.phone,
@@ -124,7 +115,6 @@ exports.createBooking = async (req, res, next) => {
         ) || "Not provided",
     };
 
-    // Create booking with vendor and customer details
     const booking = await Booking.create({
       user: req.user._id,
       vehicle: vehicleId,
@@ -148,7 +138,6 @@ exports.createBooking = async (req, res, next) => {
     const flags = await booking.checkFraud();
     await booking.save();
 
-    // Mark vehicle as booked
     vehicle.bookedDates.push({
       startDate: new Date(startDate),
       endDate: new Date(endDate),
@@ -162,59 +151,29 @@ exports.createBooking = async (req, res, next) => {
       .populate("vehicle", "name brand images basePrice")
       .populate("user", "name email phone");
 
-    // Send confirmation email to customer
+    // Send confirmation email
     try {
       await sendEmail({
-        to: req.user.email, // ✅ Email of logged-in user
+        to: req.user.email,
         subject: `Booking Confirmed - ${booking.bookingRef}`,
-        template: "bookingConfirmation",
-        data: {
-          name: req.user.name,
-          bookingRef: booking.bookingRef,
-          vehicleName: vehicle.name,
-          startDate: new Date(startDate).toDateString(),
-          endDate: new Date(endDate).toDateString(),
-          totalDays,
-          finalAmount,
-          vendorName: vendorData.businessName,
-          vendorPhone: vendorData.phone,
-          vendorAddress: vendorData.address,
-          pickupLocation: pickupLocation || vehicle.locationName,
-          pickupInstructions: vendorData.pickupInstructions,
-        },
+        html: `<h1>Booking Confirmed!</h1><p>Your booking ${booking.bookingRef} for ${vehicle.name} is confirmed.</p>`,
       });
       console.log(`✅ Booking confirmation email sent to ${req.user.email}`);
     } catch (emailErr) {
       console.warn("Booking email failed:", emailErr.message);
     }
 
-    // Send notification email to vendor
+    // Send vendor notification
     if (vehicle.vendor && vehicle.vendor.email) {
       try {
         await sendEmail({
           to: vehicle.vendor.email,
           subject: `New Booking Received - ${booking.bookingRef}`,
-          template: "bookingConfirmation",
-          data: {
-            name: vehicle.vendor.name,
-            bookingRef: booking.bookingRef,
-            vehicleName: vehicle.name,
-            startDate: new Date(startDate).toDateString(),
-            endDate: new Date(endDate).toDateString(),
-            totalDays,
-            finalAmount,
-            customerName: customerData.name,
-            customerPhone: customerData.phone,
-            customerEmail: customerData.email,
-            customerAddress: customerData.address,
-            pickupLocation: pickupLocation || vehicle.locationName,
-          },
+          html: `<h1>New Booking!</h1><p>Customer: ${customer.name}<br>Vehicle: ${vehicle.name}<br>Dates: ${startDate} to ${endDate}</p>`,
         });
-        console.log(
-          `✅ Vendor notification email sent to ${vehicle.vendor.email}`,
-        );
+        console.log(`✅ Vendor email sent to ${vehicle.vendor.email}`);
       } catch (emailErr) {
-        console.warn("Vendor notification email failed:", emailErr.message);
+        console.warn("Vendor email failed:", emailErr.message);
       }
     }
 
@@ -352,21 +311,8 @@ exports.processPayment = async (req, res, next) => {
         .json({ success: false, message: "Not authorized" });
     }
 
-    // ✅ Get customer from booking - THIS IS THE FIXED PART
     const customer = await User.findById(booking.user);
     const vendor = await User.findById(booking.vehicle.vendor);
-
-    console.log("📧 Payment - Customer email:", customer?.email);
-    console.log("👤 Payment - Customer name:", customer?.name);
-    console.log("🔍 Payment - Booking user ID:", booking.user);
-    console.log("🔍 Payment - Current user ID:", req.user._id);
-
-    if (!customer || !customer.email) {
-      console.error("❌ Customer not found or no email!");
-      return res
-        .status(400)
-        .json({ success: false, message: "Customer email not found" });
-    }
 
     booking.paymentStatus = "paid";
     booking.paymentMethod = req.body.method || "razorpay";
@@ -374,52 +320,23 @@ exports.processPayment = async (req, res, next) => {
     booking.status = "confirmed";
     await booking.save();
 
-    // ✅ Send email to the ACTUAL customer (the one who booked)
     try {
       await sendEmail({
-        to: customer.email, // ✅ This will be harsh.pvt@gmail.com if that's who booked
+        to: customer.email,
         subject: `Payment Successful - ${booking.bookingRef}`,
-        template: "paymentSuccess",
-        data: {
-          name: customer.name,
-          bookingRef: booking.bookingRef,
-          vehicleName: booking.vehicle.name,
-          startDate: new Date(booking.startDate).toDateString(),
-          endDate: new Date(booking.endDate).toDateString(),
-          totalAmount: booking.finalAmount,
-          vendorName:
-            vendor?.vendorDetails?.businessName || vendor?.name || "Wheelz",
-          vendorPhone: vendor?.phone || "9876543210",
-          vendorAddress:
-            booking.vendorDetails?.address || booking.pickupLocation,
-          pickupLocation: booking.pickupLocation,
-        },
+        html: `<h1>Payment Received!</h1><p>Your payment of ₹${booking.finalAmount} for booking ${booking.bookingRef} has been received.</p>`,
       });
-      console.log(`✅ Payment success email sent to ${customer.email}`);
+      console.log(`✅ Payment email sent to ${customer.email}`);
     } catch (emailErr) {
-      console.error("Payment success email failed:", emailErr.message);
+      console.error("Payment email failed:", emailErr.message);
     }
 
-    // Send email to vendor
     if (vendor && vendor.email) {
       try {
         await sendEmail({
           to: vendor.email,
           subject: `Booking Confirmed - ${booking.bookingRef}`,
-          template: "newBookingForVendor",
-          data: {
-            vendorName: vendor.vendorDetails?.businessName || vendor.name,
-            customerName: customer.name,
-            customerPhone: customer.phone,
-            customerEmail: customer.email,
-            customerAddress: booking.customerDetails?.address || "Not provided",
-            vehicleName: booking.vehicle.name,
-            startDate: new Date(booking.startDate).toDateString(),
-            endDate: new Date(booking.endDate).toDateString(),
-            totalDays: booking.totalDays,
-            totalAmount: booking.finalAmount,
-            pickupLocation: booking.pickupLocation,
-          },
+          html: `<h1>Booking Confirmed!</h1><p>Customer: ${customer.name}<br>Vehicle: ${booking.vehicle.name}<br>Amount: ₹${booking.finalAmount}</p>`,
         });
         console.log(`✅ Vendor email sent to ${vendor.email}`);
       } catch (emailErr) {
@@ -467,17 +384,12 @@ exports.getMyStats = async (req, res, next) => {
     next(err);
   }
 };
-/**
- * Get bookings for vendor's vehicles
- * GET /api/bookings/vendor/my-bookings
- */
+
 exports.getVendorBookings = async (req, res, next) => {
   try {
-    // First find all vehicles belonging to this vendor
     const vendorVehicles = await Vehicle.find({ vendor: req.user._id });
     const vehicleIds = vendorVehicles.map((v) => v._id);
 
-    // If no vehicles, return empty array
     if (vehicleIds.length === 0) {
       return res.json({
         success: true,
@@ -486,7 +398,6 @@ exports.getVendorBookings = async (req, res, next) => {
       });
     }
 
-    // Find bookings for those vehicles
     const bookings = await Booking.find({
       vehicle: { $in: vehicleIds },
     })
