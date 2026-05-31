@@ -52,7 +52,10 @@ export const authAPI = {
     api.post(`/auth/reset-password/${token}`, data),
   googleLogin: (data) => api.post("/auth/google/google-login", data),
 };
-
+export const tripPlannerAPI = {
+  plan: (data) => api.post("/trip-planner/plan", data),
+  quickEstimate: (data) => api.post("/trip-planner/estimate", data),
+};
 export const vehicleAPI = {
   getAll: (params) => api.get("/vehicles", { params }),
   getOne: (id) => api.get(`/vehicles/${id}`),

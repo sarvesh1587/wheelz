@@ -34,7 +34,7 @@ const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Profile = lazy(() => import("./pages/Profile"));
 const Wishlist = lazy(() => import("./pages/Wishlist"));
 const BookingDetails = lazy(() => import("./pages/BookingDetails"));
-
+const TripPlanner = lazy(() => import("./pages/TripPlanner"));
 // Admin Pages
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const AdminVehicles = lazy(() => import("./pages/AdminVehicles"));
@@ -166,6 +166,7 @@ function AppRoutes() {
                 </PrivateRoute>
               }
             />
+            <Route path="/trip-planner" element={<TripPlanner />} />
             <Route
               path="/book/:id"
               element={
