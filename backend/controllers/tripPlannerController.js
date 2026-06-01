@@ -18,9 +18,9 @@ try {
 
 // ─── Fuel cost constants (INR per km, approximate) ──────────────────────────
 const FUEL_RATES = {
-  petrol: 0.08, // ₹8 per km approx (petrol ~₹100/L, 12km/L)
-  diesel: 0.06, // ₹6 per km approx (diesel ~₹90/L, 15km/L)
-  electric: 0.015, // ₹1.5 per km approx (electricity cost)
+  petrol: 0.08,
+  diesel: 0.06,
+  electric: 0.015,
   cng: 0.04,
 };
 
@@ -68,13 +68,13 @@ const CITY_DISTANCES = {
 
 function estimateDistance(from, to) {
   const key = `${from.toLowerCase()}-${to.toLowerCase()}`;
-  return CITY_DISTANCES[key] || 300; // default 300km if unknown
+  return CITY_DISTANCES[key] || 300;
 }
 
 function estimateFuelCost(distanceKm, fuelType, roundTrip) {
   const rate = FUEL_RATES[fuelType] || FUEL_RATES.petrol;
   const totalKm = roundTrip ? distanceKm * 2 : distanceKm;
-  return Math.round(totalKm * rate * 100); // return in paise → ₹
+  return Math.round(totalKm * rate * 100);
 }
 
 // ─── Main Trip Planner ───────────────────────────────────────────────────────
@@ -88,26 +88,19 @@ exports.planTrip = async (req, res) => {
         .json({ success: false, message: "Please describe your trip." });
     }
 
-    // 1. Extract trip parameters using Gemini or fallback parser
     let tripParams = await extractTripParams(
       tripDescription ||
         `${days || 3}-day trip from ${from || "Mumbai"} to ${to} with ${people || 2} people`,
     );
 
-    // Override with explicit fields if provided
     if (from) tripParams.from = from;
     if (to) tripParams.to = to;
     if (days) tripParams.days = parseInt(days);
     if (people) tripParams.people = parseInt(people);
     if (budget) tripParams.budget = parseInt(budget);
 
-    // 2. Find matching vehicles
     const vehicles = await findMatchingVehicles(tripParams);
-
-    // 3. Build itinerary + cost estimate for top vehicles
     const plans = await buildTripPlans(tripParams, vehicles);
-
-    // 4. Generate AI description for the trip
     const tripSummary = await generateTripSummary(tripParams);
 
     res.json({
@@ -141,7 +134,7 @@ async function extractTripParams(description) {
 
   try {
     const model = genAI.getGenerativeModel({ model: "gemini-pro" });
-    const prompt = `Extract trip details from this description and return ONLY a valid JSON object (no markdown, no explanation):
+    const prompt = `Extract trip details from this description and return ONLY a valid JSON object:
 "${description}"
 
 Return this exact JSON structure:
@@ -157,7 +150,7 @@ Return this exact JSON structure:
   "roundTrip": boolean
 }
 
-Indian cities only. Default roundTrip to true. If budget mentioned convert to number in INR.`;
+IMPORTANT: If number of adults/people is mentioned (e.g., "7 adults", "8 people", "family of 6"), extract that number accurately. Indian cities only.`;
 
     const result = await model.generateContent(prompt);
     const text = result.response.text().trim();
@@ -169,35 +162,47 @@ Indian cities only. Default roundTrip to true. If budget mentioned convert to nu
   }
 }
 
-// ─── Simple regex fallback parser ───────────────────────────────────────────
+// ─── Simple regex fallback parser with improved people detection ────────────
 function parseFallback(description, defaults) {
   const lower = description.toLowerCase();
   const params = { ...defaults };
 
-  // Days
   const dayMatch = lower.match(/(\d+)[- ]day/);
   if (dayMatch) params.days = parseInt(dayMatch[1]);
 
-  // People
-  const peopleMatch = lower.match(/(\d+)\s*(friend|person|people|passenger)/);
-  if (peopleMatch) params.people = parseInt(peopleMatch[1]);
+  // 👥 IMPROVED: Better people detection
+  const peoplePatterns = [
+    /(\d+)\s*adults?/i,
+    /(\d+)\s*people/i,
+    /(\d+)\s*pax/i,
+    /(\d+)\s*friends?/i,
+    /(\d+)\s*persons?/i,
+    /family of (\d+)/i,
+    /(\d+)\s*members?/i,
+  ];
+  for (const pattern of peoplePatterns) {
+    const match = lower.match(pattern);
+    if (match) {
+      params.people = parseInt(match[1]);
+      break;
+    }
+  }
 
-  // Category
   if (lower.includes("bike") || lower.includes("motorcycle"))
     params.preferredCategory = "bike";
-  if (lower.includes("car") || lower.includes("suv"))
+  if (lower.includes("car") || lower.includes("suv") || lower.includes("sedan"))
     params.preferredCategory = "car";
 
-  // Budget
-  const budgetMatch = lower.match(/(?:budget|under|within|₹)\s*(\d+)/);
+  if (params.people >= 5 && !params.preferredCategory)
+    params.preferredCategory = "car";
+
+  const budgetMatch = lower.match(/(?:budget|under|within|₹|rs\.?)\s*(\d+)/i);
   if (budgetMatch) params.budget = parseInt(budgetMatch[1]);
 
-  // Driver
   if (lower.includes("driver") || lower.includes("chauffeur"))
     params.needDriver = true;
 
-  // Common destinations
-  const cities = [
+  const destinations = [
     "goa",
     "manali",
     "shimla",
@@ -205,14 +210,13 @@ function parseFallback(description, defaults) {
     "coorg",
     "jaipur",
     "agra",
-    "pune",
     "mysore",
     "pondicherry",
   ];
-  const found = cities.find((c) => lower.includes(c));
+  const found = destinations.find((c) => lower.includes(c));
   if (found) params.to = found.charAt(0).toUpperCase() + found.slice(1);
 
-  const fromCities = [
+  const origins = [
     "mumbai",
     "delhi",
     "bangalore",
@@ -221,58 +225,112 @@ function parseFallback(description, defaults) {
     "kolkata",
     "pune",
   ];
-  const foundFrom = fromCities.find((c) => lower.includes(c) && c !== found);
+  const foundFrom = origins.find((c) => lower.includes(c) && c !== found);
   if (foundFrom)
     params.from = foundFrom.charAt(0).toUpperCase() + foundFrom.slice(1);
 
   return params;
 }
 
-// ─── Find vehicles matching trip requirements ────────────────────────────────
+// ─── Find vehicles matching trip requirements with capacity logic ────────────
 async function findMatchingVehicles(tripParams) {
   const query = { isActive: true, isAvailable: true };
+  const people = tripParams.people || 2;
 
-  // City match - try destination first, then origin
-  const cityRegex = new RegExp(tripParams.from, "i");
-  query.city = cityRegex;
-
-  if (tripParams.preferredCategory) {
-    query.category = tripParams.preferredCategory;
-  }
-
-  // For groups of 4+, prefer cars/SUVs
-  if (tripParams.people >= 4 && !tripParams.preferredCategory) {
+  // 🚨 CRITICAL: Filter by seating capacity based on number of people
+  if (people >= 6) {
+    query.seatingCapacity = { $gte: Math.min(people, 8) };
     query.category = "car";
+  } else if (people >= 5) {
+    query.seatingCapacity = { $gte: 5 };
+    query.category = "car";
+  } else if (people >= 3) {
+    if (tripParams.preferredCategory === "bike") {
+      query.seatingCapacity = { $gte: 2 };
+    } else {
+      query.seatingCapacity = { $gte: Math.min(people, 5) };
+      query.category = "car";
+    }
+  } else if (people <= 2) {
+    if (tripParams.preferredCategory === "car")
+      query.seatingCapacity = { $gte: 4 };
+    else if (tripParams.preferredCategory === "bike")
+      query.seatingCapacity = { $gte: 2 };
   }
 
-  // Budget filter - rough estimate: daily price × days should be within budget
+  if (tripParams.city) {
+    query.city = new RegExp(tripParams.city, "i");
+  } else if (tripParams.from) {
+    query.city = new RegExp(tripParams.from, "i");
+  }
+
   if (tripParams.budget && tripParams.days) {
     const maxDaily = Math.floor(tripParams.budget / tripParams.days);
     if (maxDaily > 0) query.basePrice = { $lte: maxDaily };
   }
 
-  let vehicles = await Vehicle.find(query).limit(10);
+  if (tripParams.preferredCategory)
+    query.category = tripParams.preferredCategory;
+  if (people >= 4 && !tripParams.preferredCategory) query.category = "car";
 
-  // Fallback: drop city filter if too restrictive
-  if (vehicles.length < 3) {
+  let vehicles = await Vehicle.find(query).limit(15);
+
+  if (vehicles.length === 0 && people >= 5) {
+    delete query.seatingCapacity;
+    vehicles = await Vehicle.find(query).limit(15);
+  }
+
+  if (vehicles.length < 3 && query.city) {
     delete query.city;
-    vehicles = await Vehicle.find(query).limit(10);
+    vehicles = await Vehicle.find(query).limit(15);
   }
 
-  // Fallback: drop category too
-  if (vehicles.length < 3) {
-    delete query.category;
-    vehicles = await Vehicle.find(query).limit(10);
-  }
-
-  return vehicles;
+  return sortVehiclesBySuitability(vehicles, tripParams);
 }
 
-// ─── Build trip plans with cost breakdown ───────────────────────────────────
+// ─── Sort vehicles based on suitability for group size ──────────────────────
+function sortVehiclesBySuitability(vehicles, tripParams) {
+  const people = tripParams.people || 2;
+
+  return vehicles.sort((a, b) => {
+    let scoreA = 0,
+      scoreB = 0;
+
+    const capacityA = a.seatingCapacity || (a.category === "bike" ? 2 : 5);
+    const capacityB = b.seatingCapacity || (b.category === "bike" ? 2 : 5);
+
+    if (capacityA >= people) scoreA += 50;
+    if (capacityB >= people) scoreB += 50;
+    if (capacityA < people) scoreA -= 100;
+    if (capacityB < people) scoreB -= 100;
+
+    if (people >= 5) {
+      if (capacityA >= 7) scoreA += 30;
+      if (capacityB >= 7) scoreB += 30;
+      if (a.name?.toLowerCase().includes("innova")) scoreA += 20;
+      if (b.name?.toLowerCase().includes("innova")) scoreB += 20;
+    }
+
+    const priceA = a.basePrice || 0;
+    const priceB = b.basePrice || 0;
+    if (priceA < priceB) scoreA += 10;
+    else if (priceB < priceA) scoreB += 10;
+
+    const ratingA = a.averageRating || 0;
+    const ratingB = b.averageRating || 0;
+    if (ratingA > ratingB) scoreA += 15;
+    else if (ratingB > ratingA) scoreB += 15;
+
+    return scoreB - scoreA;
+  });
+}
+
+// ─── Build trip plans with accurate group size recommendations ──────────────
 async function buildTripPlans(tripParams, vehicles) {
   const distance = estimateDistance(tripParams.from, tripParams.to);
+  const people = tripParams.people || 2;
 
-  return vehicles.slice(0, 4).map((v) => {
+  return vehicles.slice(0, 6).map((v) => {
     const rentalCost = v.basePrice * tripParams.days;
     const fuelCost = estimateFuelCost(
       distance,
@@ -280,17 +338,41 @@ async function buildTripPlans(tripParams, vehicles) {
       tripParams.roundTrip,
     );
     const driverCost = tripParams.needDriver ? 700 * tripParams.days : 0;
-    const tollsEstimate = Math.round(distance * 0.5); // ₹0.5/km rough toll estimate
+    const tollsEstimate = Math.round(distance * 0.5);
     const totalCost = rentalCost + fuelCost + driverCost + tollsEstimate;
-    const costPerPerson = Math.round(totalCost / (tripParams.people || 1));
+    const costPerPerson = Math.round(totalCost / people);
 
-    // Suitability score
-    let suitabilityScore = 80;
-    if (tripParams.people >= 4 && v.category === "car") suitabilityScore += 10;
-    if (tripParams.people <= 2 && v.category === "bike") suitabilityScore += 10;
+    const capacity = v.seatingCapacity || (v.category === "bike" ? 2 : 5);
+    let suitabilityScore = 70;
+    let capacityMessage = "";
+
+    if (capacity >= people) {
+      suitabilityScore += 20;
+      if (capacity - people <= 1) suitabilityScore += 10;
+      capacityMessage = `✅ Fits ${people} people comfortably`;
+    } else {
+      suitabilityScore -= 50;
+      capacityMessage = `⚠️ Only fits ${capacity} people (needs ${people})`;
+    }
+
+    if (people >= 5 && v.category === "car") suitabilityScore += 15;
+    if (people <= 2 && v.category === "bike") suitabilityScore += 10;
     if (tripParams.preferredCategory === v.category) suitabilityScore += 10;
-    if (v.fuelType === "electric") suitabilityScore += 5; // eco bonus
-    suitabilityScore = Math.min(suitabilityScore, 99);
+    if (v.fuelType === "electric") suitabilityScore += 5;
+    if (
+      people >= 6 &&
+      (capacity >= 7 || v.name?.toLowerCase().includes("innova"))
+    )
+      suitabilityScore += 20;
+
+    suitabilityScore = Math.min(Math.max(suitabilityScore, 0), 100);
+
+    let suitabilityLabel;
+    if (suitabilityScore >= 90) suitabilityLabel = "Perfect Match";
+    else if (suitabilityScore >= 80) suitabilityLabel = "Great Choice";
+    else if (suitabilityScore >= 70) suitabilityLabel = "Good Fit";
+    else if (suitabilityScore >= 50) suitabilityLabel = "Available";
+    else suitabilityLabel = "Not Recommended";
 
     return {
       vehicle: {
@@ -302,10 +384,10 @@ async function buildTripPlans(tripParams, vehicles) {
         basePrice: v.basePrice,
         fuelType: v.fuelType,
         transmission: v.transmission,
-        seats: v.seats,
+        seatingCapacity: capacity,
         city: v.city,
         images: v.images,
-        rating: v.rating,
+        averageRating: v.averageRating,
       },
       costBreakdown: {
         rentalCost,
@@ -321,14 +403,8 @@ async function buildTripPlans(tripParams, vehicles) {
         totalKm: tripParams.roundTrip ? distance * 2 : distance,
       },
       suitabilityScore,
-      suitabilityLabel:
-        suitabilityScore >= 95
-          ? "Perfect Match"
-          : suitabilityScore >= 88
-            ? "Great Choice"
-            : suitabilityScore >= 80
-              ? "Good Fit"
-              : "Available",
+      suitabilityLabel,
+      capacityMessage,
     };
   });
 }
@@ -354,7 +430,7 @@ exports.quickEstimate = async (req, res) => {
   try {
     const { from, to, days, people } = req.body;
     const distance = estimateDistance(from || "Mumbai", to || "Goa");
-    const fuelCostBike = estimateFuelCost(distance, "petrol", true) * 0.5; // bikes use less
+    const fuelCostBike = estimateFuelCost(distance, "petrol", true) * 0.5;
     const fuelCostCar = estimateFuelCost(distance, "petrol", true);
 
     res.json({
