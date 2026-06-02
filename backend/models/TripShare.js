@@ -16,6 +16,7 @@ const TripShareSchema = new mongoose.Schema(
     booking: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Booking",
+      required: true,
       default: null, // optional — driver may offer without a Wheelz booking
     },
     vehicle: {

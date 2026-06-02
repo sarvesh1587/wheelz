@@ -57,42 +57,18 @@ export const tripPlannerAPI = {
   quickEstimate: (data) => api.post("/trip-planner/estimate", data),
 };
 export const rideShareAPI = {
-  // Trip Management
   create: (data) => api.post("/rideshare", data),
   search: (params) => api.get("/rideshare/search", { params }),
   getOne: (id) => api.get(`/rideshare/${id}`),
+  getMyTrips: () => api.get("/rideshare/my/trips"),
+  getMyRides: () => api.get("/rideshare/my/rides"),
+  getDriverRequests: () => api.get("/rideshare/driver/requests"),
+  requestSeat: (data) => api.post("/rideshare/request", data),
+  respondToRequest: (requestId, data) =>
+    api.put(`/rideshare/request/${requestId}/respond`, data),
   completeTrip: (tripId) => api.put(`/rideshare/${tripId}/complete`),
   cancelTrip: (tripId, reason) =>
     api.put(`/rideshare/${tripId}/cancel`, { reason }),
-
-  // Driver endpoints
-  getMyTrips: () => api.get("/rideshare/my/trips"),
-  getDriverRequests: () => api.get("/rideshare/driver/requests"),
-  getDriverEarnings: () => api.get("/rideshare/earnings/me"),
-
-  // Passenger endpoints
-  getMyRides: () => api.get("/rideshare/my/rides"),
-  requestSeat: (data) => api.post("/rideshare/request", data),
-
-  // Request management
-  getTripRequests: (tripId) => api.get(`/rideshare/${tripId}/requests`),
-  respondToRequest: (requestId, data) =>
-    api.put(`/rideshare/request/${requestId}/respond`, data),
-
-  // Payment
-  createPayment: (requestId) => api.post(`/rideshare/request/${requestId}/pay`),
-  verifyPayment: (data) =>
-    api.post(`/rideshare/request/${data.requestId}/verify`, data),
-
-  // Chat
-  sendMessage: (requestId, text) =>
-    api.post(`/rideshare/request/${requestId}/message`, { text }),
-  getMessages: (requestId) =>
-    api.get(`/rideshare/request/${requestId}/messages`),
-
-  // Ratings
-  rateUser: (requestId, data) =>
-    api.post(`/rideshare/request/${requestId}/rate`, data),
 };
 export const vehicleAPI = {
   getAll: (params) => api.get("/vehicles", { params }),

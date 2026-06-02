@@ -1,476 +1,384 @@
-/**
- * OfferTrip Page — Driver creates a shared trip listing
- * File: frontend/src/pages/OfferTrip.js
- */
-
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import { motion } from "framer-motion";
+import { rideShareAPI, bookingAPI } from "../services/api";
 import toast from "react-hot-toast";
-
-const API =
-  process.env.REACT_APP_API_URL || "https://wheelz-ldq2.onrender.com/api";
-
-const CITIES = [
-  "Mumbai",
-  "Delhi",
-  "Bangalore",
-  "Chennai",
-  "Hyderabad",
-  "Pune",
-  "Kolkata",
-  "Ahmedabad",
-  "Jaipur",
-  "Goa",
-  "Manali",
-  "Shimla",
-  "Ooty",
-  "Coorg",
-  "Mysore",
-  "Agra",
-  "Chandigarh",
-  "Pondicherry",
-  "Nashik",
-  "Aurangabad",
-  "Surat",
-  "Lucknow",
-];
+import {
+  MapPinIcon,
+  CalendarIcon,
+  UserGroupIcon,
+  CurrencyRupeeIcon,
+  SparklesIcon,
+  ChevronRightIcon,
+  ShieldCheckIcon,
+} from "@heroicons/react/24/outline";
 
 export default function OfferTrip() {
   const navigate = useNavigate();
-  const [step, setStep] = useState(1);
-  const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState({
-    fromCity: "",
-    toCity: "",
-    fromAddress: "",
-    toAddress: "",
+  const [confirmedBookings, setConfirmedBookings] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [formData, setFormData] = useState({
+    bookingId: "",
+    from: "",
+    to: "",
     departureDate: "",
     departureTime: "",
-    estimatedDuration: "",
-    totalSeats: 1,
+    totalSeats: 2,
     pricePerSeat: "",
-    useAutoPrice: true,
     womenOnly: false,
-    luggageAllowed: "medium",
-    smokingAllowed: false,
-    petsAllowed: false,
-    acAvailable: true,
-    instantBook: false,
-    isRecurring: false,
-    recurringDays: [],
-    vehicleName: "",
-    vehicleBrand: "",
-    disclaimerAccepted: false,
+    allowPets: false,
+    musicPreference: "conversation",
+    luggageSpace: "medium",
   });
 
-  const set = (key, val) => setForm((f) => ({ ...f, [key]: val }));
+  useEffect(() => {
+    fetchConfirmedBookings();
+  }, []);
 
-  const estimateAutoPrice = () => {
-    if (!form.fromCity || !form.toCity || !form.totalSeats) return;
-    set("useAutoPrice", true);
-    toast.success("Auto price will be calculated when you submit");
-  };
-
-  const handleSubmit = async () => {
-    if (!form.disclaimerAccepted) {
-      return toast.error("Please accept the disclaimer to continue");
-    }
-    setLoading(true);
+  const fetchConfirmedBookings = async () => {
     try {
-      const token = localStorage.getItem("wheelz_token");
-      const res = await axios.post(`${API}/rideshare`, form, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.data.success) {
-        toast.success("Trip listed successfully! 🎉");
-        navigate(`/rideshare/${res.data.trip._id}`);
+      const res = await bookingAPI.getAll();
+      const confirmed = (res.data.bookings || []).filter(
+        (booking) =>
+          booking.status === "confirmed" && booking.paymentStatus === "paid",
+      );
+      setConfirmedBookings(confirmed);
+      if (confirmed.length === 0) {
+        toast.error("You need a confirmed booking before you can offer a trip");
       }
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to create trip");
+    } catch (error) {
+      console.error("Error fetching bookings:", error);
+      toast.error("Failed to load bookings");
     } finally {
       setLoading(false);
     }
   };
 
-  const inputCls =
-    "w-full border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-green-500";
-  const labelCls =
-    "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5";
+  const calculateAutoPrice = () => {
+    if (formData.from && formData.to && formData.totalSeats) {
+      const basePrice = 200;
+      const estimatedPrice = Math.ceil((basePrice * 2) / formData.totalSeats);
+      setFormData({ ...formData, pricePerSeat: estimatedPrice });
+      toast.success(`Suggested price: ₹${estimatedPrice} per seat`);
+    } else {
+      toast.error("Please enter route details first");
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!formData.bookingId) {
+      toast.error("Please select a confirmed booking");
+      return;
+    }
+    if (!formData.from || !formData.to) {
+      toast.error("Please enter departure and destination cities");
+      return;
+    }
+    if (!formData.departureDate) {
+      toast.error("Please select departure date");
+      return;
+    }
+
+    try {
+      await rideShareAPI.create({
+        ...formData,
+        departureDateTime: `${formData.departureDate}T${formData.departureTime || "10:00"}`,
+      });
+      toast.success("Trip offered successfully! 🎉");
+      navigate("/dashboard");
+    } catch (error) {
+      console.error("Offer trip error:", error);
+      toast.error(error.response?.data?.message || "Failed to offer trip");
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center pt-20">
+        <div className="w-12 h-12 border-4 border-amber-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
-      {/* Header */}
-      <div className="bg-gradient-to-br from-green-600 to-emerald-700 text-white py-10">
-        <div className="max-w-2xl mx-auto px-4 text-center">
-          <h1 className="text-3xl font-bold mb-2">Offer a Shared Trip</h1>
-          <p className="text-green-100">
-            Share your journey, split costs, meet new people
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-950 pt-24 pb-12">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center mb-8"
+        >
+          <div className="inline-flex items-center gap-2 bg-amber-500/10 backdrop-blur-sm border border-amber-500/20 text-amber-400 px-4 py-2 rounded-full text-sm font-medium mb-4">
+            <SparklesIcon className="w-4 h-4 animate-pulse" /> Share Your
+            Journey
+          </div>
+          <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400 bg-clip-text text-transparent">
+            Offer a Trip
+          </h1>
+          <p className="text-gray-500 dark:text-gray-400 mt-3 max-w-xl mx-auto">
+            Share empty seats from your confirmed booking and earn back rental
+            cost
           </p>
-        </div>
-      </div>
+        </motion.div>
 
-      <div className="max-w-2xl mx-auto px-4 py-10">
-        {/* Step indicator */}
-        <div className="flex items-center gap-2 mb-8">
-          {["Route", "Schedule", "Preferences", "Review"].map((s, i) => (
-            <React.Fragment key={s}>
-              <div
-                className={`flex items-center gap-2 ${i + 1 === step ? "text-green-600 dark:text-green-400" : i + 1 < step ? "text-gray-400" : "text-gray-300 dark:text-gray-600"}`}
-              >
-                <div
-                  className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold border-2 ${i + 1 === step ? "border-green-600 bg-green-600 text-white" : i + 1 < step ? "border-gray-400 bg-gray-400 text-white" : "border-gray-300 dark:border-gray-700"}`}
-                >
-                  {i + 1 < step ? "✓" : i + 1}
-                </div>
-                <span className="text-xs font-medium hidden sm:block">{s}</span>
-              </div>
-              {i < 3 && (
-                <div
-                  className={`flex-1 h-0.5 ${i + 1 < step ? "bg-gray-400" : "bg-gray-200 dark:bg-gray-700"}`}
-                />
-              )}
-            </React.Fragment>
-          ))}
-        </div>
-
-        <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-6">
-          {/* Step 1 — Route */}
-          {step === 1 && (
-            <div className="space-y-4">
-              <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
-                📍 Where are you going?
-              </h2>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className={labelCls}>From City</label>
-                  <select
-                    value={form.fromCity}
-                    onChange={(e) => set("fromCity", e.target.value)}
-                    className={inputCls}
-                  >
-                    <option value="">Select city</option>
-                    {CITIES.map((c) => (
-                      <option key={c}>{c}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className={labelCls}>To City</label>
-                  <select
-                    value={form.toCity}
-                    onChange={(e) => set("toCity", e.target.value)}
-                    className={inputCls}
-                  >
-                    <option value="">Select city</option>
-                    {CITIES.map((c) => (
-                      <option key={c}>{c}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
+        {confirmedBookings.length === 0 ? (
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl shadow-xl border border-white/20 dark:border-gray-700/30 p-8 text-center"
+          >
+            <div className="text-6xl mb-4">🚗</div>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+              No Confirmed Bookings
+            </h2>
+            <p className="text-gray-500 dark:text-gray-400 mb-6">
+              You need to book and confirm a vehicle before you can offer shared
+              trips.
+            </p>
+            <button
+              onClick={() => navigate("/vehicles")}
+              className="px-6 py-3 bg-gradient-to-r from-amber-500 to-amber-600 text-white font-semibold rounded-xl hover:shadow-lg transition-all"
+            >
+              Book a Vehicle First
+            </button>
+          </motion.div>
+        ) : (
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl shadow-xl border border-white/20 dark:border-gray-700/30 overflow-hidden"
+          >
+            <form onSubmit={handleSubmit} className="p-6 space-y-6">
               <div>
-                <label className={labelCls}>
-                  Pickup Point{" "}
-                  <span className="text-gray-400 font-normal">(optional)</span>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Select Your Confirmed Booking *
                 </label>
-                <input
-                  className={inputCls}
-                  placeholder="e.g. Andheri Station, Gate 2"
-                  value={form.fromAddress}
-                  onChange={(e) => set("fromAddress", e.target.value)}
-                />
-              </div>
-              <div>
-                <label className={labelCls}>
-                  Drop Point{" "}
-                  <span className="text-gray-400 font-normal">(optional)</span>
-                </label>
-                <input
-                  className={inputCls}
-                  placeholder="e.g. Panaji Bus Stand"
-                  value={form.toAddress}
-                  onChange={(e) => set("toAddress", e.target.value)}
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className={labelCls}>Vehicle Name</label>
-                  <input
-                    className={inputCls}
-                    placeholder="e.g. Swift Dzire"
-                    value={form.vehicleName}
-                    onChange={(e) => set("vehicleName", e.target.value)}
-                  />
-                </div>
-                <div>
-                  <label className={labelCls}>Brand</label>
-                  <input
-                    className={inputCls}
-                    placeholder="e.g. Maruti"
-                    value={form.vehicleBrand}
-                    onChange={(e) => set("vehicleBrand", e.target.value)}
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Step 2 — Schedule */}
-          {step === 2 && (
-            <div className="space-y-4">
-              <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
-                📅 When are you leaving?
-              </h2>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className={labelCls}>Departure Date</label>
-                  <input
-                    type="date"
-                    className={inputCls}
-                    min={new Date().toISOString().split("T")[0]}
-                    value={form.departureDate}
-                    onChange={(e) => set("departureDate", e.target.value)}
-                  />
-                </div>
-                <div>
-                  <label className={labelCls}>Departure Time</label>
-                  <input
-                    type="time"
-                    className={inputCls}
-                    value={form.departureTime}
-                    onChange={(e) => set("departureTime", e.target.value)}
-                  />
-                </div>
-              </div>
-              <div>
-                <label className={labelCls}>Estimated Duration</label>
-                <input
-                  className={inputCls}
-                  placeholder="e.g. 8 hours"
-                  value={form.estimatedDuration}
-                  onChange={(e) => set("estimatedDuration", e.target.value)}
-                />
-              </div>
-              <div>
-                <label className={labelCls}>Available Seats</label>
                 <select
-                  value={form.totalSeats}
-                  onChange={(e) => set("totalSeats", parseInt(e.target.value))}
-                  className={inputCls}
+                  value={formData.bookingId}
+                  onChange={(e) =>
+                    setFormData({ ...formData, bookingId: e.target.value })
+                  }
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 focus:ring-2 focus:ring-amber-500"
+                  required
                 >
-                  {[1, 2, 3, 4].map((n) => (
-                    <option key={n} value={n}>
-                      {n} seat{n > 1 ? "s" : ""}
+                  <option value="">Select a confirmed booking</option>
+                  {confirmedBookings.map((booking) => (
+                    <option key={booking._id} value={booking._id}>
+                      🚗 {booking.vehicle?.name} - {booking.pickupLocation} (
+                      {new Date(booking.startDate).toLocaleDateString()})
                     </option>
                   ))}
                 </select>
+                <p className="text-xs text-green-600 dark:text-green-400 mt-1 flex items-center gap-1">
+                  <ShieldCheckIcon className="w-3 h-3" /> Only confirmed
+                  bookings can be shared
+                </p>
               </div>
-              {/* Pricing */}
-              <div>
-                <label className={labelCls}>Price Per Seat (₹)</label>
-                <div className="flex gap-3">
-                  <button
-                    type="button"
-                    onClick={estimateAutoPrice}
-                    className={`flex-1 py-2.5 rounded-xl text-sm font-medium border transition-colors ${form.useAutoPrice ? "bg-green-600 text-white border-green-600" : "border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50"}`}
-                  >
-                    🤖 Auto Calculate
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => set("useAutoPrice", false)}
-                    className={`flex-1 py-2.5 rounded-xl text-sm font-medium border transition-colors ${!form.useAutoPrice ? "bg-green-600 text-white border-green-600" : "border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50"}`}
-                  >
-                    ✏️ Set Manually
-                  </button>
-                </div>
-                {!form.useAutoPrice && (
-                  <input
-                    type="number"
-                    className={`${inputCls} mt-3`}
-                    placeholder="Enter price per seat"
-                    value={form.pricePerSeat}
-                    onChange={(e) => set("pricePerSeat", e.target.value)}
-                  />
-                )}
-                {form.useAutoPrice && (
-                  <p className="text-xs text-green-600 dark:text-green-400 mt-2">
-                    ✅ Fair cost-share price will be auto-calculated based on
-                    fuel cost & distance
-                  </p>
-                )}
-              </div>
-            </div>
-          )}
 
-          {/* Step 3 — Preferences */}
-          {step === 3 && (
-            <div className="space-y-4">
-              <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
-                ⚙️ Trip Preferences
-              </h2>
-              <div className="grid grid-cols-2 gap-3">
-                {[
-                  {
-                    key: "womenOnly",
-                    label: "👩 Women only",
-                    desc: "Only female passengers",
-                  },
-                  {
-                    key: "instantBook",
-                    label: "⚡ Instant book",
-                    desc: "Auto-approve requests",
-                  },
-                  {
-                    key: "acAvailable",
-                    label: "❄️ AC available",
-                    desc: "Vehicle has AC",
-                  },
-                  {
-                    key: "smokingAllowed",
-                    label: "🚬 Smoking allowed",
-                    desc: "Smoking permitted",
-                  },
-                  {
-                    key: "petsAllowed",
-                    label: "🐾 Pets allowed",
-                    desc: "Pet-friendly trip",
-                  },
-                ].map((opt) => (
-                  <label
-                    key={opt.key}
-                    className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-colors ${form[opt.key] ? "border-green-400 bg-green-50 dark:bg-green-900/20" : "border-gray-200 dark:border-gray-700"}`}
-                  >
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    From *
+                  </label>
+                  <div className="relative">
+                    <MapPinIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <input
+                      type="text"
+                      value={formData.from}
+                      onChange={(e) =>
+                        setFormData({ ...formData, from: e.target.value })
+                      }
+                      className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 focus:ring-2 focus:ring-amber-500"
+                      placeholder="Mumbai"
+                      required
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">To *</label>
+                  <div className="relative">
+                    <MapPinIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <input
+                      type="text"
+                      value={formData.to}
+                      onChange={(e) =>
+                        setFormData({ ...formData, to: e.target.value })
+                      }
+                      className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 focus:ring-2 focus:ring-amber-500"
+                      placeholder="Goa"
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Departure Date *
+                  </label>
+                  <div className="relative">
+                    <CalendarIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <input
+                      type="date"
+                      value={formData.departureDate}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          departureDate: e.target.value,
+                        })
+                      }
+                      className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 focus:ring-2 focus:ring-amber-500"
+                      required
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Departure Time
+                  </label>
+                  <input
+                    type="time"
+                    value={formData.departureTime}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        departureTime: e.target.value,
+                      })
+                    }
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 focus:ring-2 focus:ring-amber-500"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Total Seats *
+                  </label>
+                  <div className="relative">
+                    <UserGroupIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <input
+                      type="number"
+                      min="1"
+                      max="7"
+                      value={formData.totalSeats}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          totalSeats: parseInt(e.target.value),
+                        })
+                      }
+                      className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 focus:ring-2 focus:ring-amber-500"
+                      required
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Price per Seat (₹)
+                  </label>
+                  <div className="flex gap-2">
+                    <div className="relative flex-1">
+                      <CurrencyRupeeIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                      <input
+                        type="number"
+                        value={formData.pricePerSeat}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            pricePerSeat: parseInt(e.target.value),
+                          })
+                        }
+                        className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 focus:ring-2 focus:ring-amber-500"
+                        placeholder="Auto"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={calculateAutoPrice}
+                      className="px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-xl text-sm hover:bg-amber-100 transition-colors"
+                    >
+                      Auto
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-3 pt-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Travel Preferences
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <label className="flex items-center gap-2 cursor-pointer">
                     <input
                       type="checkbox"
-                      checked={!!form[opt.key]}
-                      onChange={(e) => set(opt.key, e.target.checked)}
-                      className="mt-0.5 accent-green-600"
+                      checked={formData.womenOnly}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          womenOnly: e.target.checked,
+                        })
+                      }
+                      className="rounded text-amber-500"
                     />
-                    <div>
-                      <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                        {opt.label}
-                      </p>
-                      <p className="text-xs text-gray-400">{opt.desc}</p>
-                    </div>
+                    <span className="text-sm">👩 Women only</span>
                   </label>
-                ))}
-              </div>
-              <div>
-                <label className={labelCls}>Luggage Space</label>
-                <select
-                  value={form.luggageAllowed}
-                  onChange={(e) => set("luggageAllowed", e.target.value)}
-                  className={inputCls}
-                >
-                  <option value="none">None</option>
-                  <option value="small">Small (backpack)</option>
-                  <option value="medium">Medium (cabin bag)</option>
-                  <option value="large">Large (check-in bag)</option>
-                </select>
-              </div>
-            </div>
-          )}
-
-          {/* Step 4 — Review + Disclaimer */}
-          {step === 4 && (
-            <div className="space-y-4">
-              <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
-                ✅ Review & Confirm
-              </h2>
-
-              <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-4 space-y-2 text-sm">
-                {[
-                  ["Route", `${form.fromCity} → ${form.toCity}`],
-                  ["Date", `${form.departureDate} at ${form.departureTime}`],
-                  ["Duration", form.estimatedDuration || "Not set"],
-                  ["Seats", form.totalSeats],
-                  [
-                    "Price",
-                    form.useAutoPrice
-                      ? "Auto-calculated"
-                      : `₹${form.pricePerSeat}/seat`,
-                  ],
-                  ["Women only", form.womenOnly ? "Yes" : "No"],
-                  ["Instant book", form.instantBook ? "Yes" : "No"],
-                ].map(([k, v]) => (
-                  <div key={k} className="flex justify-between">
-                    <span className="text-gray-500 dark:text-gray-400">
-                      {k}
-                    </span>
-                    <span className="font-medium text-gray-800 dark:text-gray-200">
-                      {v}
-                    </span>
-                  </div>
-                ))}
-              </div>
-
-              {/* Disclaimer */}
-              <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4">
-                <p className="text-sm font-semibold text-amber-800 dark:text-amber-300 mb-2">
-                  ⚠️ Important Disclaimer
-                </p>
-                <p className="text-xs text-amber-700 dark:text-amber-400 leading-relaxed">
-                  By offering this trip, you confirm that this is a{" "}
-                  <strong>cost-sharing arrangement</strong> and not a commercial
-                  transport service. You are not profiting from passengers — you
-                  are sharing fuel and toll costs only. Please verify that your
-                  vehicle insurance permits paid passengers. Wheelz is not
-                  responsible for accidents, disputes, or legal issues arising
-                  from shared trips.
-                </p>
-                <label className="flex items-center gap-2 mt-3 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={form.disclaimerAccepted}
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formData.allowPets}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          allowPets: e.target.checked,
+                        })
+                      }
+                      className="rounded text-amber-500"
+                    />
+                    <span className="text-sm">🐾 Pets allowed</span>
+                  </label>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <select
+                    value={formData.musicPreference}
                     onChange={(e) =>
-                      set("disclaimerAccepted", e.target.checked)
+                      setFormData({
+                        ...formData,
+                        musicPreference: e.target.value,
+                      })
                     }
-                    className="accent-amber-600"
-                  />
-                  <span className="text-xs font-medium text-amber-800 dark:text-amber-300">
-                    I understand and accept these terms
-                  </span>
-                </label>
+                    className="px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm"
+                  >
+                    <option value="silence">🔇 Silence preferred</option>
+                    <option value="conversation">💬 Conversation</option>
+                    <option value="music">🎵 Music</option>
+                  </select>
+                  <select
+                    value={formData.luggageSpace}
+                    onChange={(e) =>
+                      setFormData({ ...formData, luggageSpace: e.target.value })
+                    }
+                    className="px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm"
+                  >
+                    <option value="none">No luggage space</option>
+                    <option value="small">👜 Small (backpack)</option>
+                    <option value="medium">💼 Medium (1 suitcase)</option>
+                    <option value="large">🧳 Large (2+ suitcases)</option>
+                  </select>
+                </div>
               </div>
-            </div>
-          )}
 
-          {/* Navigation buttons */}
-          <div className="flex gap-3 mt-6">
-            {step > 1 && (
               <button
-                onClick={() => setStep((s) => s - 1)}
-                className="flex-1 py-3 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                type="submit"
+                className="w-full py-3.5 bg-gradient-to-r from-amber-500 to-amber-600 text-white font-semibold rounded-xl hover:shadow-lg transition-all flex items-center justify-center gap-2"
               >
-                ← Back
+                Offer Trip <ChevronRightIcon className="w-5 h-5" />
               </button>
-            )}
-            {step < 4 ? (
-              <button
-                onClick={() => setStep((s) => s + 1)}
-                className="flex-1 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl text-sm transition-colors"
-              >
-                Next →
-              </button>
-            ) : (
-              <button
-                onClick={handleSubmit}
-                disabled={loading || !form.disclaimerAccepted}
-                className="flex-1 py-3 bg-green-600 hover:bg-green-700 disabled:bg-green-300 text-white font-semibold rounded-xl text-sm transition-colors flex items-center justify-center gap-2"
-              >
-                {loading ? (
-                  <>
-                    <span className="animate-spin">🔄</span> Creating...
-                  </>
-                ) : (
-                  "🚗 List My Trip"
-                )}
-              </button>
-            )}
-          </div>
-        </div>
+            </form>
+          </motion.div>
+        )}
       </div>
     </div>
   );
