@@ -57,26 +57,42 @@ export const tripPlannerAPI = {
   quickEstimate: (data) => api.post("/trip-planner/estimate", data),
 };
 export const rideShareAPI = {
+  // Trip Management
   create: (data) => api.post("/rideshare", data),
   search: (params) => api.get("/rideshare/search", { params }),
   getOne: (id) => api.get(`/rideshare/${id}`),
+  completeTrip: (tripId) => api.put(`/rideshare/${tripId}/complete`),
+  cancelTrip: (tripId, reason) =>
+    api.put(`/rideshare/${tripId}/cancel`, { reason }),
+
+  // Driver endpoints
   getMyTrips: () => api.get("/rideshare/my/trips"),
+  getDriverRequests: () => api.get("/rideshare/driver/requests"),
+  getDriverEarnings: () => api.get("/rideshare/earnings/me"),
+
+  // Passenger endpoints
   getMyRides: () => api.get("/rideshare/my/rides"),
   requestSeat: (data) => api.post("/rideshare/request", data),
-  respond: (id, data) => api.put(`/rideshare/request/${id}/respond`, data),
-  createPayment: (id) => api.post(`/rideshare/request/${id}/pay`),
+
+  // Request management
   getTripRequests: (tripId) => api.get(`/rideshare/${tripId}/requests`),
-  respond: (requestId, data) =>
+  respondToRequest: (requestId, data) =>
     api.put(`/rideshare/request/${requestId}/respond`, data),
+
+  // Payment
+  createPayment: (requestId) => api.post(`/rideshare/request/${requestId}/pay`),
   verifyPayment: (data) =>
     api.post(`/rideshare/request/${data.requestId}/verify`, data),
-  sendMessage: (id, text) =>
-    api.post(`/rideshare/request/${id}/message`, { text }),
-  getMessages: (id) => api.get(`/rideshare/request/${id}/messages`),
-  rate: (id, data) => api.post(`/rideshare/request/${id}/rate`, data),
-  getEarnings: () => api.get("/rideshare/earnings/me"),
-  completeTrip: (id) => api.put(`/rideshare/${id}/complete`),
-  cancelTrip: (id, reason) => api.put(`/rideshare/${id}/cancel`, { reason }),
+
+  // Chat
+  sendMessage: (requestId, text) =>
+    api.post(`/rideshare/request/${requestId}/message`, { text }),
+  getMessages: (requestId) =>
+    api.get(`/rideshare/request/${requestId}/messages`),
+
+  // Ratings
+  rateUser: (requestId, data) =>
+    api.post(`/rideshare/request/${requestId}/rate`, data),
 };
 export const vehicleAPI = {
   getAll: (params) => api.get("/vehicles", { params }),

@@ -9,12 +9,11 @@ import {
   CalendarIcon,
   CheckCircleIcon,
   XCircleIcon,
-  ClockIcon,
   SparklesIcon,
   UserGroupIcon,
-  PhoneIcon,
   EnvelopeIcon,
   ArrowLeftIcon,
+  ClockIcon,
 } from "@heroicons/react/24/outline";
 
 export default function TripRequests() {
@@ -29,32 +28,40 @@ export default function TripRequests() {
 
   const fetchRequests = async () => {
     try {
-      // First get all trips offered by driver
-      const tripsRes = await rideShareAPI.getMyTrips();
-      const trips = tripsRes.data.trips || [];
+      setLoading(true);
+      // Try to get requests directly from the API
+      const response = await rideShareAPI.getDriverRequests();
+      console.log("Driver requests response:", response.data);
 
-      // Extract all pending requests
-      const allRequests = [];
-      for (const trip of trips) {
-        try {
-          const requestsRes = await rideShareAPI.getTripRequests(trip._id);
-          const pendingRequests = (requestsRes.data.requests || []).filter(
-            (r) => r.status === "pending",
-          );
-          pendingRequests.forEach((req) => {
-            allRequests.push({
-              ...req,
-              trip: trip,
-            });
-          });
-        } catch (err) {
-          console.error(`Error fetching requests for trip ${trip._id}:`, err);
-        }
+      if (response.data && response.data.requests) {
+        setRequests(response.data.requests);
+      } else {
+        setRequests([]);
       }
-      setRequests(allRequests);
     } catch (error) {
       console.error("Error fetching requests:", error);
-      toast.error("Failed to load requests");
+      // If the endpoint doesn't exist, try alternative method
+      try {
+        // Fallback: Get all trips and extract requests
+        const tripsRes = await rideShareAPI.getMyTrips();
+        const trips = tripsRes.data.trips || [];
+        const allRequests = [];
+
+        for (const trip of trips) {
+          if (trip.requests && trip.requests.length > 0) {
+            trip.requests.forEach((req) => {
+              allRequests.push({
+                ...req,
+                trip: trip,
+              });
+            });
+          }
+        }
+        setRequests(allRequests);
+      } catch (fallbackError) {
+        console.error("Fallback also failed:", fallbackError);
+        toast.error("Failed to load requests");
+      }
     } finally {
       setLoading(false);
     }
@@ -65,7 +72,7 @@ export default function TripRequests() {
     try {
       await rideShareAPI.respond(requestId, { status: "approved" });
       toast.success("Request approved! Passenger notified.");
-      fetchRequests();
+      fetchRequests(); // Refresh the list
     } catch (error) {
       console.error("Approve error:", error);
       toast.error(error.response?.data?.message || "Failed to approve");
@@ -79,7 +86,7 @@ export default function TripRequests() {
     try {
       await rideShareAPI.respond(requestId, { status: "rejected" });
       toast.success("Request rejected");
-      fetchRequests();
+      fetchRequests(); // Refresh the list
     } catch (error) {
       console.error("Reject error:", error);
       toast.error(error.response?.data?.message || "Failed to reject");
@@ -135,6 +142,12 @@ export default function TripRequests() {
             <p className="text-gray-500">
               When passengers request to join your trips, they'll appear here
             </p>
+            <button
+              onClick={() => navigate("/offer-trip")}
+              className="mt-4 px-4 py-2 bg-amber-500 text-white rounded-lg"
+            >
+              Offer a Trip
+            </button>
           </div>
         ) : (
           <div className="space-y-4">
@@ -152,16 +165,12 @@ export default function TripRequests() {
                     <div className="flex items-center gap-2">
                       <MapPinIcon className="w-4 h-4 text-amber-500" />
                       <span className="font-medium text-gray-900 dark:text-white">
-                        {req.trip?.fromCity ||
-                          req.trip?.route?.from ||
-                          "Starting Point"}
+                        {req.trip?.fromCity || req.fromCity || "Starting Point"}
                       </span>
                       <span>→</span>
                       <MapPinIcon className="w-4 h-4 text-green-500" />
                       <span className="font-medium text-gray-900 dark:text-white">
-                        {req.trip?.toCity ||
-                          req.trip?.route?.to ||
-                          "Destination"}
+                        {req.trip?.toCity || req.toCity || "Destination"}
                       </span>
                     </div>
                     <div className="flex items-center gap-3 text-xs text-gray-500">
@@ -171,11 +180,17 @@ export default function TripRequests() {
                           ? new Date(
                               req.trip.departureDate,
                             ).toLocaleDateString()
-                          : "Date TBD"}
+                          : req.departureDate
+                            ? new Date(req.departureDate).toLocaleDateString()
+                            : "Date TBD"}
                       </span>
                       <span className="flex items-center gap-1">
                         <UserGroupIcon className="w-3 h-3" />
                         {req.seatsRequested || 1} seat(s)
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <ClockIcon className="w-3 h-3" />
+                        {new Date(req.createdAt).toLocaleDateString()}
                       </span>
                     </div>
                   </div>
@@ -187,11 +202,13 @@ export default function TripRequests() {
                     {/* Avatar & Name */}
                     <div className="flex items-center gap-3">
                       <div className="w-14 h-14 bg-gradient-to-r from-amber-500 to-amber-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
-                        {req.passenger?.name?.[0]?.toUpperCase() || "P"}
+                        {req.passenger?.name?.[0]?.toUpperCase() ||
+                          req.user?.name?.[0]?.toUpperCase() ||
+                          "P"}
                       </div>
                       <div>
                         <h3 className="font-semibold text-gray-900 dark:text-white">
-                          {req.passenger?.name || "Passenger"}
+                          {req.passenger?.name || req.user?.name || "Passenger"}
                         </h3>
                         <div className="flex items-center gap-2 mt-1">
                           <span className="text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-2 py-0.5 rounded-full">
@@ -206,7 +223,9 @@ export default function TripRequests() {
                       <div className="grid grid-cols-1 gap-2 text-sm">
                         <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
                           <EnvelopeIcon className="w-4 h-4" />
-                          {req.passenger?.email || "Email not available"}
+                          {req.passenger?.email ||
+                            req.user?.email ||
+                            "Email not available"}
                         </div>
                       </div>
                       {req.message && (
