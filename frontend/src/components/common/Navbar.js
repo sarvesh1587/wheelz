@@ -43,7 +43,7 @@ export default function Navbar() {
     navigate("/");
   };
 
-  // Desktop nav items - Trip Planner added back
+  // Desktop nav items
   const navItems = [
     { to: "/", label: "Home" },
     { to: "/vehicles", label: "Vehicles" },
@@ -90,8 +90,8 @@ export default function Navbar() {
                 className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-1 ${
                   location.pathname === item.to ||
                   location.pathname.startsWith(item.to + "/")
-                    ? "text-amber-500"
-                    : "text-gray-600 dark:text-gray-300 hover:text-amber-500"
+                    ? "bg-amber-500 text-white"
+                    : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-amber-500"
                 } ${item.highlight ? "bg-amber-50 dark:bg-amber-900/20" : ""}`}
               >
                 {item.icon && <SparklesIcon className="w-3.5 h-3.5" />}
@@ -104,16 +104,7 @@ export default function Navbar() {
               </button>
             ))}
           </div>
-          <button
-            onClick={() => {
-              navigate("/trip-requests");
-              setProfileOpen(false);
-            }}
-            className="flex items-center gap-3 w-full px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700"
-          >
-            <UserGroupIcon className="w-4 h-4 text-amber-500" />
-            Trip Requests
-          </button>
+
           {/* Right Icons */}
           <div className="flex items-center gap-1">
             {/* Dark Mode Toggle */}
@@ -174,6 +165,16 @@ export default function Navbar() {
                     >
                       <ShieldCheckIcon className="w-4 h-4" /> KYC Status
                     </button>
+                    <button
+                      onClick={() => {
+                        navigate("/trip-requests");
+                        setProfileOpen(false);
+                      }}
+                      className="flex items-center gap-3 w-full px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 border-t border-gray-100 dark:border-gray-700 mt-1 pt-2"
+                    >
+                      <UserGroupIcon className="w-4 h-4 text-amber-500" />
+                      Trip Requests
+                    </button>
 
                     {isAdmin && (
                       <button
@@ -226,89 +227,121 @@ export default function Navbar() {
           </div>
         </div>
 
-        {/* Mobile Menu */}
+        {/* Mobile Menu - Fixed Background */}
         {menuOpen && (
-          <div className="md:hidden py-3 border-t border-gray-100 dark:border-gray-800">
-            <button
-              onClick={() => {
-                navigate("/");
-                setMenuOpen(false);
-              }}
-              className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-left hover:bg-gray-50 dark:hover:bg-gray-800"
-            >
-              <HomeIcon className="w-5 h-5 text-gray-500" />
-              <span className="text-sm font-medium">Home</span>
-            </button>
-            <button
-              onClick={() => {
-                navigate("/vehicles");
-                setMenuOpen(false);
-              }}
-              className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-left hover:bg-gray-50 dark:hover:bg-gray-800"
-            >
-              <TruckIcon className="w-5 h-5 text-gray-500" />
-              <span className="text-sm font-medium">Vehicles</span>
-            </button>
-            <button
-              onClick={() => {
-                navigate("/find-trip");
-                setMenuOpen(false);
-              }}
-              className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-left hover:bg-gray-50 dark:hover:bg-gray-800"
-            >
-              <UserGroupIcon className="w-5 h-5 text-gray-500" />
-              <span className="text-sm font-medium">Find Trip</span>
-            </button>
-            <button
-              onClick={() => {
-                navigate("/offer-trip");
-                setMenuOpen(false);
-              }}
-              className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-left hover:bg-gray-50 dark:hover:bg-gray-800"
-            >
-              <UserGroupIcon className="w-5 h-5 text-gray-500" />
-              <span className="text-sm font-medium">Offer Trip</span>
-            </button>
+          <div className="md:hidden fixed top-14 left-0 right-0 bg-white dark:bg-gray-900 shadow-xl border-t border-gray-200 dark:border-gray-700 z-50 max-h-[calc(100vh-3.5rem)] overflow-y-auto">
+            <div className="py-3 px-4">
+              <button
+                onClick={() => {
+                  navigate("/");
+                  setMenuOpen(false);
+                }}
+                className="flex items-center gap-3 w-full px-4 py-3 rounded-lg text-left hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              >
+                <HomeIcon className="w-5 h-5 text-gray-500" />
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
+                  Home
+                </span>
+              </button>
+              <button
+                onClick={() => {
+                  navigate("/vehicles");
+                  setMenuOpen(false);
+                }}
+                className="flex items-center gap-3 w-full px-4 py-3 rounded-lg text-left hover:bg-gray-100 dark:hover:bg-gray-800"
+              >
+                <TruckIcon className="w-5 h-5 text-gray-500" />
+                <span className="text-sm font-medium">Vehicles</span>
+              </button>
+              <button
+                onClick={() => {
+                  navigate("/find-trip");
+                  setMenuOpen(false);
+                }}
+                className="flex items-center gap-3 w-full px-4 py-3 rounded-lg text-left hover:bg-gray-100 dark:hover:bg-gray-800"
+              >
+                <UserGroupIcon className="w-5 h-5 text-gray-500" />
+                <span className="text-sm font-medium">Find Trip</span>
+              </button>
+              <button
+                onClick={() => {
+                  navigate("/offer-trip");
+                  setMenuOpen(false);
+                }}
+                className="flex items-center gap-3 w-full px-4 py-3 rounded-lg text-left hover:bg-gray-100 dark:hover:bg-gray-800"
+              >
+                <UserGroupIcon className="w-5 h-5 text-gray-500" />
+                <span className="text-sm font-medium">Offer Trip</span>
+              </button>
 
-            {/* Trip Planner in Mobile Menu - Prominent */}
-            <button
-              onClick={() => {
-                navigate("/trip-planner");
-                setMenuOpen(false);
-              }}
-              className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-left hover:bg-amber-50 dark:hover:bg-amber-900/20 bg-amber-50/50 dark:bg-amber-900/10 mt-2"
-            >
-              <SparklesIcon className="w-5 h-5 text-amber-500" />
-              <span className="text-sm font-medium text-amber-700 dark:text-amber-400">
-                AI Trip Planner
-              </span>
-              <span className="text-xs bg-amber-500 text-white px-1.5 py-0.5 rounded-full ml-auto">
-                AI
-              </span>
-            </button>
+              {/* Trip Planner - Highlighted */}
+              <button
+                onClick={() => {
+                  navigate("/trip-planner");
+                  setMenuOpen(false);
+                }}
+                className="flex items-center gap-3 w-full px-4 py-3 rounded-lg text-left bg-amber-50 dark:bg-amber-900/20 mt-2"
+              >
+                <SparklesIcon className="w-5 h-5 text-amber-500" />
+                <span className="text-sm font-medium text-amber-700 dark:text-amber-400">
+                  AI Trip Planner
+                </span>
+                <span className="text-xs bg-amber-500 text-white px-1.5 py-0.5 rounded-full ml-auto">
+                  AI
+                </span>
+              </button>
 
-            {!isAuthenticated && (
-              <div className="flex gap-2 px-3 pt-3 mt-2 border-t border-gray-100 dark:border-gray-800">
-                <button
-                  onClick={() => {
-                    navigate("/login");
-                    setMenuOpen(false);
-                  }}
-                  className="flex-1 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg"
-                >
-                  Login
-                </button>
-                <button
-                  onClick={() => {
-                    navigate("/register");
-                    setMenuOpen(false);
-                  }}
-                  className="flex-1 py-2 text-sm bg-gradient-to-r from-amber-500 to-amber-600 text-white rounded-lg"
-                >
-                  Sign Up
-                </button>
-              </div>
-            )}
+              {/* Trip Requests - Mobile */}
+              <button
+                onClick={() => {
+                  navigate("/trip-requests");
+                  setMenuOpen(false);
+                }}
+                className="flex items-center gap-3 w-full px-4 py-3 rounded-lg text-left hover:bg-gray-100 dark:hover:bg-gray-800 mt-1"
+              >
+                <UserGroupIcon className="w-5 h-5 text-amber-500" />
+                <span className="text-sm font-medium">Trip Requests</span>
+              </button>
+
+              <div className="my-3 border-t border-gray-200 dark:border-gray-700"></div>
+
+              {!isAuthenticated ? (
+                <div className="flex gap-3 px-4 pt-2">
+                  <button
+                    onClick={() => {
+                      navigate("/login");
+                      setMenuOpen(false);
+                    }}
+                    className="flex-1 py-2.5 text-sm font-medium border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800"
+                  >
+                    Login
+                  </button>
+                  <button
+                    onClick={() => {
+                      navigate("/register");
+                      setMenuOpen(false);
+                    }}
+                    className="flex-1 py-2.5 text-sm font-medium bg-gradient-to-r from-amber-500 to-amber-600 text-white rounded-lg"
+                  >
+                    Sign Up
+                  </button>
+                </div>
+              ) : (
+                <div className="px-4 pt-2">
+                  <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                    <div className="w-10 h-10 bg-gradient-to-r from-amber-500 to-amber-600 rounded-full flex items-center justify-center text-white font-bold">
+                      {user?.name?.[0]?.toUpperCase() || "U"}
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-900 dark:text-white">
+                        {user?.name}
+                      </p>
+                      <p className="text-xs text-gray-500">{user?.email}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>

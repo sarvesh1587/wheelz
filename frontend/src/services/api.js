@@ -65,6 +65,9 @@ export const rideShareAPI = {
   requestSeat: (data) => api.post("/rideshare/request", data),
   respond: (id, data) => api.put(`/rideshare/request/${id}/respond`, data),
   createPayment: (id) => api.post(`/rideshare/request/${id}/pay`),
+  getTripRequests: (tripId) => api.get(`/rideshare/${tripId}/requests`),
+  respond: (requestId, data) =>
+    api.put(`/rideshare/request/${requestId}/respond`, data),
   verifyPayment: (data) =>
     api.post(`/rideshare/request/${data.requestId}/verify`, data),
   sendMessage: (id, text) =>
