@@ -43,12 +43,18 @@ export default function Navbar() {
     navigate("/");
   };
 
-  // Desktop nav items - Trip Planner removed from navbar
+  // Desktop nav items - Trip Planner added back
   const navItems = [
     { to: "/", label: "Home" },
     { to: "/vehicles", label: "Vehicles" },
     { to: "/find-trip", label: "Find Trip" },
     { to: "/offer-trip", label: "Offer Trip" },
+    {
+      to: "/trip-planner",
+      label: "Trip Planner",
+      icon: SparklesIcon,
+      highlight: true,
+    },
   ];
 
   return (
@@ -75,20 +81,26 @@ export default function Navbar() {
             </span>
           </Link>
 
-          {/* Desktop Navigation - Minimal */}
+          {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-1">
             {navItems.map((item) => (
               <button
                 key={item.to}
                 onClick={() => navigate(item.to)}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-1 ${
                   location.pathname === item.to ||
                   location.pathname.startsWith(item.to + "/")
                     ? "text-amber-500"
                     : "text-gray-600 dark:text-gray-300 hover:text-amber-500"
-                }`}
+                } ${item.highlight ? "bg-amber-50 dark:bg-amber-900/20" : ""}`}
               >
+                {item.icon && <SparklesIcon className="w-3.5 h-3.5" />}
                 {item.label}
+                {item.highlight && (
+                  <span className="text-[10px] bg-amber-500 text-white px-1.5 py-0.5 rounded-full ml-1">
+                    AI
+                  </span>
+                )}
               </button>
             ))}
           </div>
@@ -152,19 +164,6 @@ export default function Navbar() {
                       className="flex items-center gap-3 w-full px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700"
                     >
                       <ShieldCheckIcon className="w-4 h-4" /> KYC Status
-                    </button>
-
-                    {/* ✅ Trip Planner inside Profile Dropdown */}
-                    <button
-                      onClick={() => {
-                        navigate("/trip-planner");
-                        setProfileOpen(false);
-                      }}
-                      className="flex items-center gap-3 w-full px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 border-t border-gray-100 dark:border-gray-700 mt-1 pt-2"
-                    >
-                      <SparklesIcon className="w-4 h-4 text-amber-500" />
-                      <span>AI Trip Planner</span>
-                      <span className="text-xs text-amber-500 ml-auto">✨</span>
                     </button>
 
                     {isAdmin && (
@@ -262,17 +261,21 @@ export default function Navbar() {
               <span className="text-sm font-medium">Offer Trip</span>
             </button>
 
-            {/* Trip Planner in Mobile Menu */}
+            {/* Trip Planner in Mobile Menu - Prominent */}
             <button
               onClick={() => {
                 navigate("/trip-planner");
                 setMenuOpen(false);
               }}
-              className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-left hover:bg-gray-50 dark:hover:bg-gray-800 border-t border-gray-100 dark:border-gray-700 mt-2 pt-3"
+              className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-left hover:bg-amber-50 dark:hover:bg-amber-900/20 bg-amber-50/50 dark:bg-amber-900/10 mt-2"
             >
               <SparklesIcon className="w-5 h-5 text-amber-500" />
-              <span className="text-sm font-medium">AI Trip Planner</span>
-              <span className="text-xs text-amber-500 ml-auto">✨ New</span>
+              <span className="text-sm font-medium text-amber-700 dark:text-amber-400">
+                AI Trip Planner
+              </span>
+              <span className="text-xs bg-amber-500 text-white px-1.5 py-0.5 rounded-full ml-auto">
+                AI
+              </span>
             </button>
 
             {!isAuthenticated && (
