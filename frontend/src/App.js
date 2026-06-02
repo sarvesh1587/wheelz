@@ -23,6 +23,8 @@ import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 import KYCUpload from "./pages/KYCUpload";
+import TripRequests from "./pages/TripRequests";
+import MyTrips from "./pages/MyTrips";
 
 // Lazy load pages
 const Home = lazy(() => import("./pages/Home"));
@@ -119,6 +121,22 @@ function AppRoutes() {
                 <PublicRoute>
                   <Login />
                 </PublicRoute>
+              }
+            />
+            <Route
+              path="/trip-requests"
+              element={
+                <PrivateRoute>
+                  <TripRequests />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/my-trips"
+              element={
+                <PrivateRoute>
+                  <MyTrips />
+                </PrivateRoute>
               }
             />
             <Route

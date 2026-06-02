@@ -104,7 +104,16 @@ export default function Navbar() {
               </button>
             ))}
           </div>
-
+          <button
+            onClick={() => {
+              navigate("/trip-requests");
+              setProfileOpen(false);
+            }}
+            className="flex items-center gap-3 w-full px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700"
+          >
+            <UserGroupIcon className="w-4 h-4 text-amber-500" />
+            Trip Requests
+          </button>
           {/* Right Icons */}
           <div className="flex items-center gap-1">
             {/* Dark Mode Toggle */}
