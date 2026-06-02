@@ -25,6 +25,7 @@ import NotFound from "./pages/NotFound";
 import KYCUpload from "./pages/KYCUpload";
 import TripRequests from "./pages/TripRequests";
 import MyTrips from "./pages/MyTrips";
+import RideShareDetail from "./pages/RideShareDetail";
 
 // Lazy load pages
 const Home = lazy(() => import("./pages/Home"));
@@ -128,6 +129,14 @@ function AppRoutes() {
               element={
                 <PrivateRoute>
                   <TripRequests />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/rideshare/:id"
+              element={
+                <PrivateRoute>
+                  <RideShareDetail />
                 </PrivateRoute>
               }
             />

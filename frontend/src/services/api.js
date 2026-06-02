@@ -62,6 +62,7 @@ export const rideShareAPI = {
   getOne: (id) => api.get(`/rideshare/${id}`),
   getMyTrips: () => api.get("/rideshare/my/trips"),
   getMyRides: () => api.get("/rideshare/my/rides"),
+  getTripRequests: (tripId) => api.get(`/rideshare/${tripId}/requests`),
   getDriverRequests: () => api.get("/rideshare/driver/requests"),
   requestSeat: (data) => api.post("/rideshare/request", data),
   respondToRequest: (requestId, data) =>
