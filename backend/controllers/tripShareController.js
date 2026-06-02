@@ -394,17 +394,17 @@ exports.getDriverRequests = async (req, res) => {
   try {
     const trips = await TripShare.find({ driver: req.user.id });
     const tripIds = trips.map((t) => t._id);
+
     const requests = await TripRequest.find({
       trip: { $in: tripIds },
       status: "pending",
     })
       .populate("passenger", "name email phone")
-      .populate(
-        "trip",
-        "fromCity toCity departureDate availableSeats pricePerSeat",
-      );
+      .populate("trip", "fromCity toCity departureDate pricePerSeat");
+
     res.json({ success: true, requests });
   } catch (err) {
+    console.error("Get driver requests error:", err);
     res.status(500).json({ success: false, message: err.message });
   }
 };
@@ -413,18 +413,31 @@ exports.getDriverRequests = async (req, res) => {
 exports.respondToRequest = async (req, res) => {
   try {
     const { action } = req.body;
-    const request = await TripRequest.findById(req.params.requestId)
-      .populate("trip")
-      .populate("passenger", "name email phone");
-    if (!request)
+    const requestId = req.params.requestId;
+
+    console.log("📝 Responding to request:", { requestId, action });
+
+    const request = await TripRequest.findById(requestId).populate("trip");
+    if (!request) {
       return res
         .status(404)
         .json({ success: false, message: "Request not found" });
+    }
 
     const trip = request.trip;
-    if (trip.driver.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ success: false, message: "Not your trip" });
+    if (!trip) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Trip not found" });
     }
+
+    // Verify the current user is the driver
+    if (trip.driver.toString() !== req.user._id.toString()) {
+      return res
+        .status(403)
+        .json({ success: false, message: "Not authorized" });
+    }
+
     if (request.status !== "pending") {
       return res
         .status(400)
@@ -435,25 +448,34 @@ exports.respondToRequest = async (req, res) => {
       if (trip.availableSeats < request.seatsRequested) {
         return res
           .status(400)
-          .json({ success: false, message: "Not enough seats" });
+          .json({ success: false, message: "Not enough seats available" });
       }
+
       request.status = "approved";
-      request.contactShared = true;
       trip.availableSeats -= request.seatsRequested;
       if (trip.availableSeats === 0) trip.status = "full";
+
       await trip.save();
       await request.save();
+
+      console.log("✅ Request approved successfully");
     } else if (action === "reject") {
       request.status = "rejected";
       await request.save();
+      console.log("✅ Request rejected");
+    } else {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid action" });
     }
 
     res.json({
       success: true,
       request,
-      message: action === "approve" ? "Request approved!" : "Request rejected.",
+      message: action === "approve" ? "Request approved!" : "Request rejected",
     });
   } catch (err) {
+    console.error("❌ Respond to request error:", err);
     res.status(500).json({ success: false, message: err.message });
   }
 };
@@ -488,7 +510,6 @@ exports.getTripRequests = async (req, res) => {
   try {
     const { tripId } = req.params;
 
-    // First check if the trip exists
     const trip = await TripShare.findById(tripId);
     if (!trip) {
       return res
@@ -496,14 +517,10 @@ exports.getTripRequests = async (req, res) => {
         .json({ success: false, message: "Trip not found" });
     }
 
-    // Check if user is the driver of this trip
     if (trip.driver.toString() !== req.user.id && req.user.role !== "admin") {
       return res
         .status(403)
-        .json({
-          success: false,
-          message: "Not authorized to view these requests",
-        });
+        .json({ success: false, message: "Not authorized" });
     }
 
     const requests = await TripRequest.find({ trip: tripId })
