@@ -91,21 +91,17 @@ exports.createTrip = async (req, res) => {
     } = req.body;
 
     if (!disclaimerAccepted) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "You must accept the disclaimer to offer a shared trip.",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "You must accept the disclaimer to offer a shared trip.",
+      });
     }
 
     if (!bookingId) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "Booking ID is required. Please book a vehicle first.",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "Booking ID is required. Please book a vehicle first.",
+      });
     }
 
     // ✅ SECURITY CHECK: Verify booking exists, belongs to user, and is confirmed
@@ -118,12 +114,10 @@ exports.createTrip = async (req, res) => {
     }
 
     if (booking.user.toString() !== req.user._id.toString()) {
-      return res
-        .status(403)
-        .json({
-          success: false,
-          message: "You can only offer trips for your own bookings",
-        });
+      return res.status(403).json({
+        success: false,
+        message: "You can only offer trips for your own bookings",
+      });
     }
 
     if (booking.status !== "confirmed" || booking.paymentStatus !== "paid") {
@@ -140,12 +134,10 @@ exports.createTrip = async (req, res) => {
     });
 
     if (existingTrip) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "This booking already has an active trip share",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "This booking already has an active trip share",
+      });
     }
 
     const vehicle = booking.vehicle;
@@ -196,13 +188,11 @@ exports.createTrip = async (req, res) => {
       "driver",
       "name avatar phone email",
     );
-    res
-      .status(201)
-      .json({
-        success: true,
-        trip: populated,
-        message: "Trip listed successfully!",
-      });
+    res.status(201).json({
+      success: true,
+      trip: populated,
+      message: "Trip listed successfully!",
+    });
   } catch (err) {
     console.error("Create trip error:", err);
     res.status(500).json({ success: false, message: err.message });
@@ -344,12 +334,10 @@ exports.requestSeat = async (req, res) => {
       status: { $in: ["pending", "approved"] },
     });
     if (existing)
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "You already have a request for this trip",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "You already have a request for this trip",
+      });
 
     if (trip.womenOnly) {
       const passenger = await User.findById(req.user._id);
@@ -389,15 +377,13 @@ exports.requestSeat = async (req, res) => {
     const populated = await TripRequest.findById(request._id)
       .populate("trip")
       .populate("passenger", "name avatar");
-    res
-      .status(201)
-      .json({
-        success: true,
-        request: populated,
-        message: trip.instantBook
-          ? "Seat booked instantly! Proceed to payment."
-          : "Request sent! Driver will respond shortly.",
-      });
+    res.status(201).json({
+      success: true,
+      request: populated,
+      message: trip.instantBook
+        ? "Seat booked instantly! Proceed to payment."
+        : "Request sent! Driver will respond shortly.",
+    });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -497,7 +483,39 @@ exports.completeTrip = async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 };
+// ─── GET REQUESTS FOR A SPECIFIC TRIP ─────────────────────────────────────────
+exports.getTripRequests = async (req, res) => {
+  try {
+    const { tripId } = req.params;
 
+    // First check if the trip exists
+    const trip = await TripShare.findById(tripId);
+    if (!trip) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Trip not found" });
+    }
+
+    // Check if user is the driver of this trip
+    if (trip.driver.toString() !== req.user.id && req.user.role !== "admin") {
+      return res
+        .status(403)
+        .json({
+          success: false,
+          message: "Not authorized to view these requests",
+        });
+    }
+
+    const requests = await TripRequest.find({ trip: tripId })
+      .populate("passenger", "name email phone")
+      .sort({ createdAt: -1 });
+
+    res.json({ success: true, requests });
+  } catch (err) {
+    console.error("Get trip requests error:", err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
 // ─── CANCEL TRIP ─────────────────────────────────────────────────────────────
 exports.cancelTrip = async (req, res) => {
   try {

@@ -1,9 +1,6 @@
 /**
  * TripShare Routes
  * File: backend/routes/tripShare.js
- *
- * Add to server.js:
- * app.use("/api/rideshare", require("./routes/tripShare"));
  */
 
 const express = require("express");
@@ -14,6 +11,8 @@ const {
   getTrip,
   getMyTrips,
   getMyRides,
+  getDriverRequests,
+  getTripRequests,
   requestSeat,
   respondToRequest,
   createPaymentOrder,
@@ -34,6 +33,8 @@ router.get("/:id", optionalAuth, getTrip);
 // ── Driver ───────────────────────────────────────────────────────────────────
 router.post("/", protect, createTrip);
 router.get("/my/trips", protect, getMyTrips);
+router.get("/driver/requests", protect, getDriverRequests); // ✅ Get all pending requests for driver
+router.get("/:tripId/requests", protect, getTripRequests); // ✅ Get requests for specific trip
 router.put("/:tripId/complete", protect, completeTrip);
 router.put("/:tripId/cancel", protect, cancelTrip);
 router.get("/earnings/me", protect, getDriverEarnings);
