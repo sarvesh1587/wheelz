@@ -56,6 +56,25 @@ export const tripPlannerAPI = {
   plan: (data) => api.post("/trip-planner/plan", data),
   quickEstimate: (data) => api.post("/trip-planner/estimate", data),
 };
+export const rideShareAPI = {
+  create: (data) => api.post("/rideshare", data),
+  search: (params) => api.get("/rideshare/search", { params }),
+  getOne: (id) => api.get(`/rideshare/${id}`),
+  getMyTrips: () => api.get("/rideshare/my/trips"),
+  getMyRides: () => api.get("/rideshare/my/rides"),
+  requestSeat: (data) => api.post("/rideshare/request", data),
+  respond: (id, data) => api.put(`/rideshare/request/${id}/respond`, data),
+  createPayment: (id) => api.post(`/rideshare/request/${id}/pay`),
+  verifyPayment: (data) =>
+    api.post(`/rideshare/request/${data.requestId}/verify`, data),
+  sendMessage: (id, text) =>
+    api.post(`/rideshare/request/${id}/message`, { text }),
+  getMessages: (id) => api.get(`/rideshare/request/${id}/messages`),
+  rate: (id, data) => api.post(`/rideshare/request/${id}/rate`, data),
+  getEarnings: () => api.get("/rideshare/earnings/me"),
+  completeTrip: (id) => api.put(`/rideshare/${id}/complete`),
+  cancelTrip: (id, reason) => api.put(`/rideshare/${id}/cancel`, { reason }),
+};
 export const vehicleAPI = {
   getAll: (params) => api.get("/vehicles", { params }),
   getOne: (id) => api.get(`/vehicles/${id}`),

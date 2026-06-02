@@ -53,6 +53,7 @@ app.use("/api/auth/google", require("./routes/googleAuth"));
 app.use("/api/kyc", require("./routes/kycRoutes"));
 app.use("/api/chatbot", require("./routes/chatbotRoutes"));
 app.use("/api/trip-planner", require("./routes/tripPlanner"));
+app.use("/api/rideshare", require("./routes/tripShare"));
 // app.use("/api/chatbot", require("./routes/chatbotRoutes"));
 // app.use("/api/otp", require("./routes/otpRoutes"));
 // ─── Health Check ───────────────────────────────────────────────────────────

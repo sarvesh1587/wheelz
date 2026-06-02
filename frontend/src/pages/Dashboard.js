@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { loadRazorpayScript, initRazorpayPayment } from "../utils/razorpay";
 import {
   bookingAPI,
   wishlistAPI,
   vehicleAPI,
   paymentAPI,
+  rideShareAPI,
 } from "../services/api";
 import toast from "react-hot-toast";
 import {
@@ -23,6 +23,9 @@ import {
   SparklesIcon,
   DocumentArrowDownIcon,
   EyeIcon,
+  UserGroupIcon,
+  MapPinIcon,
+  CurrencyRupeeIcon,
 } from "@heroicons/react/24/outline";
 import { motion, AnimatePresence } from "framer-motion";
 import html2pdf from "html2pdf.js";
@@ -39,8 +42,13 @@ export default function Dashboard() {
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [processingPayment, setProcessingPayment] = useState(false);
 
+  // Ride Share States
+  const [myTrips, setMyTrips] = useState([]);
+  const [myRides, setMyRides] = useState([]);
+
   useEffect(() => {
     fetchDashboardData();
+    fetchRideShareData();
   }, []);
 
   const fetchDashboardData = async () => {
@@ -61,6 +69,19 @@ export default function Dashboard() {
     }
   };
 
+  const fetchRideShareData = async () => {
+    try {
+      const [tripsRes, ridesRes] = await Promise.all([
+        rideShareAPI.getMyTrips(),
+        rideShareAPI.getMyRides(),
+      ]);
+      setMyTrips(tripsRes.data.trips || []);
+      setMyRides(ridesRes.data.rides || []);
+    } catch (err) {
+      console.error("Rideshare data error:", err);
+    }
+  };
+
   const getStatusBadge = (status) => {
     const badges = {
       confirmed:
@@ -70,6 +91,9 @@ export default function Dashboard() {
       cancelled: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
       completed:
         "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
+      active:
+        "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
+      full: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400",
     };
     return badges[status] || badges.pending;
   };
@@ -101,18 +125,16 @@ export default function Dashboard() {
     setSelectedBooking(booking);
     setShowBookingModal(true);
   };
-  // ✅ Process Payment Function - Fixed Version
+
   const processPayment = async (booking) => {
     setProcessingPayment(true);
     try {
-      // Check if Razorpay is loaded
       if (!window.Razorpay) {
         toast.error("Payment system is loading. Please try again.");
         setProcessingPayment(false);
         return;
       }
 
-      // Create order on backend
       toast.loading("Creating payment order...", { id: "payment" });
 
       const orderResponse = await paymentAPI.createOrder(booking._id);
@@ -136,7 +158,6 @@ export default function Dashboard() {
           toast.loading("Verifying payment...", { id: "verify" });
 
           try {
-            // ✅ Verify payment on backend
             const verifyResponse = await paymentAPI.verifyPayment({
               bookingId: booking._id,
               razorpayOrderId: paymentResponse.razorpay_order_id,
@@ -148,13 +169,9 @@ export default function Dashboard() {
 
             if (verifyResponse.data.success) {
               toast.success("✅ Payment successful! Booking confirmed.");
-
-              // ✅ IMPORTANT: Wait a moment then refresh all data
               setTimeout(() => {
                 fetchDashboardData();
               }, 500);
-
-              // ✅ Close modal if open
               setShowBookingModal(false);
               setSelectedBooking(null);
             } else {
@@ -198,9 +215,8 @@ export default function Dashboard() {
       setProcessingPayment(false);
     }
   };
-  // ✅ PDF Download Function (Only for paid/bookings)
+
   const downloadBookingPDF = (booking) => {
-    // Only allow download if payment is paid or booking is confirmed
     if (booking.paymentStatus !== "paid" && booking.status !== "confirmed") {
       toast.error("Please complete payment first to download receipt");
       return;
@@ -213,7 +229,6 @@ export default function Dashboard() {
 
     pdfContent.innerHTML = `
       <div style="max-width: 800px; margin: 0 auto;">
-        <!-- Header -->
         <div style="text-align: center; margin-bottom: 30px; border-bottom: 2px solid #f59e0b; padding-bottom: 20px;">
           <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
             <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #f59e0b, #d97706); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold; color: white;">W</div>
@@ -223,133 +238,46 @@ export default function Dashboard() {
           <p style="color: #666; margin: 0;">Booking ID: ${booking.bookingRef}</p>
           <p style="color: #666; margin: 5px 0 0;">Date: ${new Date().toLocaleDateString("en-IN")}</p>
         </div>
-
-        <!-- Success Badge -->
         <div style="text-align: center; margin-bottom: 20px;">
           <div style="display: inline-block; background: #d1fae5; color: #065f46; padding: 8px 20px; border-radius: 30px; font-weight: bold;">
             ✅ PAYMENT SUCCESSFUL | BOOKING CONFIRMED
           </div>
         </div>
-
-        <!-- Customer Details -->
         <div style="margin-bottom: 20px;">
           <h3 style="color: #f59e0b; margin-bottom: 10px; border-left: 3px solid #f59e0b; padding-left: 10px;">👤 Customer Information</h3>
           <table style="width: 100%; border-collapse: collapse;">
-            <tr style="border-bottom: 1px solid #eee;">
-              <td style="padding: 8px; font-weight: bold; width: 120px;">Full Name</td>
-              <td style="padding: 8px;">${booking.user?.name || booking.customerDetails?.name || user?.name || "N/A"}</td>
-            </tr>
-            <tr style="border-bottom: 1px solid #eee;">
-              <td style="padding: 8px; font-weight: bold;">Email</td>
-              <td style="padding: 8px;">${booking.user?.email || booking.customerDetails?.email || user?.email || "N/A"}</td>
-            </tr>
-            <tr style="border-bottom: 1px solid #eee;">
-              <td style="padding: 8px; font-weight: bold;">Phone</td>
-              <td style="padding: 8px;">${booking.user?.phone || booking.customerDetails?.phone || "N/A"}</td>
-            </tr>
+            <tr><td style="padding: 8px; font-weight: bold;">Full Name</td><td>${booking.user?.name || booking.customerDetails?.name || user?.name || "N/A"}</td></tr>
+            <tr><td style="padding: 8px; font-weight: bold;">Email</td><td>${booking.user?.email || booking.customerDetails?.email || user?.email || "N/A"}</td></tr>
+            <tr><td style="padding: 8px; font-weight: bold;">Phone</td><td>${booking.user?.phone || booking.customerDetails?.phone || "N/A"}</td></tr>
           </table>
         </div>
-
-        <!-- Vehicle Details -->
         <div style="margin-bottom: 20px;">
           <h3 style="color: #f59e0b; margin-bottom: 10px; border-left: 3px solid #f59e0b; padding-left: 10px;">🚗 Vehicle Information</h3>
           <table style="width: 100%; border-collapse: collapse;">
-            <tr style="border-bottom: 1px solid #eee;">
-              <td style="padding: 8px; font-weight: bold; width: 120px;">Vehicle Name</td>
-              <td style="padding: 8px;">${booking.vehicle?.name || "N/A"}</td>
-            </tr>
-            <tr style="border-bottom: 1px solid #eee;">
-              <td style="padding: 8px; font-weight: bold;">Brand</td>
-              <td style="padding: 8px;">${booking.vehicle?.brand || "N/A"}</td>
-            </tr>
-            <tr style="border-bottom: 1px solid #eee;">
-              <td style="padding: 8px; font-weight: bold;">Year</td>
-              <td style="padding: 8px;">${booking.vehicle?.year || "N/A"}</td>
-            </tr>
+            <tr><td style="padding: 8px; font-weight: bold;">Vehicle Name</td><td>${booking.vehicle?.name || "N/A"}</td></tr>
+            <tr><td style="padding: 8px; font-weight: bold;">Brand</td><td>${booking.vehicle?.brand || "N/A"}</td></tr>
+            <tr><td style="padding: 8px; font-weight: bold;">Year</td><td>${booking.vehicle?.year || "N/A"}</td></tr>
           </table>
         </div>
-
-        <!-- Booking Details -->
         <div style="margin-bottom: 20px;">
           <h3 style="color: #f59e0b; margin-bottom: 10px; border-left: 3px solid #f59e0b; padding-left: 10px;">📅 Booking Details</h3>
           <table style="width: 100%; border-collapse: collapse;">
-            <tr style="border-bottom: 1px solid #eee;">
-              <td style="padding: 8px; font-weight: bold; width: 120px;">Pickup Date</td>
-              <td style="padding: 8px;">${new Date(booking.startDate).toLocaleDateString("en-IN", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</td>
-            </tr>
-            <tr style="border-bottom: 1px solid #eee;">
-              <td style="padding: 8px; font-weight: bold;">Return Date</td>
-              <td style="padding: 8px;">${new Date(booking.endDate).toLocaleDateString("en-IN", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</td>
-            </tr>
-            <tr style="border-bottom: 1px solid #eee;">
-              <td style="padding: 8px; font-weight: bold;">Total Days</td>
-              <td style="padding: 8px;">${booking.totalDays} days</td>
-            </tr>
-            <tr style="border-bottom: 1px solid #eee;">
-              <td style="padding: 8px; font-weight: bold;">Pickup Location</td>
-              <td style="padding: 8px;">${booking.pickupLocation || "N/A"}</td>
-            </tr>
+            <tr><td style="padding: 8px; font-weight: bold;">Pickup Date</td><td>${new Date(booking.startDate).toLocaleDateString("en-IN")}</td></tr>
+            <tr><td style="padding: 8px; font-weight: bold;">Return Date</td><td>${new Date(booking.endDate).toLocaleDateString("en-IN")}</td></tr>
+            <tr><td style="padding: 8px; font-weight: bold;">Total Days</td><td>${booking.totalDays} days</td></tr>
+            <tr><td style="padding: 8px; font-weight: bold;">Pickup Location</td><td>${booking.pickupLocation || "N/A"}</td></tr>
           </table>
         </div>
-
-        <!-- Price Breakdown -->
         <div style="margin-bottom: 20px;">
           <h3 style="color: #f59e0b; margin-bottom: 10px; border-left: 3px solid #f59e0b; padding-left: 10px;">💰 Payment Details</h3>
           <table style="width: 100%; border-collapse: collapse;">
-            <tr style="border-bottom: 1px solid #eee;">
-              <td style="padding: 8px; font-weight: bold;">Base Price</td>
-              <td style="padding: 8px;">₹${(booking.pricePerDay * booking.totalDays).toLocaleString()}</td>
-            </tr>
-            <tr style="border-bottom: 1px solid #eee;">
-              <td style="padding: 8px; font-weight: bold;">Total Days</td>
-              <td style="padding: 8px;">${booking.totalDays} days</td>
-            </tr>
-            <tr style="border-top: 2px solid #f59e0b; background: #fef3c7;">
-              <td style="padding: 12px 8px; font-weight: bold; font-size: 16px;">Total Paid</td>
-              <td style="padding: 12px 8px; font-size: 20px; font-weight: bold; color: #f59e0b;">₹${booking.finalAmount?.toLocaleString() || booking.totalAmount?.toLocaleString()}</td>
-            </tr>
+            <tr><td style="padding: 8px; font-weight: bold;">Base Price</td><td>₹${(booking.pricePerDay * booking.totalDays).toLocaleString()}</td></tr>
+            <tr><td style="padding: 8px; font-weight: bold;">Total Paid</td><td style="font-size: 18px; font-weight: bold; color: #f59e0b;">₹${booking.finalAmount?.toLocaleString() || booking.totalAmount?.toLocaleString()}</td></tr>
           </table>
         </div>
-
-        <!-- Status -->
-        <div style="margin-bottom: 20px;">
-          <h3 style="color: #f59e0b; margin-bottom: 10px; border-left: 3px solid #f59e0b; padding-left: 10px;">📊 Status</h3>
-          <table style="width: 100%; border-collapse: collapse;">
-            <tr style="border-bottom: 1px solid #eee;">
-              <td style="padding: 8px; font-weight: bold; width: 120px;">Booking Status</td>
-              <td style="padding: 8px;"><span style="background: #d1fae5; color: #065f46; padding: 4px 12px; border-radius: 20px;">CONFIRMED ✅</span></td>
-            </tr>
-            <tr style="border-bottom: 1px solid #eee;">
-              <td style="padding: 8px; font-weight: bold;">Payment Status</td>
-              <td style="padding: 8px;"><span style="background: #d1fae5; color: #065f46; padding: 4px 12px; border-radius: 20px;">PAID ✅</span></td>
-            </tr>
-            <tr style="border-bottom: 1px solid #eee;">
-              <td style="padding: 8px; font-weight: bold;">Payment Date</td>
-              <td style="padding: 8px;">${new Date(booking.paidAt || new Date()).toLocaleDateString("en-IN")}</td>
-            </tr>
-          </table>
-        </div>
-
-        <!-- Vendor Contact -->
-        <div style="margin-bottom: 20px;">
-          <h3 style="color: #f59e0b; margin-bottom: 10px; border-left: 3px solid #f59e0b; padding-left: 10px;">🏪 Vendor Contact</h3>
-          <table style="width: 100%; border-collapse: collapse;">
-            <tr style="border-bottom: 1px solid #eee;">
-              <td style="padding: 8px; font-weight: bold; width: 120px;">Vendor Name</td>
-              <td style="padding: 8px;">${booking.vendorDetails?.businessName || booking.vendorDetails?.name || "Wheelz"}</td>
-            </tr>
-            <tr style="border-bottom: 1px solid #eee;">
-              <td style="padding: 8px; font-weight: bold;">Phone</td>
-              <td style="padding: 8px;">${booking.vendorDetails?.phone || "9876543210"}</td>
-            </tr>
-          </table>
-        </div>
-
-        <!-- Footer -->
         <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; color: #666; font-size: 12px;">
           <p>Thank you for choosing Wheelz!</p>
           <p>For any queries, contact us at support@wheelz.com | 9876543210</p>
-          <p>This is a system generated receipt. No signature required.</p>
         </div>
       </div>
     `;
@@ -429,7 +357,7 @@ export default function Dashboard() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.1 }}
-              className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300"
+              className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all"
             >
               <div className="flex items-center justify-between">
                 <div>
@@ -451,23 +379,20 @@ export default function Dashboard() {
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-2 mb-6 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex gap-2 mb-6 border-b border-gray-200 dark:border-gray-700 overflow-x-auto">
           {[
             { id: "bookings", label: "My Bookings", icon: CalendarIcon },
             { id: "wishlist", label: "Wishlist", icon: HeartIcon },
             { id: "profile", label: "Profile", icon: UserCircleIcon },
+            { id: "mytrips", label: "My Shared Trips", icon: TruckIcon },
+            { id: "myrides", label: "My Rides", icon: UserGroupIcon },
           ].map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-t-lg transition-all ${
-                activeTab === tab.id
-                  ? "bg-amber-500 text-white"
-                  : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
-              }`}
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-t-lg transition-all whitespace-nowrap ${activeTab === tab.id ? "bg-amber-500 text-white" : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"}`}
             >
-              <tab.icon className="w-4 h-4" />
-              {tab.label}
+              <tab.icon className="w-4 h-4" /> {tab.label}
             </button>
           ))}
         </div>
@@ -500,7 +425,6 @@ export default function Dashboard() {
                 const isPaid =
                   booking.paymentStatus === "paid" ||
                   booking.status === "confirmed";
-
                 return (
                   <motion.div
                     key={booking._id}
@@ -542,22 +466,21 @@ export default function Dashboard() {
                               ₹{booking.totalAmount?.toLocaleString()}
                             </p>
                             <div className="flex items-center gap-2 mt-1">
-                              {/* ✅ Only show download button if payment is done */}
                               {isPaid ? (
                                 <button
                                   onClick={() => downloadBookingPDF(booking)}
-                                  className="text-xs bg-green-500 hover:bg-green-600 text-white px-3 py-1.5 rounded-lg flex items-center gap-1 transition-colors"
+                                  className="text-xs bg-green-500 hover:bg-green-600 text-white px-3 py-1.5 rounded-lg flex items-center gap-1"
                                 >
-                                  <DocumentArrowDownIcon className="w-4 h-4" />
+                                  <DocumentArrowDownIcon className="w-4 h-4" />{" "}
                                   Download Receipt
                                 </button>
                               ) : (
                                 <button
                                   onClick={() => processPayment(booking)}
                                   disabled={processingPayment}
-                                  className="text-xs bg-amber-500 hover:bg-amber-600 text-white px-3 py-1.5 rounded-lg flex items-center gap-1 transition-colors"
+                                  className="text-xs bg-amber-500 hover:bg-amber-600 text-white px-3 py-1.5 rounded-lg flex items-center gap-1"
                                 >
-                                  <CreditCardIcon className="w-4 h-4" />
+                                  <CreditCardIcon className="w-4 h-4" />{" "}
                                   {processingPayment
                                     ? "Processing..."
                                     : "Pay Now"}
@@ -565,24 +488,21 @@ export default function Dashboard() {
                               )}
                               <button
                                 onClick={() => viewBookingDetails(booking)}
-                                className="text-xs bg-gray-500 hover:bg-gray-600 text-white px-3 py-1.5 rounded-lg flex items-center gap-1 transition-colors"
+                                className="text-xs bg-gray-500 hover:bg-gray-600 text-white px-3 py-1.5 rounded-lg flex items-center gap-1"
                               >
-                                <EyeIcon className="w-4 h-4" />
-                                View Details
+                                <EyeIcon className="w-4 h-4" /> View Details
                               </button>
                             </div>
                           </div>
                         </div>
                         <div className="flex flex-wrap gap-4 mt-3 text-sm text-gray-600 dark:text-gray-400">
                           <div className="flex items-center gap-1">
-                            <CalendarIcon className="w-4 h-4" />
-                            {new Date(
-                              booking.startDate,
-                            ).toLocaleDateString()} -{" "}
+                            <CalendarIcon className="w-4 h-4" />{" "}
+                            {new Date(booking.startDate).toLocaleDateString()} -{" "}
                             {new Date(booking.endDate).toLocaleDateString()}
                           </div>
                           <div className="flex items-center gap-1">
-                            <TruckIcon className="w-4 h-4" />
+                            <TruckIcon className="w-4 h-4" />{" "}
                             {booking.pickupLocation}
                           </div>
                         </div>
@@ -590,7 +510,7 @@ export default function Dashboard() {
                           booking.paymentStatus !== "paid" && (
                             <button
                               onClick={() => cancelBooking(booking._id)}
-                              className="mt-3 text-sm text-red-500 hover:text-red-600 transition-colors"
+                              className="mt-3 text-sm text-red-500 hover:text-red-600"
                             >
                               Cancel Booking
                             </button>
@@ -666,7 +586,7 @@ export default function Dashboard() {
                         onClick={() =>
                           navigate(`/vehicles/${item.vehicle?._id}`)
                         }
-                        className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors"
+                        className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600"
                       >
                         Book Now
                       </button>
@@ -702,15 +622,11 @@ export default function Dashboard() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
                 <p className="text-sm text-gray-500">Phone Number</p>
-                <p className="font-medium text-gray-900 dark:text-white">
-                  {user?.phone || "Not added"}
-                </p>
+                <p className="font-medium">{user?.phone || "Not added"}</p>
               </div>
               <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
                 <p className="text-sm text-gray-500">Location</p>
-                <p className="font-medium text-gray-900 dark:text-white">
-                  {user?.city || "Not added"}
-                </p>
+                <p className="font-medium">{user?.city || "Not added"}</p>
               </div>
             </div>
             <button
@@ -719,6 +635,160 @@ export default function Dashboard() {
             >
               Edit Profile
             </button>
+          </motion.div>
+        )}
+
+        {/* My Shared Trips Tab (Driver) */}
+        {activeTab === "mytrips" && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="space-y-4"
+          >
+            {myTrips.length === 0 ? (
+              <div className="text-center py-16 bg-white dark:bg-gray-800 rounded-2xl">
+                <TruckIcon className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                  No Trips Offered Yet
+                </h3>
+                <p className="text-gray-500 mb-4">
+                  Share your journey and split costs with fellow travelers!
+                </p>
+                <button
+                  onClick={() => navigate("/vehicles")}
+                  className="px-6 py-2.5 bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold rounded-xl"
+                >
+                  + Book a Vehicle First
+                </button>
+              </div>
+            ) : (
+              myTrips.map((trip) => (
+                <div
+                  key={trip._id}
+                  className="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-md hover:shadow-lg transition-all"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-4">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg">🚗</span>
+                        <p className="font-bold">
+                          {trip.fromCity || trip.route?.from} →{" "}
+                          {trip.toCity || trip.route?.to}
+                        </p>
+                      </div>
+                      <p className="text-sm text-gray-500 mt-1">
+                        {new Date(trip.departureDate).toLocaleDateString()} at{" "}
+                        {trip.departureTime}
+                      </p>
+                      <p className="text-xs text-gray-400 mt-1">
+                        {trip.availableSeats}/{trip.totalSeats} seats • ₹
+                        {trip.pricePerSeat}/seat
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <span
+                        className={`text-xs px-3 py-1 rounded-full font-medium ${getStatusBadge(trip.status)}`}
+                      >
+                        {trip.status?.toUpperCase()}
+                      </span>
+                      <div className="flex gap-2 mt-2">
+                        {trip.pendingRequests > 0 && (
+                          <span className="text-xs bg-amber-100 text-amber-700 px-2 py-1 rounded-full">
+                            {trip.pendingRequests} pending
+                          </span>
+                        )}
+                        <button
+                          onClick={() => navigate(`/rideshare/${trip._id}`)}
+                          className="text-xs bg-green-600 text-white px-3 py-1.5 rounded-lg hover:bg-green-700"
+                        >
+                          Manage
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </motion.div>
+        )}
+
+        {/* My Rides Tab (Passenger) */}
+        {activeTab === "myrides" && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="space-y-4"
+          >
+            {myRides.length === 0 ? (
+              <div className="text-center py-16 bg-white dark:bg-gray-800 rounded-2xl">
+                <UserGroupIcon className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                  No Rides Booked Yet
+                </h3>
+                <p className="text-gray-500 mb-4">
+                  Find a shared trip and save on travel costs!
+                </p>
+                <button
+                  onClick={() => navigate("/find-trip")}
+                  className="px-6 py-2.5 bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold rounded-xl"
+                >
+                  Find a Trip
+                </button>
+              </div>
+            ) : (
+              myRides.map((ride) => (
+                <div
+                  key={ride._id}
+                  className="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-md hover:shadow-lg transition-all"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-4">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg">👤</span>
+                        <p className="font-bold">
+                          {ride.trip?.fromCity || ride.fromCity} →{" "}
+                          {ride.trip?.toCity || ride.toCity}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          with {ride.trip?.driver?.name || "Driver"}
+                        </p>
+                      </div>
+                      <p className="text-sm text-gray-500 mt-1">
+                        {ride.trip?.departureDate
+                          ? new Date(
+                              ride.trip.departureDate,
+                            ).toLocaleDateString()
+                          : "Date TBD"}
+                      </p>
+                      <p className="text-xs text-gray-400 mt-1">
+                        {ride.seatsBooked || ride.seatsRequested} seat(s) • ₹
+                        {ride.totalAmount ||
+                          ride.trip?.pricePerSeat * (ride.seatsBooked || 1)}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <span
+                        className={`text-xs px-3 py-1 rounded-full font-medium ${getStatusBadge(ride.status)}`}
+                      >
+                        {ride.status?.toUpperCase()}
+                      </span>
+                      {ride.status === "approved" && (
+                        <div className="mt-2">
+                          <button
+                            onClick={() =>
+                              navigate(`/rideshare/${ride.trip?._id}`)
+                            }
+                            className="text-xs bg-amber-500 text-white px-3 py-1.5 rounded-lg hover:bg-amber-600"
+                          >
+                            View Details
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
           </motion.div>
         )}
       </div>
@@ -734,145 +804,87 @@ export default function Dashboard() {
               onClick={() => setShowBookingModal(false)}
               className="absolute inset-0 bg-black/60 backdrop-blur-sm"
             />
-
             <motion.div
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              transition={{ type: "spring", damping: 25, stiffness: 300 }}
               className="relative w-full max-w-4xl max-h-[85vh] overflow-y-auto bg-white dark:bg-gray-900 rounded-2xl shadow-2xl"
             >
-              {/* Modal Header */}
-              <div className="sticky top-0 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 px-6 py-4 flex items-center justify-between rounded-t-2xl z-10">
+              <div className="sticky top-0 bg-white dark:bg-gray-900 border-b px-6 py-4 flex justify-between">
                 <div>
-                  <h2 className="text-xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400 bg-clip-text text-transparent">
-                    Booking Details
-                  </h2>
+                  <h2 className="text-xl font-bold">Booking Details</h2>
                   <p className="text-sm text-gray-500">
-                    Booking ID: {selectedBooking.bookingRef}
+                    ID: {selectedBooking.bookingRef}
                   </p>
                 </div>
-                <div className="flex items-center gap-2">
-                  {selectedBooking.paymentStatus === "paid" && (
-                    <button
-                      onClick={() => downloadBookingPDF(selectedBooking)}
-                      className="p-2 rounded-full bg-green-500 hover:bg-green-600 text-white transition-colors"
-                      title="Download Receipt"
-                    >
-                      <DocumentArrowDownIcon className="w-5 h-5" />
-                    </button>
-                  )}
-                  <button
-                    onClick={() => setShowBookingModal(false)}
-                    className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                  >
-                    <XCircleIcon className="w-5 h-5" />
-                  </button>
-                </div>
+                <button
+                  onClick={() => setShowBookingModal(false)}
+                  className="p-2 rounded-full hover:bg-gray-100"
+                >
+                  <XCircleIcon className="w-5 h-5" />
+                </button>
               </div>
-
               <div className="p-6">
-                {/* Vehicle Details */}
-                <div className="flex gap-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-xl mb-6">
+                <div className="flex gap-4 p-4 bg-gray-50 rounded-xl mb-6">
                   <img
                     src={selectedBooking.vehicle?.images?.[0]}
-                    alt={selectedBooking.vehicle?.name}
                     className="w-24 h-24 rounded-xl object-cover"
                   />
                   <div>
-                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                    <h3 className="text-xl font-bold">
                       {selectedBooking.vehicle?.name}
                     </h3>
                     <p className="text-gray-500">
                       {selectedBooking.vehicle?.brand} •{" "}
                       {selectedBooking.vehicle?.year}
                     </p>
-                    <p className="text-amber-500 font-semibold mt-1">
+                    <p className="text-amber-500 font-semibold">
                       ₹{selectedBooking.pricePerDay?.toLocaleString()}/day
                     </p>
                   </div>
                 </div>
-
-                {/* Booking Dates */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                  <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
-                    <p className="text-xs text-gray-500 mb-1">Pickup Date</p>
+                <div className="grid grid-cols-2 gap-4 mb-6">
+                  <div className="p-4 bg-gray-50 rounded-xl">
+                    <p className="text-xs text-gray-500">Pickup</p>
                     <p className="font-medium">
-                      {new Date(selectedBooking.startDate).toLocaleDateString(
-                        "en-IN",
-                        {
-                          weekday: "long",
-                          year: "numeric",
-                          month: "long",
-                          day: "numeric",
-                        },
-                      )}
+                      {new Date(selectedBooking.startDate).toLocaleDateString()}
                     </p>
-                    <p className="text-sm text-gray-500 mt-1">
+                    <p className="text-sm text-gray-500">
                       {selectedBooking.pickupLocation}
                     </p>
                   </div>
-                  <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
-                    <p className="text-xs text-gray-500 mb-1">Return Date</p>
+                  <div className="p-4 bg-gray-50 rounded-xl">
+                    <p className="text-xs text-gray-500">Return</p>
                     <p className="font-medium">
-                      {new Date(selectedBooking.endDate).toLocaleDateString(
-                        "en-IN",
-                        {
-                          weekday: "long",
-                          year: "numeric",
-                          month: "long",
-                          day: "numeric",
-                        },
-                      )}
+                      {new Date(selectedBooking.endDate).toLocaleDateString()}
                     </p>
-                    <p className="text-sm text-gray-500 mt-1">
+                    <p className="text-sm text-gray-500">
                       {selectedBooking.dropoffLocation ||
                         selectedBooking.pickupLocation}
                     </p>
                   </div>
                 </div>
-
-                {/* Price */}
-                <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800/50 dark:to-gray-900/50 rounded-xl p-4 mb-6">
-                  <h3 className="font-semibold text-gray-900 dark:text-white mb-3">
-                    Price Breakdown
-                  </h3>
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Price per day</span>
-                      <span>
-                        ₹{selectedBooking.pricePerDay?.toLocaleString()}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Number of days</span>
-                      <span>{selectedBooking.totalDays} days</span>
-                    </div>
-                    <div className="border-t pt-2 mt-2">
-                      <div className="flex justify-between font-bold">
-                        <span>Total Amount</span>
-                        <span className="text-amber-500 text-xl">
-                          ₹
-                          {selectedBooking.finalAmount?.toLocaleString() ||
-                            selectedBooking.totalAmount?.toLocaleString()}
-                        </span>
-                      </div>
-                    </div>
+                <div className="bg-gray-50 rounded-xl p-4 mb-6">
+                  <div className="flex justify-between font-bold">
+                    <span>Total Amount</span>
+                    <span className="text-amber-500 text-xl">
+                      ₹
+                      {selectedBooking.finalAmount?.toLocaleString() ||
+                        selectedBooking.totalAmount?.toLocaleString()}
+                    </span>
                   </div>
                 </div>
-
-                {/* Status */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
-                    <p className="text-xs text-gray-500 mb-1">Booking Status</p>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-4 bg-gray-50 rounded-xl">
+                    <p className="text-xs text-gray-500">Booking Status</p>
                     <span
                       className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${getStatusBadge(selectedBooking.status)}`}
                     >
                       {selectedBooking.status?.toUpperCase()}
                     </span>
                   </div>
-                  <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
-                    <p className="text-xs text-gray-500 mb-1">Payment Status</p>
+                  <div className="p-4 bg-gray-50 rounded-xl">
+                    <p className="text-xs text-gray-500">Payment Status</p>
                     <span
                       className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${getPaymentStatusBadge(selectedBooking.paymentStatus)}`}
                     >

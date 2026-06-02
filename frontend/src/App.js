@@ -35,6 +35,9 @@ const Profile = lazy(() => import("./pages/Profile"));
 const Wishlist = lazy(() => import("./pages/Wishlist"));
 const BookingDetails = lazy(() => import("./pages/BookingDetails"));
 const TripPlanner = lazy(() => import("./pages/TripPlanner"));
+const FindTrip = lazy(() => import("./pages/FindTrip"));
+const OfferTrip = lazy(() => import("./pages/OfferTrip"));
+const TripDetail = lazy(() => import("./pages/TripDetail"));
 // Admin Pages
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const AdminVehicles = lazy(() => import("./pages/AdminVehicles"));
@@ -140,7 +143,16 @@ function AppRoutes() {
             {/* Vendor Registration */}
             <Route path="/vendor/register" element={<VendorRegister />} />
             <Route path="/vendor-pending" element={<VendorPending />} />
-
+            <Route path="/find-trip" element={<FindTrip />} />
+            <Route
+              path="/offer-trip"
+              element={
+                <PrivateRoute>
+                  <OfferTrip />
+                </PrivateRoute>
+              }
+            />
+            <Route path="/rideshare/:id" element={<TripDetail />} />
             {/* Customer Routes */}
             <Route
               path="/dashboard"

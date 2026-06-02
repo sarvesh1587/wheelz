@@ -78,6 +78,8 @@ export default function Navbar() {
     { to: "/vehicles?category=bike", label: "Bikes", icon: TruckIcon },
     { to: "/vehicles", label: "All Vehicles", icon: TruckIcon },
     { to: "/trip-planner", label: "Trip Planner", icon: SparklesIcon },
+    { to: "/find-trip", label: "Find Trip", icon: TruckIcon },
+    { to: "/offer-trip", label: "Offer Trip", icon: TruckIcon },
   ];
 
   // ✅ ADMIN NAVBAR
