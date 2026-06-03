@@ -108,17 +108,21 @@ export default function FindTrip() {
     setSearched(true);
 
     try {
-      const res = await axios.get(`${API}/rideshare/search`, {
-        params: {
-          from: form.from,
-          to: form.to,
-          date: form.date,
-          seats: form.seats,
-          womenOnly: form.womenOnly,
-        },
-      });
+      const params = new URLSearchParams();
+      params.append("from", form.from);
+      params.append("to", form.to);
+      if (form.date) params.append("date", form.date);
+      if (form.seats) params.append("seats", form.seats);
+      if (form.womenOnly) params.append("womenOnly", "true");
+
+      console.log("🔍 Searching with params:", params.toString());
+
+      const res = await axios.get(`${API}/rideshare/search`, { params });
+      console.log("📋 Response:", res.data);
+
       setTrips(res.data.trips || []);
-    } catch {
+    } catch (error) {
+      console.error("Search error:", error);
       toast.error("Search failed. Please try again.");
     } finally {
       setLoading(false);

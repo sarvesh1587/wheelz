@@ -188,41 +188,75 @@ exports.createTrip = async (req, res) => {
 };
 
 // ─── SEARCH TRIPS ────────────────────────────────────────────────────────────
+// ─── SEARCH TRIPS - FIXED ────────────────────────────────────────────────────
 exports.searchTrips = async (req, res) => {
   try {
     const { from, to, date, seats = 1, womenOnly } = req.query;
+
+    console.log("🔍 SEARCH REQUEST:", { from, to, date, seats, womenOnly });
+
     if (!from || !to) {
-      return res
-        .status(400)
-        .json({ success: false, message: "From and To cities required" });
+      return res.status(400).json({
+        success: false,
+        message: "From and To cities required",
+      });
     }
 
-    const query = {
-      fromCity: new RegExp(from, "i"),
-      toCity: new RegExp(to, "i"),
+    // Build query
+    let query = {
+      fromCity: { $regex: new RegExp(from.trim(), "i") },
+      toCity: { $regex: new RegExp(to.trim(), "i") },
       status: "active",
       availableSeats: { $gte: parseInt(seats) },
     };
 
+    // ✅ FIXED: Date filter - match entire day regardless of time
     if (date) {
-      const d = new Date(date);
+      const startDate = new Date(date);
+      startDate.setHours(0, 0, 0, 0);
+
+      const endDate = new Date(date);
+      endDate.setHours(23, 59, 59, 999);
+
       query.departureDate = {
-        $gte: new Date(d.setHours(0, 0, 0, 0)),
-        $lte: new Date(d.setHours(23, 59, 59, 999)),
+        $gte: startDate,
+        $lte: endDate,
       };
     } else {
-      query.departureDate = { $gte: new Date() };
+      // No date provided - show upcoming trips from today
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      query.departureDate = { $gte: today };
     }
 
-    if (womenOnly === "true") query.womenOnly = true;
+    // Women-only filter
+    if (womenOnly === "true") {
+      query.womenOnly = true;
+    }
+
+    console.log("📝 MongoDB Query:", JSON.stringify(query, null, 2));
 
     const trips = await TripShare.find(query)
-      .populate("driver", "name avatar phone createdAt")
+      .populate("driver", "name avatar phone email")
       .sort({ departureDate: 1 })
-      .limit(20);
+      .limit(50);
 
-    res.json({ success: true, trips, total: trips.length });
+    console.log(`✅ Found ${trips.length} trips`);
+
+    // Log each trip for debugging
+    trips.forEach((trip) => {
+      console.log(
+        `   - ${trip.fromCity} → ${trip.toCity}, Date: ${trip.departureDate}, Seats: ${trip.availableSeats}/${trip.totalSeats}`,
+      );
+    });
+
+    res.json({
+      success: true,
+      trips,
+      total: trips.length,
+    });
   } catch (err) {
+    console.error("Search trips error:", err);
     res.status(500).json({ success: false, message: err.message });
   }
 };
@@ -448,12 +482,10 @@ exports.respondToRequest = async (req, res) => {
     } else if (action === "reject") {
       request.status = "rejected";
     } else {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "Invalid action. Use approve or reject",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "Invalid action. Use approve or reject",
+      });
     }
 
     await request.save();
@@ -600,12 +632,10 @@ exports.rateUser = async (req, res) => {
     );
 
     if (!request || request.status !== "completed") {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "Can only rate after trip completion",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "Can only rate after trip completion",
+      });
     }
 
     if (
