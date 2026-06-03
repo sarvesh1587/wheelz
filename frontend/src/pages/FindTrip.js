@@ -66,7 +66,27 @@ export default function FindTrip() {
   const [suggestions, setSuggestions] = useState({ from: [], to: [] });
   const [focusedField, setFocusedField] = useState(null);
   const [debug, setDebug] = useState(null);
+  // Check if token is expired
+  const isTokenExpired = () => {
+    const token = localStorage.getItem("wheelz_token");
+    if (!token) return true;
 
+    try {
+      const payload = JSON.parse(atob(token.split(".")[1]));
+      return payload.exp * 1000 < Date.now();
+    } catch {
+      return true;
+    }
+  };
+
+  // In handleSearch, add this at the beginning:
+  if (isTokenExpired()) {
+    toast.error("Session expired. Please login again.");
+    localStorage.removeItem("wheelz_token");
+    localStorage.removeItem("wheelz_user");
+    navigate("/login");
+    return;
+  }
   const handleCityInput = (value, field) => {
     setForm((f) => ({ ...f, [field]: value }));
     if (value.length > 0) {
@@ -88,9 +108,16 @@ export default function FindTrip() {
 
     setLoading(true);
     setSearched(true);
-    setDebug(null);
 
     try {
+      // ✅ Check if token exists and is valid before making request
+      const token = localStorage.getItem("wheelz_token");
+      if (!token) {
+        toast.error("Please login to search trips");
+        navigate("/login");
+        return;
+      }
+
       const params = new URLSearchParams();
       params.append("from", form.from);
       params.append("to", form.to);
@@ -98,40 +125,37 @@ export default function FindTrip() {
       if (form.seats) params.append("seats", form.seats);
       if (form.womenOnly) params.append("womenOnly", "true");
 
-      console.log("🔍 Searching with params:", params.toString());
+      const config = {
+        headers: { Authorization: `Bearer ${token}` },
+      };
 
-      const res = await axios.get(`${API}/rideshare/search`, { params });
+      const res = await axios.get(`${API}/rideshare/search`, {
+        params,
+        ...config,
+      });
 
-      console.log("📋 API Response:", res.data);
-      console.log("📋 Trips array:", res.data.trips);
-      console.log("📋 Number of trips:", res.data.trips?.length);
-
-      if (res.data.trips && res.data.trips.length > 0) {
-        console.log("📋 First trip details:", {
-          id: res.data.trips[0]._id,
-          from: res.data.trips[0].fromCity,
-          to: res.data.trips[0].toCity,
-          departureDate: res.data.trips[0].departureDate,
-          price: res.data.trips[0].pricePerSeat,
-          seats: res.data.trips[0].availableSeats,
-        });
-        setDebug({
-          count: res.data.trips.length,
-          sample: res.data.trips[0],
-        });
-      }
-
-      setTrips(res.data.trips || []);
-
-      if (res.data.trips?.length === 0) {
-        toast.info("No trips found. Try different cities or dates.");
+      if (res.data.success) {
+        setTrips(res.data.trips || []);
+        if (res.data.trips?.length === 0) {
+          toast.info("No trips found. Try different cities or dates.");
+        }
+      } else {
+        toast.error(res.data.message || "Search failed");
       }
     } catch (error) {
       console.error("Search error:", error);
-      toast.error(
-        error.response?.data?.message || "Search failed. Please try again.",
-      );
-      setDebug({ error: error.message });
+
+      // ✅ Handle 401 specifically
+      if (error.response?.status === 401) {
+        toast.error("Session expired. Please login again.");
+        localStorage.removeItem("wheelz_token");
+        localStorage.removeItem("wheelz_user");
+        navigate("/login");
+      } else {
+        toast.error(
+          error.response?.data?.message || "Search failed. Please try again.",
+        );
+      }
     } finally {
       setLoading(false);
     }

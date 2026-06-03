@@ -22,10 +22,46 @@ api.interceptors.request.use(
   (error) => Promise.reject(error),
 );
 
+// Update the response interceptor
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
+  async (error) => {
+    const originalRequest = error.config;
+
     console.error("API Error:", error.config?.url, error.message);
+
+    // ✅ If 401 and not already retrying, try to refresh
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+
+      // Try to refresh token (if you have refresh token endpoint)
+      try {
+        const refreshToken = localStorage.getItem("wheelz_refresh_token");
+        if (refreshToken) {
+          const response = await api.post("/auth/refresh-token", {
+            refreshToken,
+          });
+          localStorage.setItem("wheelz_token", response.data.token);
+          originalRequest.headers.Authorization = `Bearer ${response.data.token}`;
+          return api(originalRequest);
+        }
+      } catch (refreshError) {
+        // Refresh failed, logout
+        localStorage.removeItem("wheelz_token");
+        localStorage.removeItem("wheelz_user");
+        window.location.href = "/login";
+        return Promise.reject(error);
+      }
+    }
+
+    // Don't redirect on 401 for specific endpoints
+    if (
+      error.response?.status === 401 &&
+      error.config?.url?.includes("/rideshare")
+    ) {
+      // Just return empty data instead of redirecting
+      return Promise.resolve({ data: { success: false, trips: [] } });
+    }
 
     const message =
       error.response?.data?.message || error.message || "Something went wrong";
@@ -33,7 +69,10 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       localStorage.removeItem("wheelz_token");
       localStorage.removeItem("wheelz_user");
-      window.location.href = "/login";
+      // ✅ Add delay before redirect to avoid race conditions
+      setTimeout(() => {
+        window.location.href = "/login";
+      }, 100);
     } else if (error.response?.status !== 404) {
       toast.error(message);
     }

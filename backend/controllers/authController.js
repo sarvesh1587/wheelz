@@ -73,7 +73,7 @@ exports.register = async (req, res) => {
     const token = jwt.sign(
       { id: user._id, role: user.role },
       process.env.JWT_SECRET || "wheelz_secret",
-      { expiresIn: "30d" },
+      { expiresIn: "90d" },
     );
 
     res.status(201).json({
