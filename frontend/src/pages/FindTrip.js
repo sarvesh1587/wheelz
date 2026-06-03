@@ -1,12 +1,28 @@
 /**
- * FindTrip Page — BlaBlaCar-style search
+ * FindTrip Page — Premium Wheelz Rideshare Search
  * File: frontend/src/pages/FindTrip.js
  */
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
 import toast from "react-hot-toast";
+import {
+  MagnifyingGlassIcon,
+  ArrowsRightLeftIcon,
+  MapPinIcon,
+  CalendarIcon,
+  UserGroupIcon,
+  ShieldCheckIcon,
+  SparklesIcon,
+  BoltIcon,
+  ClockIcon,
+  CurrencyDollarIcon,
+  StarIcon,
+  ArrowRightIcon,
+  PlusIcon,
+} from "@heroicons/react/24/outline";
 
 const API =
   process.env.REACT_APP_API_URL || "https://wheelz-ldq2.onrender.com/api";
@@ -36,6 +52,25 @@ const CITIES = [
   "Lucknow",
 ];
 
+// Animation variants
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.1, delayChildren: 0.2 },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0 },
+};
+
+const cardHover = {
+  rest: { scale: 1, y: 0 },
+  hover: { scale: 1.01, y: -2, transition: { duration: 0.2 } },
+};
+
 export default function FindTrip() {
   const navigate = useNavigate();
   const [form, setForm] = useState({
@@ -48,13 +83,30 @@ export default function FindTrip() {
   const [trips, setTrips] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
+  const [suggestions, setSuggestions] = useState({ from: [], to: [] });
+  const [focusedField, setFocusedField] = useState(null);
+
+  // City autocomplete suggestions
+  const handleCityInput = (value, field) => {
+    setForm((f) => ({ ...f, [field]: value }));
+    if (value.length > 0) {
+      const filtered = CITIES.filter((city) =>
+        city.toLowerCase().includes(value.toLowerCase()),
+      );
+      setSuggestions((f) => ({ ...f, [field]: filtered }));
+    } else {
+      setSuggestions((f) => ({ ...f, [field]: [] }));
+    }
+  };
 
   const handleSearch = async (e) => {
     e.preventDefault();
     if (!form.from || !form.to)
       return toast.error("Please select From and To cities");
+
     setLoading(true);
     setSearched(true);
+
     try {
       const res = await axios.get(`${API}/rideshare/search`, {
         params: {
@@ -67,83 +119,161 @@ export default function FindTrip() {
       });
       setTrips(res.data.trips || []);
     } catch {
-      toast.error("Search failed");
+      toast.error("Search failed. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
-  const swap = () => setForm((f) => ({ ...f, from: f.to, to: f.from }));
+  const swap = () => {
+    setForm((f) => ({ ...f, from: f.to, to: f.from }));
+    toast.success("Routes swapped", {
+      icon: "🔄",
+      style: {
+        background: "#111827",
+        color: "#F9FAFB",
+        border: "1px solid rgba(255,255,255,0.08)",
+      },
+    });
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
-      {/* Hero */}
-      <div className="bg-gradient-to-br from-green-600 via-emerald-600 to-teal-700 text-white py-14">
-        <div className="max-w-4xl mx-auto px-4 text-center">
-          <div className="inline-flex items-center gap-2 bg-white/20 rounded-full px-4 py-1.5 text-sm font-medium mb-4">
-            🚗 BlaBlaCar-style Ride Sharing
-          </div>
-          <h1 className="text-4xl md:text-5xl font-bold mb-3">
-            Find a Shared Trip
-          </h1>
-          <p className="text-green-100 text-lg max-w-lg mx-auto">
-            Travel together, split costs. Safe, affordable, community-driven.
-          </p>
+    <div className="min-h-screen bg-[#0B1120]">
+      {/* Ambient background glow */}
+      <div className="fixed inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-blue-600/5 pointer-events-none" />
+
+      {/* Hero Section */}
+      <div className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 via-blue-800/5 to-transparent" />
+        <div className="absolute top-20 left-10 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-10 right-10 w-96 h-96 bg-blue-600/5 rounded-full blur-3xl" />
+
+        <div className="relative max-w-4xl mx-auto px-4 py-16 text-center">
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <div className="inline-flex items-center gap-2 glass-card rounded-full px-4 py-1.5 text-sm font-medium mb-6">
+              <SparklesIcon className="w-4 h-4 text-blue-400" />
+              <span className="text-blue-300">Premium Ridesharing</span>
+            </div>
+
+            <h1 className="text-5xl md:text-6xl font-bold mb-4 tracking-tight">
+              <span className="text-white">Find Your </span>
+              <span className="bg-gradient-to-r from-blue-400 to-blue-300 bg-clip-text text-transparent">
+                Perfect Ride
+              </span>
+            </h1>
+
+            <p className="text-gray-400 text-lg max-w-lg mx-auto">
+              Connect with verified drivers. Split costs. Travel sustainably.
+              Experience premium carpooling.
+            </p>
+          </motion.div>
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 py-10">
-        {/* Search Form */}
-        <form
+      <div className="relative max-w-5xl mx-auto px-4 pb-16">
+        {/* Search Form Card */}
+        <motion.form
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
           onSubmit={handleSearch}
-          className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 p-6 mb-8"
+          className="glass-card glow-accent rounded-2xl p-8 mb-10"
         >
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                📍 From
-              </label>
-              <select
-                value={form.from}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, from: e.target.value }))
-                }
-                className="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-green-500"
-              >
-                <option value="">Leaving from...</option>
-                {CITIES.map((c) => (
-                  <option key={c}>{c}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Swap button */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            {/* From City */}
             <div className="relative">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                🏁 To
+              <label className="flex items-center gap-2 text-sm font-medium text-gray-400 mb-2">
+                <MapPinIcon className="w-4 h-4 text-blue-400" />
+                From
               </label>
-              <select
-                value={form.to}
-                onChange={(e) => setForm((f) => ({ ...f, to: e.target.value }))}
-                className="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-green-500"
-              >
-                <option value="">Going to...</option>
-                {CITIES.map((c) => (
-                  <option key={c}>{c}</option>
-                ))}
-              </select>
-              <button
-                type="button"
-                onClick={swap}
-                className="absolute right-12 top-7 text-gray-400 hover:text-green-500 text-lg transition-colors"
-              >
-                ⇄
-              </button>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={form.from}
+                  onChange={(e) => handleCityInput(e.target.value, "from")}
+                  onFocus={() => setFocusedField("from")}
+                  onBlur={() => setTimeout(() => setFocusedField(null), 200)}
+                  placeholder="Leaving from..."
+                  className="w-full bg-white/[0.03] border border-[rgba(255,255,255,0.08)] rounded-xl px-4 py-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500/50 focus:bg-white/[0.05] transition-all duration-200"
+                />
+
+                {/* City suggestions dropdown */}
+                {focusedField === "from" && suggestions.from.length > 0 && (
+                  <div className="absolute top-full left-0 right-0 mt-2 glass-card rounded-xl overflow-hidden z-10 border border-[rgba(255,255,255,0.08)]">
+                    {suggestions.from.map((city) => (
+                      <button
+                        key={city}
+                        type="button"
+                        onClick={() => {
+                          setForm((f) => ({ ...f, from: city }));
+                          setSuggestions((f) => ({ ...f, from: [] }));
+                        }}
+                        className="w-full text-left px-4 py-2.5 text-sm text-gray-300 hover:bg-white/[0.05] hover:text-white transition-colors"
+                      >
+                        📍 {city}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
 
+            {/* To City */}
+            <div className="relative">
+              <label className="flex items-center gap-2 text-sm font-medium text-gray-400 mb-2">
+                <MapPinIcon className="w-4 h-4 text-blue-400" />
+                To
+              </label>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={form.to}
+                  onChange={(e) => handleCityInput(e.target.value, "to")}
+                  onFocus={() => setFocusedField("to")}
+                  onBlur={() => setTimeout(() => setFocusedField(null), 200)}
+                  placeholder="Going to..."
+                  className="w-full bg-white/[0.03] border border-[rgba(255,255,255,0.08)] rounded-xl px-4 py-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500/50 focus:bg-white/[0.05] transition-all duration-200"
+                />
+
+                {/* Swap button */}
+                <button
+                  type="button"
+                  onClick={swap}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-lg bg-white/[0.03] border border-[rgba(255,255,255,0.08)] text-gray-400 hover:text-blue-400 hover:border-blue-500/30 transition-all duration-200"
+                >
+                  <ArrowsRightLeftIcon className="w-5 h-5" />
+                </button>
+
+                {/* City suggestions dropdown */}
+                {focusedField === "to" && suggestions.to.length > 0 && (
+                  <div className="absolute top-full left-0 right-0 mt-2 glass-card rounded-xl overflow-hidden z-10 border border-[rgba(255,255,255,0.08)]">
+                    {suggestions.to.map((city) => (
+                      <button
+                        key={city}
+                        type="button"
+                        onClick={() => {
+                          setForm((f) => ({ ...f, to: city }));
+                          setSuggestions((f) => ({ ...f, to: [] }));
+                        }}
+                        className="w-full text-left px-4 py-2.5 text-sm text-gray-300 hover:bg-white/[0.05] hover:text-white transition-colors"
+                      >
+                        📍 {city}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Date */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                📅 Date
+              <label className="flex items-center gap-2 text-sm font-medium text-gray-400 mb-2">
+                <CalendarIcon className="w-4 h-4 text-blue-400" />
+                Date
               </label>
               <input
                 type="date"
@@ -152,23 +282,25 @@ export default function FindTrip() {
                 onChange={(e) =>
                   setForm((f) => ({ ...f, date: e.target.value }))
                 }
-                className="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="w-full bg-white/[0.03] border border-[rgba(255,255,255,0.08)] rounded-xl px-4 py-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500/50 focus:bg-white/[0.05] transition-all duration-200 [color-scheme:dark]"
               />
             </div>
 
+            {/* Seats */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                👥 Seats Needed
+              <label className="flex items-center gap-2 text-sm font-medium text-gray-400 mb-2">
+                <UserGroupIcon className="w-4 h-4 text-blue-400" />
+                Seats Needed
               </label>
               <select
                 value={form.seats}
                 onChange={(e) =>
                   setForm((f) => ({ ...f, seats: e.target.value }))
                 }
-                className="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="w-full bg-white/[0.03] border border-[rgba(255,255,255,0.08)] rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500/50 focus:bg-white/[0.05] transition-all duration-200"
               >
                 {[1, 2, 3, 4].map((n) => (
-                  <option key={n} value={n}>
+                  <option key={n} value={n} className="bg-[#111827]">
                     {n} seat{n > 1 ? "s" : ""}
                   </option>
                 ))}
@@ -176,179 +308,313 @@ export default function FindTrip() {
             </div>
           </div>
 
-          <div className="flex items-center gap-6 mb-4">
-            <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={form.womenOnly}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, womenOnly: e.target.checked }))
-                }
-                className="rounded accent-green-600"
+          {/* Women Only Toggle */}
+          <div className="flex items-center gap-3 mb-6">
+            <button
+              type="button"
+              onClick={() =>
+                setForm((f) => ({ ...f, womenOnly: !f.womenOnly }))
+              }
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 ${
+                form.womenOnly ? "bg-blue-500" : "bg-white/[0.08]"
+              }`}
+            >
+              <span
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-200 ${
+                  form.womenOnly ? "translate-x-6" : "translate-x-1"
+                }`}
               />
-              👩 Women-only trips only
+            </button>
+            <label className="flex items-center gap-2 text-sm text-gray-400 cursor-pointer">
+              <ShieldCheckIcon className="w-4 h-4 text-pink-400" />
+              Women-only trips only
             </label>
           </div>
 
-          <button
+          {/* Search Button */}
+          <motion.button
             type="submit"
             disabled={loading}
-            className="w-full bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white font-semibold py-3.5 rounded-xl text-base transition-colors flex items-center justify-center gap-2"
+            whileHover={{ scale: 1.01 }}
+            whileTap={{ scale: 0.99 }}
+            className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 disabled:from-gray-600 disabled:to-gray-700 text-white font-semibold py-3.5 rounded-xl text-base transition-all duration-200 flex items-center justify-center gap-2 shadow-lg shadow-blue-500/25"
           >
             {loading ? (
               <>
-                <span className="animate-spin">🔄</span> Searching...
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                >
+                  <SparklesIcon className="w-5 h-5" />
+                </motion.div>
+                Searching...
               </>
             ) : (
-              "🔍 Search Trips"
+              <>
+                <MagnifyingGlassIcon className="w-5 h-5" />
+                Search Trips
+              </>
             )}
-          </button>
-        </form>
+          </motion.button>
+        </motion.form>
 
-        {/* Results */}
-        {searched && (
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold text-gray-900 dark:text-white">
-                {trips.length > 0
-                  ? `${trips.length} trip${trips.length > 1 ? "s" : ""} found`
-                  : "No trips found"}
-              </h2>
-              {trips.length > 0 && (
-                <p className="text-sm text-gray-500">
-                  {form.from} → {form.to}
-                </p>
-              )}
-            </div>
-
-            {trips.length === 0 ? (
-              <div className="text-center py-16 bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800">
-                <div className="text-5xl mb-4">🚗</div>
-                <p className="text-lg font-medium text-gray-700 dark:text-gray-300">
-                  No trips found
-                </p>
-                <p className="text-sm text-gray-500 mt-1 mb-6">
-                  Be the first to offer this route!
-                </p>
-                <button
-                  onClick={() => navigate("/offer-trip")}
-                  className="bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-2.5 rounded-xl transition-colors"
-                >
-                  + Offer a Trip
-                </button>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {trips.map((trip) => (
-                  <TripCard
-                    key={trip._id}
-                    trip={trip}
-                    onBook={() => navigate(`/rideshare/${trip._id}`)}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* CTA when not searched yet */}
-        {!searched && (
-          <div className="text-center py-8">
-            <p className="text-gray-500 dark:text-gray-400 text-sm mb-4">
-              Are you driving? Offer seats on your trip
-            </p>
-            <button
-              onClick={() => navigate("/offer-trip")}
-              className="border border-green-600 text-green-600 dark:text-green-400 font-semibold px-6 py-2.5 rounded-xl hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors"
+        {/* Results Section */}
+        <AnimatePresence>
+          {searched && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.4 }}
             >
-              + Offer a Trip
-            </button>
-          </div>
+              {/* Results Header */}
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-xl font-bold text-white">
+                    {trips.length > 0
+                      ? `${trips.length} Trip${trips.length > 1 ? "s" : ""} Available`
+                      : "No Trips Found"}
+                  </h2>
+                  {trips.length > 0 && (
+                    <p className="text-sm text-gray-400 mt-1">
+                      {form.from}{" "}
+                      <ArrowRightIcon className="inline w-3 h-3 mx-1" />{" "}
+                      {form.to}
+                    </p>
+                  )}
+                </div>
+                {trips.length > 0 && (
+                  <span className="text-xs text-gray-500 glass-card rounded-lg px-3 py-1.5">
+                    Updated just now
+                  </span>
+                )}
+              </div>
+
+              {/* Trip Cards */}
+              {trips.length === 0 ? (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="text-center py-16 glass-card rounded-2xl"
+                >
+                  <motion.div
+                    animate={{ y: [0, -10, 0] }}
+                    transition={{ duration: 3, repeat: Infinity }}
+                    className="text-6xl mb-6"
+                  >
+                    🚗
+                  </motion.div>
+                  <p className="text-lg font-medium text-white mb-2">
+                    No trips found on this route
+                  </p>
+                  <p className="text-sm text-gray-400 mb-6 max-w-md mx-auto">
+                    Be the first to offer this route and earn money while
+                    traveling.
+                  </p>
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => navigate("/offer-trip")}
+                    className="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-6 py-3 rounded-xl transition-colors inline-flex items-center gap-2 shadow-lg shadow-blue-500/25"
+                  >
+                    <PlusIcon className="w-5 h-5" />
+                    Offer a Trip
+                  </motion.button>
+                </motion.div>
+              ) : (
+                <motion.div
+                  variants={containerVariants}
+                  initial="hidden"
+                  animate="visible"
+                  className="space-y-4"
+                >
+                  {trips.map((trip, index) => (
+                    <motion.div
+                      key={trip._id}
+                      variants={itemVariants}
+                      custom={index}
+                    >
+                      <TripCard
+                        trip={trip}
+                        onBook={() => navigate(`/rideshare/${trip._id}`)}
+                      />
+                    </motion.div>
+                  ))}
+                </motion.div>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* CTA for first-time visitors */}
+        {!searched && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+            className="text-center py-8"
+          >
+            <p className="text-gray-400 text-sm mb-4">
+              Driving somewhere? Offer seats and earn on your journey
+            </p>
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => navigate("/offer-trip")}
+              className="glass-card border-[rgba(255,255,255,0.12)] text-blue-400 font-semibold px-6 py-3 rounded-xl hover:border-blue-500/30 hover:text-blue-300 transition-all duration-200 inline-flex items-center gap-2"
+            >
+              <PlusIcon className="w-5 h-5" />
+              Offer a Trip
+            </motion.button>
+          </motion.div>
         )}
       </div>
     </div>
   );
 }
 
+// Premium Trip Card Component
 function TripCard({ trip, onBook }) {
   const depDate = new Date(trip.departureDate);
+  const isToday = depDate.toDateString() === new Date().toDateString();
+  const isTomorrow =
+    depDate.toDateString() === new Date(Date.now() + 86400000).toDateString();
+
+  const getDateLabel = () => {
+    if (isToday) return "Today";
+    if (isTomorrow) return "Tomorrow";
+    return depDate.toLocaleDateString("en-IN", {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+    });
+  };
+
   return (
-    <div
-      className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-5 hover:shadow-md transition-shadow cursor-pointer"
+    <motion.div
+      variants={cardHover}
+      initial="rest"
+      whileHover="hover"
       onClick={onBook}
+      className="glass-card rounded-2xl p-6 cursor-pointer group"
     >
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex-1">
-          {/* Route */}
-          <div className="flex items-center gap-3 mb-3">
-            <div className="text-center">
-              <p className="font-bold text-gray-900 dark:text-white">
+      <div className="flex items-start justify-between gap-6">
+        {/* Left - Route Info */}
+        <div className="flex-1 min-w-0">
+          {/* Route Timeline */}
+          <div className="flex items-center gap-4 mb-4">
+            {/* Departure */}
+            <div className="text-center flex-shrink-0">
+              <p className="text-xl font-bold text-white font-mono">
                 {trip.departureTime}
               </p>
-              <p className="text-sm text-gray-500">{trip.fromCity}</p>
-            </div>
-            <div className="flex-1 flex items-center gap-2">
-              <div className="flex-1 border-t-2 border-dashed border-gray-200 dark:border-gray-700" />
-              <span className="text-xs text-gray-400">
-                {trip.estimatedDuration || "~"}
-              </span>
-              <div className="flex-1 border-t-2 border-dashed border-gray-200 dark:border-gray-700" />
-            </div>
-            <div className="text-center">
-              <p className="font-bold text-gray-900 dark:text-white">
-                {trip.estimatedArrival || "—"}
+              <p className="text-xs text-gray-400 mt-1 font-medium">
+                {trip.fromCity}
               </p>
-              <p className="text-sm text-gray-500">{trip.toCity}</p>
+            </div>
+
+            {/* Route Line */}
+            <div className="flex-1 flex items-center px-2">
+              <div className="flex-1 border-t border-[rgba(255,255,255,0.08)] relative">
+                <div className="absolute -top-1 left-0 w-2 h-2 rounded-full bg-blue-500" />
+              </div>
+              <div className="px-3">
+                <ClockIcon className="w-4 h-4 text-gray-600" />
+              </div>
+              <div className="flex-1 border-t border-[rgba(255,255,255,0.08)] relative">
+                <div className="absolute -top-1 right-0 w-2 h-2 rounded-full bg-blue-500" />
+              </div>
+            </div>
+
+            {/* Arrival */}
+            <div className="text-center flex-shrink-0">
+              <p className="text-xl font-bold text-white font-mono">
+                {trip.estimatedArrival || "--:--"}
+              </p>
+              <p className="text-xs text-gray-400 mt-1 font-medium">
+                {trip.toCity}
+              </p>
             </div>
           </div>
 
-          {/* Date + badges */}
-          <div className="flex flex-wrap gap-2 text-xs">
-            <span className="bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 px-2 py-1 rounded-lg">
-              📅 {depDate.toDateString()}
+          {/* Trip Badges */}
+          <div className="flex flex-wrap gap-2">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/[0.03] border border-[rgba(255,255,255,0.08)] text-xs text-gray-400">
+              <CalendarIcon className="w-3 h-3 text-blue-400" />
+              {getDateLabel()}
             </span>
-            <span className="bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 px-2 py-1 rounded-lg">
-              💺 {trip.availableSeats} seat
-              {trip.availableSeats !== 1 ? "s" : ""} left
+
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/[0.03] border border-[rgba(255,255,255,0.08)] text-xs text-gray-400">
+              <UserGroupIcon className="w-3 h-3 text-blue-400" />
+              {trip.availableSeats} seat{trip.availableSeats !== 1 ? "s" : ""}{" "}
+              left
             </span>
+
             {trip.womenOnly && (
-              <span className="bg-pink-50 dark:bg-pink-900/20 text-pink-600 dark:text-pink-400 px-2 py-1 rounded-lg border border-pink-100 dark:border-pink-800">
-                👩 Women only
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-pink-500/10 border border-pink-500/20 text-xs text-pink-400">
+                <ShieldCheckIcon className="w-3 h-3" />
+                Women only
               </span>
             )}
+
             {trip.instantBook && (
-              <span className="bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 px-2 py-1 rounded-lg">
-                ⚡ Instant book
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-500/10 border border-blue-500/20 text-xs text-blue-400">
+                <BoltIcon className="w-3 h-3" />
+                Instant book
               </span>
             )}
-            <span className="bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 px-2 py-1 rounded-lg capitalize">
-              {trip.luggageAllowed} luggage
+
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/[0.03] border border-[rgba(255,255,255,0.08)] text-xs text-gray-400 capitalize">
+              {trip.luggageAllowed || "Medium"} luggage
             </span>
+
+            {trip.driver?.rating && (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20 text-xs text-amber-400">
+                <StarIcon className="w-3 h-3" />
+                {trip.driver.rating.toFixed(1)}
+              </span>
+            )}
           </div>
         </div>
 
-        {/* Driver + Price */}
+        {/* Right - Price & Driver */}
         <div className="text-right flex-shrink-0">
-          <p className="text-2xl font-bold text-green-600 dark:text-green-400">
-            ₹{trip.pricePerSeat?.toLocaleString()}
-          </p>
-          <p className="text-xs text-gray-400 mb-3">per seat</p>
+          {/* Price */}
+          <div className="mb-4">
+            <p className="text-3xl font-bold text-white font-mono">
+              ₹{trip.pricePerSeat?.toLocaleString()}
+            </p>
+            <p className="text-xs text-gray-500 mt-0.5">per seat</p>
+          </div>
 
-          <div className="flex items-center gap-2 justify-end">
-            <div className="w-8 h-8 bg-gradient-to-br from-amber-400 to-amber-500 rounded-full flex items-center justify-center text-xs font-bold text-white">
-              {trip.driver?.name?.[0]?.toUpperCase() || "D"}
-            </div>
-            <div className="text-left">
-              <p className="text-xs font-medium text-gray-700 dark:text-gray-300">
-                {trip.driver?.name?.split(" ")[0]}
+          {/* Driver Info */}
+          <div className="flex items-center gap-3 justify-end">
+            <div className="text-right">
+              <p className="text-sm font-medium text-white">
+                {trip.driver?.name || "Driver"}
               </p>
-              <p className="text-xs text-gray-400">
+              <p className="text-xs text-gray-500">
                 {trip.driver?.ridesCompleted || 0} rides
               </p>
             </div>
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-sm font-bold text-white ring-2 ring-blue-500/20">
+              {trip.driver?.name?.[0]?.toUpperCase() || "D"}
+            </div>
           </div>
+
+          {/* View Details CTA */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileHover={{ opacity: 1 }}
+            className="mt-3 opacity-0 group-hover:opacity-100 transition-opacity"
+          >
+            <span className="inline-flex items-center gap-1 text-xs text-blue-400">
+              View Details
+              <ArrowRightIcon className="w-3 h-3" />
+            </span>
+          </motion.div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
