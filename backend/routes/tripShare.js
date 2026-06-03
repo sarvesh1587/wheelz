@@ -1,5 +1,5 @@
 /**
- * TripShare Routes - CORRECTED ORDER
+ * TripShare Routes - FIXED ORDER
  * File: backend/routes/tripShare.js
  */
 
@@ -15,11 +15,11 @@ const {
   getTripRequests,
   requestSeat,
   respondToRequest,
+  cancelRequest,
   sendMessage,
   getMessages,
   completeTrip,
   cancelTrip,
-  cancelRequest,
   rateUser,
   reportRide,
   getDriverEarnings,
@@ -31,34 +31,34 @@ const { protect, optionalAuth } = require("../middleware/auth");
 // ── Public ───────────────────────────────────────────────────────────────────
 router.get("/search", optionalAuth, searchTrips);
 
-// ── Named routes FIRST (before /:id) ─────────────────────────────────────────
+// ── IMPORTANT: Named routes FIRST before any /:param routes ─────────────────
 router.get("/my/trips", protect, getMyTrips);
 router.get("/my/rides", protect, getMyRides);
 router.get("/earnings/me", protect, getDriverEarnings);
 router.get("/driver/requests", protect, getDriverRequests);
 
-// ── Create trip ───────────────────────────────────────────────────────────────
+// ── Create trip ─────────────────────────────────────────────────────────────
 router.post("/", protect, createTrip);
 
-// ── Seat request ──────────────────────────────────────────────────────────────
+// ── Seat request ────────────────────────────────────────────────────────────
 router.post("/request", protect, requestSeat);
 
-// ── Request-specific routes (these MUST come before /:tripId and /:id) ────────
+// ── Request-specific routes (MUST be before /:tripId and /:id) ──────────────
 router.put("/request/:requestId/respond", protect, respondToRequest);
 router.put("/request/:requestId/cancel", protect, cancelRequest);
-router.post("/request/:requestId/pay", protect, createPaymentOrder);
+router.post("/request/:requestId/pay", protect, createPaymentOrder); // ← THIS IS YOUR 404
 router.post("/request/:requestId/verify", protect, verifyPayment);
 router.post("/request/:requestId/message", protect, sendMessage);
 router.get("/request/:requestId/messages", protect, getMessages);
 router.post("/request/:requestId/rate", protect, rateUser);
 router.post("/request/:requestId/report", protect, reportRide);
 
-// ── Trip-specific routes (these MUST come before /:id) ────────────────────────
+// ── Trip-specific routes ────────────────────────────────────────────────────
 router.get("/:tripId/requests", protect, getTripRequests);
 router.put("/:tripId/complete", protect, completeTrip);
 router.put("/:tripId/cancel", protect, cancelTrip);
 
-// ── Generic get — MUST BE LAST ────────────────────────────────────────────────
+// ── Generic get — MUST BE ABSOLUTE LAST ─────────────────────────────────────
 router.get("/:id", optionalAuth, getTrip);
 
 module.exports = router;
