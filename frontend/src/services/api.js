@@ -112,6 +112,18 @@ export const rideShareAPI = {
   createPayment: (requestId) => api.post(`/rideshare/request/${requestId}/pay`),
   verifyPayment: (data) =>
     api.post(`/rideshare/request/${data.requestId}/verify`, data),
+  // Add these inside rideShareAPI object in frontend/src/services/api.js
+
+  cancelRequest: (requestId) =>
+    api.put(`/rideshare/request/${requestId}/cancel`),
+  sendMessage: (requestId, data) =>
+    api.post(`/rideshare/request/${requestId}/message`, data),
+  getMessages: (requestId) =>
+    api.get(`/rideshare/request/${requestId}/messages`),
+  rateUser: (requestId, data) =>
+    api.post(`/rideshare/request/${requestId}/rate`, data),
+  reportRide: (requestId, data) =>
+    api.post(`/rideshare/request/${requestId}/report`, data),
 };
 export const vehicleAPI = {
   getAll: (params) => api.get("/vehicles", { params }),

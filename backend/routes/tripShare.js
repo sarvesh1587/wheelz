@@ -35,14 +35,12 @@ router.get("/driver/requests", protect, getDriverRequests);
 
 // ── Create trip ───────────────────────────────────────────────────────────────
 router.post("/", protect, createTrip);
-
 // ── Seat request ──────────────────────────────────────────────────────────────
 router.post("/request", protect, requestSeat);
 router.put("/request/:requestId/respond", protect, respondToRequest);
 router.post("/request/:requestId/message", protect, sendMessage);
 router.get("/request/:requestId/messages", protect, getMessages);
 router.post("/request/:requestId/rate", protect, rateUser);
-
 // ── Trip actions ──────────────────────────────────────────────────────────────
 router.get("/:tripId/requests", protect, getTripRequests);
 router.put("/:tripId/complete", protect, completeTrip);
@@ -52,5 +50,4 @@ router.post("/request/:requestId/verify", protect, verifyPayment);
 
 // ── Generic get — MUST BE LAST ────────────────────────────────────────────────
 router.get("/:id", optionalAuth, getTrip);
-
 module.exports = router;
