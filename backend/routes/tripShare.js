@@ -47,7 +47,8 @@ router.post("/request/:requestId/rate", protect, rateUser);
 router.get("/:tripId/requests", protect, getTripRequests);
 router.put("/:tripId/complete", protect, completeTrip);
 router.put("/:tripId/cancel", protect, cancelTrip);
-
+router.post("/request/:requestId/pay", protect, createPaymentOrder);
+router.post("/request/:requestId/verify", protect, verifyPayment);
 // ── Generic get — MUST BE LAST ────────────────────────────────────────────────
 router.get("/:id", optionalAuth, getTrip);
 

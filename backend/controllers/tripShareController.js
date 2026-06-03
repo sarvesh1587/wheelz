@@ -692,3 +692,126 @@ exports.getDriverEarnings = async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 };
+const Razorpay = require("razorpay");
+const crypto = require("crypto");
+
+const razorpay = new Razorpay({
+  key_id: process.env.RAZORPAY_KEY_ID,
+  key_secret: process.env.RAZORPAY_KEY_SECRET,
+});
+
+// ─── CREATE PAYMENT ORDER FOR RIDE SHARE ─────────────────────────────────────
+exports.createPaymentOrder = async (req, res) => {
+  try {
+    const { requestId } = req.params;
+
+    const request = await TripRequest.findById(requestId).populate("trip");
+    if (!request) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Request not found" });
+    }
+
+    // Verify the passenger is making the payment
+    if (request.passenger.toString() !== req.user._id.toString()) {
+      return res
+        .status(403)
+        .json({ success: false, message: "Not authorized" });
+    }
+
+    if (request.status !== "approved") {
+      return res
+        .status(400)
+        .json({ success: false, message: "Request not approved yet" });
+    }
+
+    if (request.paymentStatus === "paid") {
+      return res
+        .status(400)
+        .json({ success: false, message: "Payment already completed" });
+    }
+
+    // Convert amount to paise
+    const amountInPaise = Math.round(request.totalAmount * 100);
+
+    console.log("💰 Creating Razorpay order:", {
+      requestId,
+      amountInRupees: request.totalAmount,
+      amountInPaise,
+    });
+
+    const options = {
+      amount: amountInPaise,
+      currency: "INR",
+      receipt: `ride_${requestId}_${Date.now()}`,
+      payment_capture: 1,
+      notes: {
+        requestId: requestId.toString(),
+        type: "ride_share",
+      },
+    };
+
+    const order = await razorpay.orders.create(options);
+
+    request.razorpayOrderId = order.id;
+    await request.save();
+
+    res.json({
+      success: true,
+      orderId: order.id,
+      amount: order.amount,
+      currency: order.currency,
+      keyId: process.env.RAZORPAY_KEY_ID,
+    });
+  } catch (err) {
+    console.error("Create payment order error:", err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// ─── VERIFY PAYMENT ──────────────────────────────────────────────────────────
+exports.verifyPayment = async (req, res) => {
+  try {
+    const { requestId, razorpayOrderId, razorpayPaymentId, razorpaySignature } =
+      req.body;
+
+    const body = razorpayOrderId + "|" + razorpayPaymentId;
+    const expectedSignature = crypto
+      .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+      .update(body.toString())
+      .digest("hex");
+
+    if (expectedSignature !== razorpaySignature) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid signature" });
+    }
+
+    const request = await TripRequest.findByIdAndUpdate(
+      requestId,
+      {
+        paymentStatus: "paid",
+        razorpayPaymentId,
+        paidAt: new Date(),
+      },
+      { new: true },
+    )
+      .populate("trip")
+      .populate("passenger", "name email phone");
+
+    // Update trip available seats
+    const trip = await TripShare.findById(request.trip._id);
+    trip.availableSeats -= request.seatsRequested;
+    if (trip.availableSeats === 0) trip.status = "full";
+    await trip.save();
+
+    res.json({
+      success: true,
+      message: "Payment verified! Trip confirmed.",
+      request,
+    });
+  } catch (err) {
+    console.error("Verify payment error:", err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+};

@@ -109,6 +109,9 @@ export const rideShareAPI = {
   completeTrip: (tripId) => api.put(`/rideshare/${tripId}/complete`),
   cancelTrip: (tripId, reason) =>
     api.put(`/rideshare/${tripId}/cancel`, { reason }),
+  createPayment: (requestId) => api.post(`/rideshare/request/${requestId}/pay`),
+  verifyPayment: (data) =>
+    api.post(`/rideshare/request/${data.requestId}/verify`, data),
 };
 export const vehicleAPI = {
   getAll: (params) => api.get("/vehicles", { params }),
