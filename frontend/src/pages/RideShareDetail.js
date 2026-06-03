@@ -33,17 +33,32 @@ export default function RideShareDetail() {
   useEffect(() => {
     fetchTripDetails();
   }, [id]);
-
   const fetchTripDetails = async () => {
     try {
       const tripRes = await rideShareAPI.getOne(id);
       setTrip(tripRes.data.trip);
 
-      try {
-        const requestsRes = await rideShareAPI.getTripRequests(id);
-        setRequests(requestsRes.data.requests || []);
-      } catch (err) {
-        setRequests([]);
+      // Only fetch requests if user is driver
+      if (tripRes.data.trip?.driver?._id === user?._id) {
+        try {
+          const requestsRes = await rideShareAPI.getTripRequests(id);
+          setRequests(requestsRes.data.requests || []);
+        } catch (err) {
+          console.log("Cannot fetch requests - user may not be driver");
+          setRequests([]);
+        }
+      } else {
+        // Passenger - check their own request status
+        try {
+          const requestsRes = await rideShareAPI.getTripRequests(id);
+          const myReq = requestsRes.data.requests?.find(
+            (r) => r.passenger?._id === user?._id,
+          );
+          if (myReq) setRequests([myReq]);
+          else setRequests([]);
+        } catch (err) {
+          setRequests([]);
+        }
       }
     } catch (error) {
       console.error("Error fetching trip details:", error);
@@ -53,6 +68,23 @@ export default function RideShareDetail() {
     }
   };
 
+  const handleRequestSeat = async () => {
+    try {
+      const response = await rideShareAPI.requestSeat({
+        tripId: id,
+        seatsRequested: 1,
+      });
+      if (response.data.success) {
+        toast.success("Request sent to driver!");
+        fetchTripDetails();
+      }
+    } catch (error) {
+      console.error("Request error:", error);
+      const errorMsg =
+        error.response?.data?.message || "Failed to send request";
+      toast.error(errorMsg);
+    }
+  };
   const handleApprove = async (requestId) => {
     setProcessingId(requestId);
     try {

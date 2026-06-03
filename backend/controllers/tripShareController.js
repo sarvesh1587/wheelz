@@ -351,95 +351,133 @@ exports.getDriverRequests = async (req, res) => {
 };
 
 // ─── GET REQUESTS FOR A SPECIFIC TRIP ────────────────────────────────────────
+// ─── GET REQUESTS FOR A SPECIFIC TRIP ────────────────────────────────────────
 exports.getTripRequests = async (req, res) => {
   try {
-    const trip = await TripShare.findById(req.params.tripId);
-    if (!trip)
+    const { tripId } = req.params;
+
+    console.log("🔍 Fetching requests for trip:", tripId);
+    console.log("👤 User ID:", req.user._id);
+
+    // First check if the trip exists
+    const trip = await TripShare.findById(tripId);
+    if (!trip) {
       return res
         .status(404)
         .json({ success: false, message: "Trip not found" });
+    }
 
+    console.log("🚗 Trip driver:", trip.driver);
+    console.log("🔑 Current user:", req.user._id);
+
+    // Allow if user is driver OR admin
     if (
       trip.driver.toString() !== req.user._id.toString() &&
       req.user.role !== "admin"
     ) {
-      return res
-        .status(403)
-        .json({ success: false, message: "Not authorized" });
+      console.log("❌ Unauthorized - User is not the driver");
+      return res.status(403).json({
+        success: false,
+        message: "Not authorized to view these requests",
+      });
     }
 
-    const requests = await TripRequest.find({ trip: req.params.tripId })
-      .populate("passenger", "name email phone avatar")
+    const requests = await TripRequest.find({ trip: tripId })
+      .populate("passenger", "name email phone")
       .sort({ createdAt: -1 });
+
+    console.log(`✅ Found ${requests.length} requests`);
 
     res.json({ success: true, requests });
   } catch (err) {
+    console.error("Get trip requests error:", err);
     res.status(500).json({ success: false, message: err.message });
   }
 };
 
 // ─── REQUEST SEAT ────────────────────────────────────────────────────────────
+// ─── REQUEST SEAT ────────────────────────────────────────────────────────────
 exports.requestSeat = async (req, res) => {
   try {
     const { tripId, seatsRequested = 1, message } = req.body;
 
-    const trip = await TripShare.findById(tripId).populate(
-      "driver",
-      "name email",
-    );
-    if (!trip)
+    console.log("📝 Request seat:", {
+      tripId,
+      seatsRequested,
+      userId: req.user._id,
+    });
+
+    if (!tripId) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Trip ID is required" });
+    }
+
+    const trip = await TripShare.findById(tripId);
+    if (!trip) {
       return res
         .status(404)
         .json({ success: false, message: "Trip not found" });
-    if (trip.status !== "active")
-      return res
-        .status(400)
-        .json({ success: false, message: "Trip not available" });
-    if (trip.driver._id.toString() === req.user._id.toString()) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Cannot join your own trip" });
     }
+
+    if (trip.status !== "active") {
+      return res
+        .status(400)
+        .json({ success: false, message: "Trip is not available for booking" });
+    }
+
+    if (trip.driver.toString() === req.user._id.toString()) {
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: "You cannot request a seat on your own trip",
+        });
+    }
+
     if (trip.availableSeats < seatsRequested) {
       return res
         .status(400)
-        .json({ success: false, message: "Not enough seats available" });
+        .json({
+          success: false,
+          message: `Only ${trip.availableSeats} seat(s) available`,
+        });
     }
 
-    const existing = await TripRequest.findOne({
+    // Check for existing request
+    const existingRequest = await TripRequest.findOne({
       trip: tripId,
       passenger: req.user._id,
       status: { $in: ["pending", "approved"] },
     });
-    if (existing)
-      return res
-        .status(400)
-        .json({ success: false, message: "Request already exists" });
 
-    const totalAmount = trip.pricePerSeat * parseInt(seatsRequested);
+    if (existingRequest) {
+      return res.status(400).json({
+        success: false,
+        message: `You already have a ${existingRequest.status} request for this trip`,
+      });
+    }
+
+    const totalAmount = trip.pricePerSeat * seatsRequested;
+
     const request = await TripRequest.create({
       trip: tripId,
       passenger: req.user._id,
       seatsRequested: parseInt(seatsRequested),
       message: message || "",
       totalAmount,
-      status: trip.instantBook ? "approved" : "pending",
+      status: "pending",
     });
 
-    if (trip.instantBook) {
-      trip.availableSeats -= parseInt(seatsRequested);
-      if (trip.availableSeats === 0) trip.status = "full";
-      await trip.save();
-    }
+    console.log("✅ Request created:", request._id);
 
     res.status(201).json({
       success: true,
       request,
-      message: trip.instantBook
-        ? "Seat booked instantly!"
-        : "Request sent to driver!",
+      message: "Request sent to driver successfully!",
     });
   } catch (err) {
+    console.error("Request seat error:", err);
     res.status(500).json({ success: false, message: err.message });
   }
 };
