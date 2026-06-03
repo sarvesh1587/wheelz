@@ -36,13 +36,18 @@ export default function RideShareDetail() {
 
   const fetchTripDetails = async () => {
     try {
+      // Fetch trip details
       const tripRes = await rideShareAPI.getOne(id);
+      console.log("Trip data:", tripRes.data);
       setTrip(tripRes.data.trip);
 
+      // Fetch all requests for this trip
       try {
         const requestsRes = await rideShareAPI.getTripRequests(id);
+        console.log("Requests data:", requestsRes.data);
         setRequests(requestsRes.data.requests || []);
       } catch (err) {
+        console.log("No requests found:", err);
         setRequests([]);
       }
     } catch (error) {
@@ -82,12 +87,10 @@ export default function RideShareDetail() {
   const initiatePayment = async (requestId, amount) => {
     setProcessingPayment(true);
     try {
-      // Load Razorpay script
       const script = document.createElement("script");
       script.src = "https://checkout.razorpay.com/v1/checkout.js";
       script.onload = async () => {
         try {
-          // Create order on backend
           const orderRes = await rideShareAPI.createPayment(requestId);
           const orderData = orderRes.data;
 
@@ -100,7 +103,6 @@ export default function RideShareDetail() {
             order_id: orderData.orderId,
             handler: async (response) => {
               try {
-                // Verify payment
                 await rideShareAPI.verifyPayment({
                   requestId,
                   razorpayOrderId: response.razorpay_order_id,
@@ -242,66 +244,155 @@ export default function RideShareDetail() {
           </div>
         )}
 
-        {/* Driver Section - Pending Requests */}
-        {isDriver && pendingRequests.length > 0 && (
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 mb-6">
-            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <UserGroupIcon className="w-5 h-5 text-amber-500" /> Pending
-              Requests ({pendingRequests.length})
-            </h2>
-            {pendingRequests.map((req) => (
-              <div key={req._id} className="border rounded-xl p-4 mb-3">
-                <div className="flex flex-wrap justify-between items-center gap-4">
-                  <div>
-                    <p className="font-medium">{req.passenger?.name}</p>
-                    <p className="text-xs text-gray-500">
-                      {req.seatsRequested} seat(s) •{" "}
-                      {req.message && `"${req.message}"`}
-                    </p>
+        {/* ✅ DRIVER SECTION - PASSENGER DETAILS */}
+        {isDriver && (
+          <>
+            {/* Pending Requests */}
+            {pendingRequests.length > 0 && (
+              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 mb-6">
+                <h2 className="text-lg font-semibold mb-4 flex items-center gap-2 text-amber-600">
+                  <UserGroupIcon className="w-5 h-5" /> Pending Requests (
+                  {pendingRequests.length})
+                </h2>
+                {pendingRequests.map((req) => (
+                  <div
+                    key={req._id}
+                    className="border border-gray-200 dark:border-gray-700 rounded-xl p-4 mb-3"
+                  >
+                    <div className="flex flex-wrap justify-between items-start gap-4">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-amber-100 dark:bg-amber-900/30 rounded-full flex items-center justify-center text-amber-600 font-bold">
+                            {req.passenger?.name?.[0]?.toUpperCase() || "P"}
+                          </div>
+                          <div>
+                            <p className="font-semibold text-gray-900 dark:text-white">
+                              {req.passenger?.name || "Passenger"}
+                            </p>
+                            <p className="text-xs text-gray-500 flex items-center gap-1">
+                              <EnvelopeIcon className="w-3 h-3" />{" "}
+                              {req.passenger?.email || "Email hidden"}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="mt-2">
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                            🎫 {req.seatsRequested} seat(s) requested
+                          </p>
+                          {req.message && (
+                            <p className="text-sm text-gray-500 italic mt-1">
+                              💬 "{req.message}"
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleApprove(req._id)}
+                          disabled={processingId === req._id}
+                          className="px-4 py-1.5 bg-green-500 hover:bg-green-600 text-white rounded-lg text-sm"
+                        >
+                          Approve
+                        </button>
+                        <button
+                          onClick={() => handleReject(req._id)}
+                          disabled={processingId === req._id}
+                          className="px-4 py-1.5 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm"
+                        >
+                          Reject
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => handleApprove(req._id)}
-                      disabled={processingId === req._id}
-                      className="px-4 py-1.5 bg-green-500 text-white rounded-lg text-sm"
-                    >
-                      Approve
-                    </button>
-                    <button
-                      onClick={() => handleReject(req._id)}
-                      disabled={processingId === req._id}
-                      className="px-4 py-1.5 bg-red-500 text-white rounded-lg text-sm"
-                    >
-                      Reject
-                    </button>
-                  </div>
-                </div>
+                ))}
               </div>
-            ))}
-          </div>
+            )}
+
+            {/* Approved Passengers */}
+            {approvedRequests.length > 0 && (
+              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 mb-6">
+                <h2 className="text-lg font-semibold mb-4 flex items-center gap-2 text-green-600">
+                  <CheckCircleIcon className="w-5 h-5" /> Approved Passengers (
+                  {approvedRequests.length})
+                </h2>
+                {approvedRequests.map((req) => (
+                  <div
+                    key={req._id}
+                    className="border border-gray-200 dark:border-gray-700 rounded-xl p-4 mb-3"
+                  >
+                    <div className="flex flex-wrap justify-between items-start gap-4">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center text-green-600 font-bold">
+                            {req.passenger?.name?.[0]?.toUpperCase() || "P"}
+                          </div>
+                          <div>
+                            <p className="font-semibold text-gray-900 dark:text-white">
+                              {req.passenger?.name || "Passenger"}
+                            </p>
+                            <p className="text-xs text-gray-500 flex items-center gap-1">
+                              <EnvelopeIcon className="w-3 h-3" />{" "}
+                              {req.passenger?.email}
+                            </p>
+                            <p className="text-xs text-gray-500 flex items-center gap-1 mt-1">
+                              <PhoneIcon className="w-3 h-3" />{" "}
+                              {req.passenger?.phone || "Not available"}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="mt-2">
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                            🎫 {req.seatsRequested} seat(s)
+                          </p>
+                          <p
+                            className={`text-xs mt-1 inline-block px-2 py-0.5 rounded-full ${req.paymentStatus === "paid" ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}
+                          >
+                            {req.paymentStatus === "paid"
+                              ? "Payment Received ✅"
+                              : "Payment Pending ⏳"}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* No Requests Message */}
+            {pendingRequests.length === 0 && approvedRequests.length === 0 && (
+              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 mb-6 text-center">
+                <UserGroupIcon className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  No Requests Yet
+                </h3>
+                <p className="text-gray-500">
+                  Share this trip link with potential passengers
+                </p>
+              </div>
+            )}
+          </>
         )}
 
-        {/* ✅ PAYMENT SECTION - Passenger View */}
+        {/* Payment Section - Passenger View */}
         {!isDriver && isApproved && !isPaid && (
           <div className="bg-amber-50 dark:bg-amber-900/20 rounded-2xl shadow-xl p-6 mb-6 border-2 border-amber-500">
-            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2 text-amber-700 dark:text-amber-400">
+            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2 text-amber-700">
               <CreditCardIcon className="w-5 h-5" /> Complete Payment
             </h2>
-            <p className="text-gray-700 dark:text-gray-300 mb-4">
+            <p className="text-gray-700 mb-4">
               Your seat request has been approved! Complete payment to confirm
               your seat.
             </p>
             <div className="bg-white dark:bg-gray-800 rounded-xl p-4 mb-4">
               <div className="flex justify-between items-center">
-                <span className="text-gray-600 dark:text-gray-400">
-                  Amount to Pay:
-                </span>
+                <span className="text-gray-600">Amount to Pay:</span>
                 <span className="text-2xl font-bold text-amber-600">
                   ₹{userRequest?.totalAmount}
                 </span>
               </div>
               <div className="flex justify-between items-center mt-2">
-                <span className="text-gray-600 dark:text-gray-400">Seats:</span>
+                <span className="text-gray-600">Seats:</span>
                 <span>{userRequest?.seatsRequested} seat(s)</span>
               </div>
             </div>
@@ -323,10 +414,10 @@ export default function RideShareDetail() {
           </div>
         )}
 
-        {/* ✅ CONFIRMED TRIP - After Payment */}
+        {/* Confirmed Trip - Passenger View */}
         {!isDriver && isPaid && (
           <div className="bg-green-50 dark:bg-green-900/20 rounded-2xl shadow-xl p-6 mb-6 border-2 border-green-500">
-            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2 text-green-700 dark:text-green-400">
+            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2 text-green-700">
               <CheckCircleIcon className="w-5 h-5" /> Trip Confirmed!
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -334,7 +425,7 @@ export default function RideShareDetail() {
                 <p className="text-xs text-gray-500">Driver Contact</p>
                 <p className="font-medium flex items-center gap-2">
                   <PhoneIcon className="w-4 h-4" />{" "}
-                  {trip.driver?.phone || "Will be shared before trip"}
+                  {trip.driver?.phone || "Contact will be shared"}
                 </p>
               </div>
               <div className="p-3 bg-white dark:bg-gray-800 rounded-lg">
@@ -343,13 +434,6 @@ export default function RideShareDetail() {
                   ✅ Paid - ₹{userRequest?.totalAmount}
                 </p>
               </div>
-            </div>
-            <div className="p-3 bg-white dark:bg-gray-800 rounded-lg">
-              <p className="text-xs text-gray-500 mb-1">Pickup Instructions</p>
-              <p className="text-sm">
-                Please be at the pickup location 10 minutes before departure.
-                Contact driver for exact meeting point.
-              </p>
             </div>
           </div>
         )}
