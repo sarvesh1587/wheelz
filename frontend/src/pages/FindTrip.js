@@ -1,5 +1,5 @@
 /**
- * FindTrip Page — Premium Wheelz Rideshare Search
+ * FindTrip Page — Premium Wheelz Rideshare Search (Amber Theme)
  * File: frontend/src/pages/FindTrip.js
  */
 
@@ -139,14 +139,14 @@ export default function FindTrip() {
 
   return (
     <div className="min-h-screen bg-[#0B1120]">
-      {/* Ambient background glow */}
-      <div className="fixed inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-blue-600/5 pointer-events-none" />
+      {/* Ambient background glow - Amber */}
+      <div className="fixed inset-0 bg-gradient-to-br from-amber-500/5 via-transparent to-amber-600/5 pointer-events-none" />
 
       {/* Hero Section */}
       <div className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 via-blue-800/5 to-transparent" />
-        <div className="absolute top-20 left-10 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-10 right-10 w-96 h-96 bg-blue-600/5 rounded-full blur-3xl" />
+        <div className="absolute inset-0 bg-gradient-to-br from-amber-600/10 via-amber-800/5 to-transparent" />
+        <div className="absolute top-20 left-10 w-72 h-72 bg-amber-500/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-10 right-10 w-96 h-96 bg-amber-600/5 rounded-full blur-3xl" />
 
         <div className="relative max-w-4xl mx-auto px-4 py-16 text-center">
           <motion.div
@@ -155,13 +155,13 @@ export default function FindTrip() {
             transition={{ duration: 0.5 }}
           >
             <div className="inline-flex items-center gap-2 glass-card rounded-full px-4 py-1.5 text-sm font-medium mb-6">
-              <SparklesIcon className="w-4 h-4 text-blue-400" />
-              <span className="text-blue-300">Premium Ridesharing</span>
+              <SparklesIcon className="w-4 h-4 text-amber-400" />
+              <span className="text-amber-300">Premium Ridesharing</span>
             </div>
 
             <h1 className="text-5xl md:text-6xl font-bold mb-4 tracking-tight">
               <span className="text-white">Find Your </span>
-              <span className="bg-gradient-to-r from-blue-400 to-blue-300 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-amber-400 to-amber-300 bg-clip-text text-transparent">
                 Perfect Ride
               </span>
             </h1>
@@ -181,13 +181,16 @@ export default function FindTrip() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
           onSubmit={handleSearch}
-          className="glass-card glow-accent rounded-2xl p-8 mb-10"
+          className="glass-card rounded-2xl p-8 mb-10"
+          style={{
+            boxShadow: "0 0 30px rgba(245, 158, 11, 0.1)",
+          }}
         >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             {/* From City */}
             <div className="relative">
               <label className="flex items-center gap-2 text-sm font-medium text-gray-400 mb-2">
-                <MapPinIcon className="w-4 h-4 text-blue-400" />
+                <MapPinIcon className="w-4 h-4 text-amber-400" />
                 From
               </label>
               <div className="relative">
@@ -198,7 +201,7 @@ export default function FindTrip() {
                   onFocus={() => setFocusedField("from")}
                   onBlur={() => setTimeout(() => setFocusedField(null), 200)}
                   placeholder="Leaving from..."
-                  className="w-full bg-white/[0.03] border border-[rgba(255,255,255,0.08)] rounded-xl px-4 py-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500/50 focus:bg-white/[0.05] transition-all duration-200"
+                  className="w-full bg-white/[0.03] border border-[rgba(255,255,255,0.08)] rounded-xl px-4 py-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-amber-500/50 focus:bg-white/[0.05] transition-all duration-200"
                 />
 
                 {/* City suggestions dropdown */}
@@ -225,7 +228,7 @@ export default function FindTrip() {
             {/* To City */}
             <div className="relative">
               <label className="flex items-center gap-2 text-sm font-medium text-gray-400 mb-2">
-                <MapPinIcon className="w-4 h-4 text-blue-400" />
+                <MapPinIcon className="w-4 h-4 text-amber-400" />
                 To
               </label>
               <div className="relative">
@@ -236,14 +239,14 @@ export default function FindTrip() {
                   onFocus={() => setFocusedField("to")}
                   onBlur={() => setTimeout(() => setFocusedField(null), 200)}
                   placeholder="Going to..."
-                  className="w-full bg-white/[0.03] border border-[rgba(255,255,255,0.08)] rounded-xl px-4 py-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500/50 focus:bg-white/[0.05] transition-all duration-200"
+                  className="w-full bg-white/[0.03] border border-[rgba(255,255,255,0.08)] rounded-xl px-4 py-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-amber-500/50 focus:bg-white/[0.05] transition-all duration-200"
                 />
 
                 {/* Swap button */}
                 <button
                   type="button"
                   onClick={swap}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-lg bg-white/[0.03] border border-[rgba(255,255,255,0.08)] text-gray-400 hover:text-blue-400 hover:border-blue-500/30 transition-all duration-200"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-lg bg-white/[0.03] border border-[rgba(255,255,255,0.08)] text-gray-400 hover:text-amber-400 hover:border-amber-500/30 transition-all duration-200"
                 >
                   <ArrowsRightLeftIcon className="w-5 h-5" />
                 </button>
@@ -272,7 +275,7 @@ export default function FindTrip() {
             {/* Date */}
             <div>
               <label className="flex items-center gap-2 text-sm font-medium text-gray-400 mb-2">
-                <CalendarIcon className="w-4 h-4 text-blue-400" />
+                <CalendarIcon className="w-4 h-4 text-amber-400" />
                 Date
               </label>
               <input
@@ -282,14 +285,14 @@ export default function FindTrip() {
                 onChange={(e) =>
                   setForm((f) => ({ ...f, date: e.target.value }))
                 }
-                className="w-full bg-white/[0.03] border border-[rgba(255,255,255,0.08)] rounded-xl px-4 py-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500/50 focus:bg-white/[0.05] transition-all duration-200 [color-scheme:dark]"
+                className="w-full bg-white/[0.03] border border-[rgba(255,255,255,0.08)] rounded-xl px-4 py-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-amber-500/50 focus:bg-white/[0.05] transition-all duration-200 [color-scheme:dark]"
               />
             </div>
 
             {/* Seats */}
             <div>
               <label className="flex items-center gap-2 text-sm font-medium text-gray-400 mb-2">
-                <UserGroupIcon className="w-4 h-4 text-blue-400" />
+                <UserGroupIcon className="w-4 h-4 text-amber-400" />
                 Seats Needed
               </label>
               <select
@@ -297,7 +300,7 @@ export default function FindTrip() {
                 onChange={(e) =>
                   setForm((f) => ({ ...f, seats: e.target.value }))
                 }
-                className="w-full bg-white/[0.03] border border-[rgba(255,255,255,0.08)] rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500/50 focus:bg-white/[0.05] transition-all duration-200"
+                className="w-full bg-white/[0.03] border border-[rgba(255,255,255,0.08)] rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-amber-500/50 focus:bg-white/[0.05] transition-all duration-200"
               >
                 {[1, 2, 3, 4].map((n) => (
                   <option key={n} value={n} className="bg-[#111827]">
@@ -316,7 +319,7 @@ export default function FindTrip() {
                 setForm((f) => ({ ...f, womenOnly: !f.womenOnly }))
               }
               className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 ${
-                form.womenOnly ? "bg-blue-500" : "bg-white/[0.08]"
+                form.womenOnly ? "bg-amber-500" : "bg-white/[0.08]"
               }`}
             >
               <span
@@ -337,7 +340,7 @@ export default function FindTrip() {
             disabled={loading}
             whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.99 }}
-            className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 disabled:from-gray-600 disabled:to-gray-700 text-white font-semibold py-3.5 rounded-xl text-base transition-all duration-200 flex items-center justify-center gap-2 shadow-lg shadow-blue-500/25"
+            className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 disabled:from-gray-600 disabled:to-gray-700 text-white font-semibold py-3.5 rounded-xl text-base transition-all duration-200 flex items-center justify-center gap-2 shadow-lg shadow-amber-500/25"
           >
             {loading ? (
               <>
@@ -415,7 +418,7 @@ export default function FindTrip() {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => navigate("/offer-trip")}
-                    className="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-6 py-3 rounded-xl transition-colors inline-flex items-center gap-2 shadow-lg shadow-blue-500/25"
+                    className="bg-amber-500 hover:bg-amber-600 text-white font-semibold px-6 py-3 rounded-xl transition-colors inline-flex items-center gap-2 shadow-lg shadow-amber-500/25"
                   >
                     <PlusIcon className="w-5 h-5" />
                     Offer a Trip
@@ -461,7 +464,7 @@ export default function FindTrip() {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => navigate("/offer-trip")}
-              className="glass-card border-[rgba(255,255,255,0.12)] text-blue-400 font-semibold px-6 py-3 rounded-xl hover:border-blue-500/30 hover:text-blue-300 transition-all duration-200 inline-flex items-center gap-2"
+              className="glass-card border-[rgba(255,255,255,0.12)] text-amber-400 font-semibold px-6 py-3 rounded-xl hover:border-amber-500/30 hover:text-amber-300 transition-all duration-200 inline-flex items-center gap-2"
             >
               <PlusIcon className="w-5 h-5" />
               Offer a Trip
@@ -473,7 +476,7 @@ export default function FindTrip() {
   );
 }
 
-// Premium Trip Card Component
+// Premium Trip Card Component - Amber Theme
 function TripCard({ trip, onBook }) {
   const depDate = new Date(trip.departureDate);
   const isToday = depDate.toDateString() === new Date().toDateString();
@@ -497,6 +500,9 @@ function TripCard({ trip, onBook }) {
       whileHover="hover"
       onClick={onBook}
       className="glass-card rounded-2xl p-6 cursor-pointer group"
+      whileHover={{
+        boxShadow: "0 0 25px rgba(245, 158, 11, 0.15)",
+      }}
     >
       <div className="flex items-start justify-between gap-6">
         {/* Left - Route Info */}
@@ -516,13 +522,13 @@ function TripCard({ trip, onBook }) {
             {/* Route Line */}
             <div className="flex-1 flex items-center px-2">
               <div className="flex-1 border-t border-[rgba(255,255,255,0.08)] relative">
-                <div className="absolute -top-1 left-0 w-2 h-2 rounded-full bg-blue-500" />
+                <div className="absolute -top-1 left-0 w-2 h-2 rounded-full bg-amber-500 shadow-lg shadow-amber-500/50" />
               </div>
               <div className="px-3">
                 <ClockIcon className="w-4 h-4 text-gray-600" />
               </div>
               <div className="flex-1 border-t border-[rgba(255,255,255,0.08)] relative">
-                <div className="absolute -top-1 right-0 w-2 h-2 rounded-full bg-blue-500" />
+                <div className="absolute -top-1 right-0 w-2 h-2 rounded-full bg-amber-500 shadow-lg shadow-amber-500/50" />
               </div>
             </div>
 
@@ -540,12 +546,12 @@ function TripCard({ trip, onBook }) {
           {/* Trip Badges */}
           <div className="flex flex-wrap gap-2">
             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/[0.03] border border-[rgba(255,255,255,0.08)] text-xs text-gray-400">
-              <CalendarIcon className="w-3 h-3 text-blue-400" />
+              <CalendarIcon className="w-3 h-3 text-amber-400" />
               {getDateLabel()}
             </span>
 
             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/[0.03] border border-[rgba(255,255,255,0.08)] text-xs text-gray-400">
-              <UserGroupIcon className="w-3 h-3 text-blue-400" />
+              <UserGroupIcon className="w-3 h-3 text-amber-400" />
               {trip.availableSeats} seat{trip.availableSeats !== 1 ? "s" : ""}{" "}
               left
             </span>
@@ -558,7 +564,7 @@ function TripCard({ trip, onBook }) {
             )}
 
             {trip.instantBook && (
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-500/10 border border-blue-500/20 text-xs text-blue-400">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20 text-xs text-amber-400">
                 <BoltIcon className="w-3 h-3" />
                 Instant book
               </span>
@@ -597,7 +603,7 @@ function TripCard({ trip, onBook }) {
                 {trip.driver?.ridesCompleted || 0} rides
               </p>
             </div>
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-sm font-bold text-white ring-2 ring-blue-500/20">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-500 to-amber-700 flex items-center justify-center text-sm font-bold text-white ring-2 ring-amber-500/20 shadow-lg shadow-amber-500/25">
               {trip.driver?.name?.[0]?.toUpperCase() || "D"}
             </div>
           </div>
@@ -608,7 +614,7 @@ function TripCard({ trip, onBook }) {
             whileHover={{ opacity: 1 }}
             className="mt-3 opacity-0 group-hover:opacity-100 transition-opacity"
           >
-            <span className="inline-flex items-center gap-1 text-xs text-blue-400">
+            <span className="inline-flex items-center gap-1 text-xs text-amber-400">
               View Details
               <ArrowRightIcon className="w-3 h-3" />
             </span>
