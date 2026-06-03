@@ -95,6 +95,7 @@ export const tripPlannerAPI = {
   plan: (data) => api.post("/trip-planner/plan", data),
   quickEstimate: (data) => api.post("/trip-planner/estimate", data),
 };
+// frontend/src/services/api.js - rideShareAPI section
 export const rideShareAPI = {
   create: (data) => api.post("/rideshare", data),
   search: (params) => api.get("/rideshare/search", { params }),
@@ -106,16 +107,13 @@ export const rideShareAPI = {
   requestSeat: (data) => api.post("/rideshare/request", data),
   respondToRequest: (requestId, data) =>
     api.put(`/rideshare/request/${requestId}/respond`, data),
-  completeTrip: (tripId) => api.put(`/rideshare/${tripId}/complete`),
-  cancelTrip: (tripId, reason) =>
-    api.put(`/rideshare/${tripId}/cancel`, { reason }),
+
+  // ✅ These are the ones that were missing/404ing
+  cancelRequest: (requestId) =>
+    api.put(`/rideshare/request/${requestId}/cancel`),
   createPayment: (requestId) => api.post(`/rideshare/request/${requestId}/pay`),
   verifyPayment: (data) =>
     api.post(`/rideshare/request/${data.requestId}/verify`, data),
-  // Add these inside rideShareAPI object in frontend/src/services/api.js
-
-  cancelRequest: (requestId) =>
-    api.put(`/rideshare/request/${requestId}/cancel`),
   sendMessage: (requestId, data) =>
     api.post(`/rideshare/request/${requestId}/message`, data),
   getMessages: (requestId) =>
@@ -124,6 +122,10 @@ export const rideShareAPI = {
     api.post(`/rideshare/request/${requestId}/rate`, data),
   reportRide: (requestId, data) =>
     api.post(`/rideshare/request/${requestId}/report`, data),
+
+  completeTrip: (tripId) => api.put(`/rideshare/${tripId}/complete`),
+  cancelTrip: (tripId, reason) =>
+    api.put(`/rideshare/${tripId}/cancel`, { reason }),
 };
 export const vehicleAPI = {
   getAll: (params) => api.get("/vehicles", { params }),
