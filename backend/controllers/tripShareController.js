@@ -1,5 +1,5 @@
 /**
- * TripShare Controller
+ * TripShare Controller - COMPLETE
  * File: backend/controllers/tripShareController.js
  */
 
@@ -7,6 +7,13 @@ const { TripShare, TripRequest } = require("../models/TripShare");
 const { Booking } = require("../models/Booking");
 const User = require("../models/User");
 const Vehicle = require("../models/Vehicle");
+const Razorpay = require("razorpay");
+const crypto = require("crypto");
+
+const razorpay = new Razorpay({
+  key_id: process.env.RAZORPAY_KEY_ID,
+  key_secret: process.env.RAZORPAY_KEY_SECRET,
+});
 
 // ─── Helper: City distance map ───────────────────────────────────────────────
 const CITY_DISTANCES = {
@@ -43,7 +50,7 @@ function estimateDistance(from, to) {
 
 function calculateFairSeatPrice(fromCity, toCity, seats) {
   const distance = estimateDistance(fromCity, toCity);
-  const fuelCost = distance * 0.08 * 100 * 2; // round trip
+  const fuelCost = distance * 0.08 * 100 * 2;
   const tolls = distance * 0.5;
   return Math.round((fuelCost + tolls) / (parseInt(seats) + 1));
 }
@@ -52,7 +59,7 @@ function calculateFairSeatPrice(fromCity, toCity, seats) {
 exports.createTrip = async (req, res) => {
   try {
     const {
-      bookingId, // ✅ optional
+      bookingId,
       fromCity,
       toCity,
       fromAddress,
@@ -76,7 +83,6 @@ exports.createTrip = async (req, res) => {
       disclaimerAccepted,
     } = req.body;
 
-    // ✅ Basic validation
     if (
       !fromCity ||
       !toCity ||
@@ -98,7 +104,6 @@ exports.createTrip = async (req, res) => {
       });
     }
 
-    // ✅ Optionally link to a Wheelz booking
     let vehicleId = null;
     let vehicleInfo = {};
 
@@ -126,14 +131,12 @@ exports.createTrip = async (req, res) => {
         };
       }
     } else if (vehicleName) {
-      // ✅ Driver manually enters vehicle info (no Wheelz booking)
       vehicleInfo = {
         name: vehicleName,
         brand: vehicleBrand || "",
       };
     }
 
-    // ✅ Calculate price
     const distance = estimateDistance(fromCity, toCity);
     const finalPrice = useAutoPrice
       ? calculateFairSeatPrice(fromCity, toCity, totalSeats)
@@ -188,7 +191,6 @@ exports.createTrip = async (req, res) => {
 };
 
 // ─── SEARCH TRIPS ────────────────────────────────────────────────────────────
-// ─── SEARCH TRIPS - FIXED ────────────────────────────────────────────────────
 exports.searchTrips = async (req, res) => {
   try {
     const { from, to, date, seats = 1, womenOnly } = req.query;
@@ -202,7 +204,6 @@ exports.searchTrips = async (req, res) => {
       });
     }
 
-    // Build query
     let query = {
       fromCity: { $regex: new RegExp(from.trim(), "i") },
       toCity: { $regex: new RegExp(to.trim(), "i") },
@@ -210,26 +211,18 @@ exports.searchTrips = async (req, res) => {
       availableSeats: { $gte: parseInt(seats) },
     };
 
-    // ✅ FIXED: Date filter - match entire day regardless of time
     if (date) {
       const startDate = new Date(date);
       startDate.setHours(0, 0, 0, 0);
-
       const endDate = new Date(date);
       endDate.setHours(23, 59, 59, 999);
-
-      query.departureDate = {
-        $gte: startDate,
-        $lte: endDate,
-      };
+      query.departureDate = { $gte: startDate, $lte: endDate };
     } else {
-      // No date provided - show upcoming trips from today
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       query.departureDate = { $gte: today };
     }
 
-    // Women-only filter
     if (womenOnly === "true") {
       query.womenOnly = true;
     }
@@ -242,13 +235,6 @@ exports.searchTrips = async (req, res) => {
       .limit(50);
 
     console.log(`✅ Found ${trips.length} trips`);
-
-    // Log each trip for debugging
-    trips.forEach((trip) => {
-      console.log(
-        `   - ${trip.fromCity} → ${trip.toCity}, Date: ${trip.departureDate}, Seats: ${trip.availableSeats}/${trip.totalSeats}`,
-      );
-    });
 
     res.json({
       success: true,
@@ -331,7 +317,7 @@ exports.getMyRides = async (req, res) => {
   }
 };
 
-// ─── GET DRIVER REQUESTS ──────────────────────────────────────────────────────
+// ─── GET DRIVER REQUESTS ─────────────────────────────────────────────────────
 exports.getDriverRequests = async (req, res) => {
   try {
     const trips = await TripShare.find({ driver: req.user._id });
@@ -351,42 +337,31 @@ exports.getDriverRequests = async (req, res) => {
 };
 
 // ─── GET REQUESTS FOR A SPECIFIC TRIP ────────────────────────────────────────
-// ─── GET REQUESTS FOR A SPECIFIC TRIP ────────────────────────────────────────
 exports.getTripRequests = async (req, res) => {
   try {
     const { tripId } = req.params;
 
-    console.log("🔍 Fetching requests for trip:", tripId);
-    console.log("👤 User ID:", req.user._id);
-
-    // First check if the trip exists
     const trip = await TripShare.findById(tripId);
-    if (!trip) {
+    if (!trip)
       return res
         .status(404)
         .json({ success: false, message: "Trip not found" });
-    }
 
-    console.log("🚗 Trip driver:", trip.driver);
-    console.log("🔑 Current user:", req.user._id);
-
-    // Allow if user is driver OR admin
     if (
       trip.driver.toString() !== req.user._id.toString() &&
       req.user.role !== "admin"
     ) {
-      console.log("❌ Unauthorized - User is not the driver");
-      return res.status(403).json({
-        success: false,
-        message: "Not authorized to view these requests",
-      });
+      return res
+        .status(403)
+        .json({
+          success: false,
+          message: "Not authorized to view these requests",
+        });
     }
 
     const requests = await TripRequest.find({ trip: tripId })
       .populate("passenger", "name email phone")
       .sort({ createdAt: -1 });
-
-    console.log(`✅ Found ${requests.length} requests`);
 
     res.json({ success: true, requests });
   } catch (err) {
@@ -396,16 +371,9 @@ exports.getTripRequests = async (req, res) => {
 };
 
 // ─── REQUEST SEAT ────────────────────────────────────────────────────────────
-// ─── REQUEST SEAT ────────────────────────────────────────────────────────────
 exports.requestSeat = async (req, res) => {
   try {
     const { tripId, seatsRequested = 1, message } = req.body;
-
-    console.log("📝 Request seat:", {
-      tripId,
-      seatsRequested,
-      userId: req.user._id,
-    });
 
     if (!tripId) {
       return res
@@ -414,11 +382,10 @@ exports.requestSeat = async (req, res) => {
     }
 
     const trip = await TripShare.findById(tripId);
-    if (!trip) {
+    if (!trip)
       return res
         .status(404)
         .json({ success: false, message: "Trip not found" });
-    }
 
     if (trip.status !== "active") {
       return res
@@ -444,7 +411,6 @@ exports.requestSeat = async (req, res) => {
         });
     }
 
-    // Check for existing request
     const existingRequest = await TripRequest.findOne({
       trip: tripId,
       passenger: req.user._id,
@@ -469,8 +435,6 @@ exports.requestSeat = async (req, res) => {
       status: "pending",
     });
 
-    console.log("✅ Request created:", request._id);
-
     res.status(201).json({
       success: true,
       request,
@@ -482,7 +446,7 @@ exports.requestSeat = async (req, res) => {
   }
 };
 
-// ─── RESPOND TO REQUEST ───────────────────────────────────────────────────────
+// ─── RESPOND TO REQUEST ──────────────────────────────────────────────────────
 exports.respondToRequest = async (req, res) => {
   try {
     const { action } = req.body;
@@ -501,6 +465,7 @@ exports.respondToRequest = async (req, res) => {
         .status(403)
         .json({ success: false, message: "Not authorized" });
     }
+
     if (request.status !== "pending") {
       return res
         .status(400)
@@ -514,16 +479,17 @@ exports.respondToRequest = async (req, res) => {
           .json({ success: false, message: "Not enough seats" });
       }
       request.status = "approved";
-      trip.availableSeats -= request.seatsRequested;
-      if (trip.availableSeats === 0) trip.status = "full";
+      // Don't deduct seats here - deduct after payment
       await trip.save();
     } else if (action === "reject") {
       request.status = "rejected";
     } else {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid action. Use approve or reject",
-      });
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: "Invalid action. Use approve or reject",
+        });
     }
 
     await request.save();
@@ -538,207 +504,59 @@ exports.respondToRequest = async (req, res) => {
   }
 };
 
-// ─── SEND MESSAGE ────────────────────────────────────────────────────────────
-exports.sendMessage = async (req, res) => {
+// ─── CANCEL REQUEST (Passenger) ──────────────────────────────────────────────
+exports.cancelRequest = async (req, res) => {
   try {
-    const { text } = req.body;
-    const request = await TripRequest.findById(req.params.requestId).populate(
-      "trip",
-      "driver",
-    );
+    const request = await TripRequest.findById(req.params.requestId);
 
-    if (!request)
+    if (!request) {
       return res
         .status(404)
         .json({ success: false, message: "Request not found" });
-
-    const isDriver = request.trip.driver.toString() === req.user._id.toString();
-    const isPassenger =
-      request.passenger.toString() === req.user._id.toString();
-    if (!isDriver && !isPassenger) {
-      return res
-        .status(403)
-        .json({ success: false, message: "Not authorized" });
-    }
-    if (request.status === "pending") {
-      return res
-        .status(400)
-        .json({ success: false, message: "Chat unlocks after approval" });
     }
 
-    request.messages.push({
-      sender: req.user._id,
-      text,
-      timestamp: new Date(),
-    });
-    await request.save();
-
-    const msg = request.messages[request.messages.length - 1];
-    res.json({ success: true, message: msg });
-  } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
-  }
-};
-
-// ─── GET MESSAGES ────────────────────────────────────────────────────────────
-exports.getMessages = async (req, res) => {
-  try {
-    const request = await TripRequest.findById(req.params.requestId)
-      .populate("messages.sender", "name avatar")
-      .populate("trip", "driver");
-
-    if (!request)
-      return res.status(404).json({ success: false, message: "Not found" });
-
-    const isDriver = request.trip.driver.toString() === req.user._id.toString();
-    const isPassenger =
-      request.passenger.toString() === req.user._id.toString();
-    if (!isDriver && !isPassenger) {
-      return res
-        .status(403)
-        .json({ success: false, message: "Not authorized" });
-    }
-
-    res.json({ success: true, messages: request.messages });
-  } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
-  }
-};
-
-// ─── COMPLETE TRIP ────────────────────────────────────────────────────────────
-exports.completeTrip = async (req, res) => {
-  try {
-    const trip = await TripShare.findById(req.params.tripId);
-    if (!trip)
-      return res
-        .status(404)
-        .json({ success: false, message: "Trip not found" });
-    if (trip.driver.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ success: false, message: "Not your trip" });
-    }
-    trip.status = "completed";
-    await trip.save();
-
-    await TripRequest.updateMany(
-      { trip: trip._id, status: "approved" },
-      { status: "completed" },
-    );
-
-    res.json({ success: true, message: "Trip completed!" });
-  } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
-  }
-};
-
-// ─── CANCEL TRIP ──────────────────────────────────────────────────────────────
-exports.cancelTrip = async (req, res) => {
-  try {
-    const trip = await TripShare.findById(req.params.tripId);
-    if (!trip)
-      return res
-        .status(404)
-        .json({ success: false, message: "Trip not found" });
     if (
-      trip.driver.toString() !== req.user._id.toString() &&
+      request.passenger.toString() !== req.user._id.toString() &&
       req.user.role !== "admin"
     ) {
       return res
         .status(403)
         .json({ success: false, message: "Not authorized" });
     }
-    trip.status = "cancelled";
-    await trip.save();
 
-    await TripRequest.updateMany(
-      { trip: trip._id, status: { $in: ["pending", "approved"] } },
-      { status: "cancelled", cancelledBy: "driver" },
-    );
-
-    res.json({ success: true, message: "Trip cancelled" });
-  } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
-  }
-};
-
-// ─── RATE USER ────────────────────────────────────────────────────────────────
-exports.rateUser = async (req, res) => {
-  try {
-    const { rating, review, rateWho } = req.body;
-    const request = await TripRequest.findById(req.params.requestId).populate(
-      "trip",
-      "driver",
-    );
-
-    if (!request || request.status !== "completed") {
-      return res.status(400).json({
-        success: false,
-        message: "Can only rate after trip completion",
-      });
-    }
-
-    if (
-      rateWho === "driver" &&
-      request.passenger.toString() === req.user._id.toString()
-    ) {
-      request.driverRating = rating;
-      request.driverReview = review;
-      request.driverRatedByPassenger = true;
-    } else if (
-      rateWho === "passenger" &&
-      request.trip.driver.toString() === req.user._id.toString()
-    ) {
-      request.passengerRating = rating;
-      request.passengerReview = review;
-      request.passengerRatedByDriver = true;
-    } else {
+    if (["cancelled", "completed", "rejected"].includes(request.status)) {
       return res
-        .status(403)
-        .json({ success: false, message: "Not authorized to rate" });
+        .status(400)
+        .json({
+          success: false,
+          message: `Request is already ${request.status}`,
+        });
     }
 
+    // If request was approved, restore seats
+    if (request.status === "approved") {
+      const trip = await TripShare.findById(request.trip);
+      if (trip) {
+        trip.availableSeats += request.seatsRequested;
+        if (trip.status === "full") trip.status = "active";
+        await trip.save();
+      }
+    }
+
+    request.status = "cancelled";
+    request.cancelledBy = "passenger";
+    request.cancelledAt = new Date();
+    request.cancellationReason = req.body.reason || "Cancelled by passenger";
     await request.save();
-    res.json({ success: true, message: "Rating submitted!" });
+
+    res.json({ success: true, message: "Request cancelled successfully" });
   } catch (err) {
+    console.error("Cancel request error:", err);
     res.status(500).json({ success: false, message: err.message });
   }
 };
 
-// ─── DRIVER EARNINGS ──────────────────────────────────────────────────────────
-exports.getDriverEarnings = async (req, res) => {
-  try {
-    const trips = await TripShare.find({ driver: req.user._id }).distinct(
-      "_id",
-    );
-    const completed = await TripRequest.find({
-      trip: { $in: trips },
-      status: "completed",
-    });
-
-    const totalEarned = completed.reduce(
-      (sum, r) => sum + (r.totalAmount || 0),
-      0,
-    );
-
-    res.json({
-      success: true,
-      earnings: {
-        totalEarned,
-        totalRides: completed.length,
-      },
-    });
-  } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
-  }
-};
-const Razorpay = require("razorpay");
-const crypto = require("crypto");
-
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID,
-  key_secret: process.env.RAZORPAY_KEY_SECRET,
-});
-
-// ─── CREATE PAYMENT ORDER FOR RIDE SHARE ─────────────────────────────────────
+// ─── CREATE PAYMENT ORDER ────────────────────────────────────────────────────
 exports.createPaymentOrder = async (req, res) => {
   try {
     const { requestId } = req.params;
@@ -750,7 +568,6 @@ exports.createPaymentOrder = async (req, res) => {
         .json({ success: false, message: "Request not found" });
     }
 
-    // Verify the passenger is making the payment
     if (request.passenger.toString() !== req.user._id.toString()) {
       return res
         .status(403)
@@ -769,7 +586,6 @@ exports.createPaymentOrder = async (req, res) => {
         .json({ success: false, message: "Payment already completed" });
     }
 
-    // Convert amount to paise
     const amountInPaise = Math.round(request.totalAmount * 100);
 
     console.log("💰 Creating Razorpay order:", {
@@ -837,11 +653,22 @@ exports.verifyPayment = async (req, res) => {
       .populate("trip")
       .populate("passenger", "name email phone");
 
-    // Update trip available seats
+    if (!request) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Request not found" });
+    }
+
+    // Now deduct seats after successful payment
     const trip = await TripShare.findById(request.trip._id);
-    trip.availableSeats -= request.seatsRequested;
-    if (trip.availableSeats === 0) trip.status = "full";
-    await trip.save();
+    if (trip) {
+      trip.availableSeats -= request.seatsRequested;
+      if (trip.availableSeats <= 0) {
+        trip.availableSeats = 0;
+        trip.status = "full";
+      }
+      await trip.save();
+    }
 
     res.json({
       success: true,
@@ -850,6 +677,241 @@ exports.verifyPayment = async (req, res) => {
     });
   } catch (err) {
     console.error("Verify payment error:", err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// ─── SEND MESSAGE ────────────────────────────────────────────────────────────
+exports.sendMessage = async (req, res) => {
+  try {
+    const { text } = req.body;
+    const request = await TripRequest.findById(req.params.requestId).populate(
+      "trip",
+      "driver",
+    );
+
+    if (!request)
+      return res
+        .status(404)
+        .json({ success: false, message: "Request not found" });
+
+    const isDriver = request.trip.driver.toString() === req.user._id.toString();
+    const isPassenger =
+      request.passenger.toString() === req.user._id.toString();
+
+    if (!isDriver && !isPassenger) {
+      return res
+        .status(403)
+        .json({ success: false, message: "Not authorized" });
+    }
+
+    request.messages.push({
+      sender: req.user._id,
+      text,
+      timestamp: new Date(),
+    });
+    await request.save();
+
+    const msg = request.messages[request.messages.length - 1];
+    res.json({ success: true, message: msg });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// ─── GET MESSAGES ────────────────────────────────────────────────────────────
+exports.getMessages = async (req, res) => {
+  try {
+    const request = await TripRequest.findById(req.params.requestId)
+      .populate("messages.sender", "name avatar")
+      .populate("trip", "driver");
+
+    if (!request)
+      return res.status(404).json({ success: false, message: "Not found" });
+
+    const isDriver = request.trip.driver.toString() === req.user._id.toString();
+    const isPassenger =
+      request.passenger.toString() === req.user._id.toString();
+
+    if (!isDriver && !isPassenger) {
+      return res
+        .status(403)
+        .json({ success: false, message: "Not authorized" });
+    }
+
+    res.json({ success: true, messages: request.messages });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// ─── COMPLETE TRIP ───────────────────────────────────────────────────────────
+exports.completeTrip = async (req, res) => {
+  try {
+    const trip = await TripShare.findById(req.params.tripId);
+    if (!trip)
+      return res
+        .status(404)
+        .json({ success: false, message: "Trip not found" });
+    if (trip.driver.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ success: false, message: "Not your trip" });
+    }
+
+    trip.status = "completed";
+    await trip.save();
+
+    await TripRequest.updateMany(
+      { trip: trip._id, status: "approved" },
+      { status: "completed" },
+    );
+
+    res.json({ success: true, message: "Trip completed!" });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// ─── CANCEL TRIP ─────────────────────────────────────────────────────────────
+exports.cancelTrip = async (req, res) => {
+  try {
+    const trip = await TripShare.findById(req.params.tripId);
+    if (!trip)
+      return res
+        .status(404)
+        .json({ success: false, message: "Trip not found" });
+
+    if (
+      trip.driver.toString() !== req.user._id.toString() &&
+      req.user.role !== "admin"
+    ) {
+      return res
+        .status(403)
+        .json({ success: false, message: "Not authorized" });
+    }
+
+    trip.status = "cancelled";
+    await trip.save();
+
+    await TripRequest.updateMany(
+      { trip: trip._id, status: { $in: ["pending", "approved"] } },
+      { status: "cancelled", cancelledBy: "driver" },
+    );
+
+    res.json({ success: true, message: "Trip cancelled" });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// ─── RATE USER ───────────────────────────────────────────────────────────────
+exports.rateUser = async (req, res) => {
+  try {
+    const { rating, review, rateWho } = req.body;
+    const request = await TripRequest.findById(req.params.requestId).populate(
+      "trip",
+      "driver",
+    );
+
+    if (!request || request.status !== "completed") {
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: "Can only rate after trip completion",
+        });
+    }
+
+    if (
+      rateWho === "driver" &&
+      request.passenger.toString() === req.user._id.toString()
+    ) {
+      request.driverRating = rating;
+      request.driverReview = review;
+      request.driverRatedByPassenger = true;
+    } else if (
+      rateWho === "passenger" &&
+      request.trip.driver.toString() === req.user._id.toString()
+    ) {
+      request.passengerRating = rating;
+      request.passengerReview = review;
+      request.passengerRatedByDriver = true;
+    } else {
+      return res
+        .status(403)
+        .json({ success: false, message: "Not authorized to rate" });
+    }
+
+    await request.save();
+    res.json({ success: true, message: "Rating submitted!" });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// ─── REPORT RIDE ─────────────────────────────────────────────────────────────
+exports.reportRide = async (req, res) => {
+  try {
+    const { reason } = req.body;
+    const request = await TripRequest.findById(req.params.requestId)
+      .populate("trip", "driver fromCity toCity")
+      .populate("passenger", "name");
+
+    if (!request) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Request not found" });
+    }
+
+    if (!reason || !reason.trim()) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Reason is required" });
+    }
+
+    // Log report for now - create a Report model later
+    console.log("🚨 REPORT:", {
+      requestId: request._id,
+      reportedBy: req.user._id,
+      reportedDriver: request.trip?.driver,
+      trip: `${request.trip?.fromCity} → ${request.trip?.toCity}`,
+      reason: reason.trim(),
+      timestamp: new Date(),
+    });
+
+    res.json({
+      success: true,
+      message: "Report submitted. We will review this.",
+    });
+  } catch (err) {
+    console.error("Report ride error:", err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// ─── DRIVER EARNINGS ─────────────────────────────────────────────────────────
+exports.getDriverEarnings = async (req, res) => {
+  try {
+    const trips = await TripShare.find({ driver: req.user._id }).distinct(
+      "_id",
+    );
+    const completed = await TripRequest.find({
+      trip: { $in: trips },
+      status: "completed",
+    });
+
+    const totalEarned = completed.reduce(
+      (sum, r) => sum + (r.totalAmount || 0),
+      0,
+    );
+
+    res.json({
+      success: true,
+      earnings: {
+        totalEarned,
+        totalRides: completed.length,
+      },
+    });
+  } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
 };
