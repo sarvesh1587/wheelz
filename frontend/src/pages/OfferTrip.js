@@ -82,8 +82,18 @@ export default function OfferTrip() {
 
     try {
       await rideShareAPI.create({
-        ...formData,
-        departureDateTime: `${formData.departureDate}T${formData.departureTime || "10:00"}`,
+        bookingId: formData.bookingId,
+        fromCity: formData.from, // ✅ renamed
+        toCity: formData.to, // ✅ renamed
+        departureDate: formData.departureDate, // ✅ separate field
+        departureTime: formData.departureTime || "10:00", // ✅ separate field
+        totalSeats: formData.totalSeats,
+        pricePerSeat: formData.pricePerSeat || null,
+        useAutoPrice: !formData.pricePerSeat,
+        womenOnly: formData.womenOnly,
+        petsAllowed: formData.allowPets, // ✅ renamed
+        luggageAllowed: formData.luggageSpace, // ✅ renamed
+        disclaimerAccepted: true, // ✅ added
       });
       toast.success("Trip offered successfully! 🎉");
       navigate("/dashboard");
