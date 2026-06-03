@@ -16,8 +16,7 @@ const TripShareSchema = new mongoose.Schema(
     booking: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Booking",
-      required: true,
-      default: null, // optional — driver may offer without a Wheelz booking
+      default: null, // ✅ Fixed: removed required:true — booking is optional
     },
     vehicle: {
       type: mongoose.Schema.Types.ObjectId,
@@ -28,14 +27,14 @@ const TripShareSchema = new mongoose.Schema(
     // Route
     fromCity: { type: String, required: true, trim: true },
     toCity: { type: String, required: true, trim: true },
-    fromAddress: { type: String, trim: true }, // specific pickup point
+    fromAddress: { type: String, trim: true },
     toAddress: { type: String, trim: true },
 
     // Schedule
     departureDate: { type: Date, required: true },
-    departureTime: { type: String, required: true }, // "14:30"
-    estimatedDuration: { type: String }, // "4 hours"
-    estimatedArrival: { type: String }, // "18:30"
+    departureTime: { type: String, required: true },
+    estimatedDuration: { type: String },
+    estimatedArrival: { type: String },
 
     // Seats
     totalSeats: { type: Number, required: true, min: 1, max: 4 },
@@ -56,7 +55,7 @@ const TripShareSchema = new mongoose.Schema(
     smokingAllowed: { type: Boolean, default: false },
     petsAllowed: { type: Boolean, default: false },
     acAvailable: { type: Boolean, default: true },
-    instantBook: { type: Boolean, default: false }, // auto-approve requests
+    instantBook: { type: Boolean, default: false },
 
     // Vehicle info (denormalized for display)
     vehicleInfo: {
