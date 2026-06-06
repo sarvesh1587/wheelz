@@ -105,8 +105,209 @@ export default function Footer() {
         <div className="absolute bottom-0 right-0 w-96 h-96 bg-pink-500/10 rounded-full blur-3xl animate-float delay-1000" />
 
         <div className="relative max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-2">
-            <img src="/logo.png" alt="Wheelz" className="h-10 w-auto" />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
+            {/* Brand Section */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="space-y-4"
+            >
+              <div className="flex items-center gap-2">
+                <motion.div
+                  whileHover={{ rotate: 360, scale: 1.1 }}
+                  transition={{ duration: 0.5 }}
+                  className="w-10 h-10 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl flex items-center justify-center font-bold text-gray-900 text-xl shadow-lg"
+                >
+                  W
+                </motion.div>
+                <span className="font-bold text-xl bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
+                  Wheelz
+                </span>
+              </div>
+              <p className="text-sm leading-relaxed text-gray-400 max-w-xs">
+                Premium car and bike rentals across India.
+                <span className="block mt-2 text-amber-400">
+                  Travel smarter, arrive in style.
+                </span>
+              </p>
+
+              {/* Contact Info */}
+              <div className="space-y-2 text-sm">
+                <div className="flex items-center gap-2 text-gray-400">
+                  <MapPinIcon className="w-4 h-4 text-amber-500" />
+                  <span>15+ Cities across India</span>
+                </div>
+                <div className="flex items-center gap-2 text-gray-400">
+                  <ClockIcon className="w-4 h-4 text-amber-500" />
+                  <span>24/7 Customer Support</span>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Quick Links */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+            >
+              <h4 className="text-white font-semibold mb-4 flex items-center gap-2">
+                <span className="w-1 h-4 bg-amber-500 rounded-full" />
+                Quick Links
+              </h4>
+              <ul className="space-y-3">
+                {quickLinks.map((link, idx) => (
+                  <motion.li
+                    key={link.label}
+                    initial={{ opacity: 0, x: -20 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    transition={{ delay: idx * 0.05 }}
+                  >
+                    {link.isHash ? (
+                      <button
+                        onClick={() => {
+                          navigate("/");
+                          setTimeout(() => {
+                            const element =
+                              document.getElementById("how-it-works");
+                            if (element)
+                              element.scrollIntoView({ behavior: "smooth" });
+                          }, 100);
+                        }}
+                        className="flex items-center gap-2 text-sm hover:text-amber-400 transition-all duration-300 hover:translate-x-2 group"
+                      >
+                        <span className="text-amber-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                          →
+                        </span>
+                        {link.icon && <span>{link.icon}</span>}
+                        <span>{link.label}</span>
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => handleNavigation(link.path)}
+                        className="flex items-center gap-2 text-sm hover:text-amber-400 transition-all duration-300 hover:translate-x-2 group"
+                      >
+                        <span className="text-amber-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                          →
+                        </span>
+                        {link.icon && <span>{link.icon}</span>}
+                        <span>{link.label}</span>
+                      </button>
+                    )}
+                  </motion.li>
+                ))}
+              </ul>
+            </motion.div>
+
+            {/* Support */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+            >
+              <h4 className="text-white font-semibold mb-4 flex items-center gap-2">
+                <span className="w-1 h-4 bg-amber-500 rounded-full" />
+                Support
+              </h4>
+              <ul className="space-y-3">
+                {supportLinks.map((link, idx) => (
+                  <motion.li
+                    key={link.label}
+                    initial={{ opacity: 0, x: -20 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    transition={{ delay: idx * 0.05 }}
+                  >
+                    {link.href ? (
+                      <a
+                        href={link.href}
+                        className="flex items-center gap-2 text-sm hover:text-amber-400 transition-all duration-300 hover:translate-x-2 group"
+                      >
+                        <span className="text-amber-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                          →
+                        </span>
+                        {link.icon}
+                        <span>{link.label}</span>
+                      </a>
+                    ) : (
+                      <button
+                        onClick={() => handleNavigation(link.path)}
+                        className="flex items-center gap-2 text-sm hover:text-amber-400 transition-all duration-300 hover:translate-x-2 group"
+                      >
+                        <span className="text-amber-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                          →
+                        </span>
+                        {link.icon}
+                        <span>{link.label}</span>
+                      </button>
+                    )}
+                  </motion.li>
+                ))}
+              </ul>
+            </motion.div>
+
+            {/* Newsletter & Payment */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+              className="space-y-6"
+            >
+              <div>
+                <h4 className="text-white font-semibold mb-3 flex items-center gap-2">
+                  <span className="w-1 h-4 bg-amber-500 rounded-full" />
+                  Subscribe
+                </h4>
+                <form onSubmit={handleSubscribe} className="space-y-3">
+                  <div className="relative group">
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="Enter your email"
+                      className="w-full px-4 py-2.5 bg-gray-800/50 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-all"
+                    />
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      type="submit"
+                      disabled={isSubscribing}
+                      className="absolute right-1 top-1 px-4 py-1.5 bg-gradient-to-r from-amber-500 to-amber-600 text-gray-900 font-semibold text-sm rounded-lg hover:shadow-lg transition-all disabled:opacity-50"
+                    >
+                      {isSubscribing ? (
+                        <div className="w-4 h-4 border-2 border-gray-900 border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        "Subscribe"
+                      )}
+                    </motion.button>
+                  </div>
+                </form>
+              </div>
+
+              {/* Payment Methods */}
+              <div>
+                <h4 className="text-white font-semibold mb-3">
+                  Secure Payments
+                </h4>
+                <div className="flex flex-wrap gap-2">
+                  {paymentMethods.map((method) => (
+                    <motion.div
+                      key={method.name}
+                      whileHover={{ scale: 1.05, y: -2 }}
+                      className={`px-3 py-1.5 bg-gradient-to-r ${method.color} bg-opacity-20 rounded-lg text-white text-xs font-medium flex items-center gap-1`}
+                    >
+                      <span>{method.icon}</span>
+                      <span>{method.name}</span>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Made with love */}
+              <div className="flex items-center gap-1 text-xs text-gray-500">
+                <HeartIcon className="w-3 h-3 text-red-500 animate-pulse" />
+                <span>Made with love for Indian travelers</span>
+              </div>
+            </motion.div>
           </div>
 
           {/* Bottom Bar */}
