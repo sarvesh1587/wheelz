@@ -18,6 +18,10 @@ import {
   ArrowLeftIcon,
   PhoneIcon,
   CreditCardIcon,
+  EyeIcon,
+  ChatBubbleLeftRightIcon,
+  StarIcon,
+  XMarkIcon,
 } from "@heroicons/react/24/outline";
 
 export default function RideShareDetail() {
@@ -29,10 +33,12 @@ export default function RideShareDetail() {
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState(null);
   const [processingPayment, setProcessingPayment] = useState(false);
+  const [showDriverModal, setShowDriverModal] = useState(false);
 
   useEffect(() => {
     fetchTripDetails();
   }, [id]);
+
   const fetchTripDetails = async () => {
     try {
       const tripRes = await rideShareAPI.getOne(id);
@@ -41,7 +47,6 @@ export default function RideShareDetail() {
       const isDriver = tripRes.data.trip?.driver?._id === user?._id;
 
       if (isDriver) {
-        // Driver - fetch all requests
         try {
           const requestsRes = await rideShareAPI.getTripRequests(id);
           setRequests(requestsRes.data.requests || []);
@@ -50,7 +55,6 @@ export default function RideShareDetail() {
           setRequests([]);
         }
       } else {
-        // Passenger - fetch their own rides to find this request
         try {
           const ridesRes = await rideShareAPI.getMyRides();
           const myRides = ridesRes.data.rides || [];
@@ -83,12 +87,12 @@ export default function RideShareDetail() {
         fetchTripDetails();
       }
     } catch (error) {
-      console.error("Request error:", error);
       const errorMsg =
         error.response?.data?.message || "Failed to send request";
       toast.error(errorMsg);
     }
   };
+
   const handleApprove = async (requestId) => {
     setProcessingId(requestId);
     try {
@@ -143,7 +147,6 @@ export default function RideShareDetail() {
                 toast.success("Payment successful! Trip confirmed.");
                 fetchTripDetails();
               } catch (error) {
-                console.error("Verification error:", error);
                 toast.error("Payment verification failed");
               }
             },
@@ -163,13 +166,11 @@ export default function RideShareDetail() {
           const razorpay = new window.Razorpay(options);
           razorpay.open();
         } catch (error) {
-          console.error("Order creation error:", error);
           toast.error("Failed to create payment order");
         }
       };
       document.body.appendChild(script);
     } catch (error) {
-      console.error("Payment error:", error);
       toast.error("Payment failed. Please try again.");
     } finally {
       setProcessingPayment(false);
@@ -180,7 +181,6 @@ export default function RideShareDetail() {
   const pendingRequests = requests.filter((r) => r.status === "pending");
   const approvedRequests = requests.filter((r) => r.status === "approved");
 
-  // Find current user's request (for passenger view)
   const myRequest = requests.find((r) => r.passenger?._id === user?._id);
   const isApproved = myRequest?.status === "approved";
   const isPaid = myRequest?.paymentStatus === "paid";
@@ -188,7 +188,7 @@ export default function RideShareDetail() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center pt-20">
+      <div className="min-h-screen flex items-center justify-center pt-20 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-950">
         <div className="w-12 h-12 border-4 border-amber-500 border-t-transparent rounded-full animate-spin" />
       </div>
     );
@@ -196,12 +196,12 @@ export default function RideShareDetail() {
 
   if (!trip) {
     return (
-      <div className="min-h-screen flex items-center justify-center pt-20">
+      <div className="min-h-screen flex items-center justify-center pt-20 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-950">
         <div className="text-center">
           <p className="text-gray-500">Trip not found</p>
           <button
             onClick={() => navigate("/find-trip")}
-            className="mt-4 text-amber-500"
+            className="mt-4 text-amber-500 hover:text-amber-600 font-medium"
           >
             Go back
           </button>
@@ -213,23 +213,32 @@ export default function RideShareDetail() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-950 pt-24 pb-12">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Back Button */}
         <button
           onClick={() => navigate(-1)}
-          className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-amber-500 mb-6"
+          className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-amber-500 mb-6 transition-colors"
         >
           <ArrowLeftIcon className="w-5 h-5" /> Back
         </button>
 
         {/* Trip Header */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 mb-6">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 mb-6 border border-gray-100 dark:border-gray-700"
+        >
           <div className="flex flex-wrap justify-between items-start gap-4">
             <div>
               <div className="flex items-center gap-3 mb-3">
                 <MapPinIcon className="w-5 h-5 text-amber-500" />
-                <span className="text-xl font-semibold">{trip.fromCity}</span>
-                <span>→</span>
+                <span className="text-xl font-semibold text-gray-900 dark:text-white">
+                  {trip.fromCity}
+                </span>
+                <span className="text-gray-400">→</span>
                 <MapPinIcon className="w-5 h-5 text-green-500" />
-                <span className="text-xl font-semibold">{trip.toCity}</span>
+                <span className="text-xl font-semibold text-gray-900 dark:text-white">
+                  {trip.toCity}
+                </span>
               </div>
               <div className="flex flex-wrap gap-4 text-sm text-gray-500">
                 <span className="flex items-center gap-1">
@@ -254,36 +263,61 @@ export default function RideShareDetail() {
               <div className="text-xs text-gray-400">per seat</div>
             </div>
           </div>
-        </div>
+        </motion.div>
 
-        {/* Driver Info - Passenger View */}
+        {/* Driver Info Card */}
         {!isDriver && (
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 mb-6">
-            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <UserCircleIcon className="w-5 h-5 text-amber-500" /> Driver
-            </h2>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 mb-6 border border-gray-100 dark:border-gray-700"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold flex items-center gap-2 text-gray-900 dark:text-white">
+                <UserCircleIcon className="w-5 h-5 text-amber-500" /> Driver
+                Details
+              </h2>
+              <button
+                onClick={() => setShowDriverModal(true)}
+                className="text-sm text-amber-500 hover:text-amber-600 font-medium flex items-center gap-1 transition-colors"
+              >
+                <EyeIcon className="w-4 h-4" /> View Full Profile
+              </button>
+            </div>
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-gradient-to-r from-amber-500 to-amber-600 rounded-full flex items-center justify-center text-white font-bold text-xl">
+              <div
+                className="w-16 h-16 bg-gradient-to-r from-amber-500 to-amber-600 rounded-full flex items-center justify-center text-white font-bold text-xl cursor-pointer hover:scale-105 transition-transform shadow-lg"
+                onClick={() => setShowDriverModal(true)}
+              >
                 {trip.driver?.name?.[0]?.toUpperCase() || "D"}
               </div>
               <div>
-                <h3 className="font-semibold text-lg">{trip.driver?.name}</h3>
+                <h3 className="font-semibold text-lg text-gray-900 dark:text-white">
+                  {trip.driver?.name}
+                </h3>
                 <div className="flex items-center gap-2 mt-1">
-                  <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
-                    ✅ Verified
+                  <span className="text-xs bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 px-2 py-0.5 rounded-full">
+                    ✅ Verified Driver
+                  </span>
+                  <span className="text-xs text-gray-400">
+                    {trip.driver?.ridesCompleted || 0} rides completed
                   </span>
                 </div>
               </div>
             </div>
-          </div>
+          </motion.div>
         )}
 
-        {/* ========== PASSENGER VIEW - Status Cards ========== */}
+        {/* ========== PASSENGER VIEW ========== */}
         {!isDriver && (
           <>
-            {/* Request Pending */}
             {isPending && (
-              <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-2xl shadow-xl p-6 mb-6 border border-yellow-300 dark:border-yellow-700">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-yellow-50 dark:bg-yellow-900/20 rounded-2xl shadow-xl p-6 mb-6 border border-yellow-300 dark:border-yellow-700"
+              >
                 <div className="flex items-center gap-3 mb-3">
                   <div className="w-12 h-12 bg-yellow-500 rounded-full flex items-center justify-center text-white text-xl">
                     ⏳
@@ -298,7 +332,7 @@ export default function RideShareDetail() {
                   </div>
                 </div>
                 <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-gray-600 dark:text-gray-300">
                     You requested {myRequest?.seatsRequested} seat(s)
                   </p>
                   {myRequest?.message && (
@@ -307,12 +341,15 @@ export default function RideShareDetail() {
                     </p>
                   )}
                 </div>
-              </div>
+              </motion.div>
             )}
 
-            {/* Request Approved - Payment Required */}
             {isApproved && !isPaid && (
-              <div className="bg-amber-50 dark:bg-amber-900/20 rounded-2xl shadow-xl p-6 mb-6 border-2 border-amber-500">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-amber-50 dark:bg-amber-900/20 rounded-2xl shadow-xl p-6 mb-6 border-2 border-amber-500"
+              >
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center text-white text-xl">
                     ✅
@@ -322,21 +359,26 @@ export default function RideShareDetail() {
                       Request Approved!
                     </h2>
                     <p className="text-green-700 dark:text-green-500">
-                      Driver has approved your request. Complete payment to
-                      confirm seat.
+                      Complete payment to confirm your seat.
                     </p>
                   </div>
                 </div>
                 <div className="bg-white dark:bg-gray-800 rounded-xl p-4 mb-4">
                   <div className="flex justify-between items-center">
-                    <span className="text-gray-600">Amount to Pay:</span>
+                    <span className="text-gray-600 dark:text-gray-400">
+                      Amount to Pay:
+                    </span>
                     <span className="text-2xl font-bold text-amber-600">
                       ₹{myRequest?.totalAmount}
                     </span>
                   </div>
                   <div className="flex justify-between items-center mt-2">
-                    <span className="text-gray-600">Seats:</span>
-                    <span>{myRequest?.seatsRequested} seat(s)</span>
+                    <span className="text-gray-600 dark:text-gray-400">
+                      Seats:
+                    </span>
+                    <span className="text-gray-900 dark:text-white">
+                      {myRequest?.seatsRequested} seat(s)
+                    </span>
                   </div>
                 </div>
                 <button
@@ -344,22 +386,26 @@ export default function RideShareDetail() {
                     initiatePayment(myRequest?._id, myRequest?.totalAmount)
                   }
                   disabled={processingPayment}
-                  className="w-full py-3 bg-gradient-to-r from-amber-500 to-amber-600 text-white rounded-xl flex items-center justify-center gap-2"
+                  className="w-full py-3 bg-gradient-to-r from-amber-500 to-amber-600 text-white rounded-xl flex items-center justify-center gap-2 font-semibold hover:shadow-lg transition-all"
                 >
                   {processingPayment ? (
                     <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                   ) : (
                     <>
-                      <CreditCardIcon className="w-5 h-5" /> Pay Now
+                      <CreditCardIcon className="w-5 h-5" /> Pay ₹
+                      {myRequest?.totalAmount}
                     </>
                   )}
                 </button>
-              </div>
+              </motion.div>
             )}
 
-            {/* Trip Confirmed - After Payment */}
             {isPaid && (
-              <div className="bg-green-50 dark:bg-green-900/20 rounded-2xl shadow-xl p-6 mb-6 border-2 border-green-500">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-green-50 dark:bg-green-900/20 rounded-2xl shadow-xl p-6 mb-6 border-2 border-green-500"
+              >
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center text-white text-xl">
                     🎉
@@ -376,7 +422,7 @@ export default function RideShareDetail() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="p-3 bg-white dark:bg-gray-800 rounded-lg">
                     <p className="text-xs text-gray-500">Driver Contact</p>
-                    <p className="font-medium flex items-center gap-2">
+                    <p className="font-medium text-gray-900 dark:text-white flex items-center gap-2">
                       <PhoneIcon className="w-4 h-4" />{" "}
                       {trip.driver?.phone ||
                         "Contact will be shared before trip"}
@@ -384,7 +430,7 @@ export default function RideShareDetail() {
                   </div>
                   <div className="p-3 bg-white dark:bg-gray-800 rounded-lg">
                     <p className="text-xs text-gray-500">Pickup Location</p>
-                    <p className="font-medium">
+                    <p className="font-medium text-gray-900 dark:text-white">
                       {trip.fromAddress || trip.fromCity}
                     </p>
                   </div>
@@ -393,44 +439,41 @@ export default function RideShareDetail() {
                   <p className="text-xs text-gray-500 mb-1">
                     Trip Instructions
                   </p>
-                  <p className="text-sm">
+                  <p className="text-sm text-gray-700 dark:text-gray-300">
                     Please arrive 10 minutes before departure. Contact driver
                     for exact meeting point.
                   </p>
                 </div>
-              </div>
+              </motion.div>
             )}
 
-            {/* Request Seat Button - Only if no request exists */}
             {!isPending &&
               !isApproved &&
               !isPaid &&
               trip.availableSeats > 0 && (
-                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6">
-                  <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 border border-gray-100 dark:border-gray-700"
+                >
+                  <h2 className="text-lg font-semibold mb-4 flex items-center gap-2 text-gray-900 dark:text-white">
                     <SparklesIcon className="w-5 h-5 text-amber-500" /> Request
                     a Seat
                   </h2>
                   <button
-                    onClick={async () => {
-                      await rideShareAPI.requestSeat({
-                        tripId: id,
-                        seatsRequested: 1,
-                      });
-                      fetchTripDetails();
-                    }}
-                    className="w-full py-3 bg-gradient-to-r from-amber-500 to-amber-600 text-white rounded-xl"
+                    onClick={handleRequestSeat}
+                    className="w-full py-3 bg-gradient-to-r from-amber-500 to-amber-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all"
                   >
                     Request Seat • ₹{trip.pricePerSeat}
                   </button>
                   <div className="mt-4 p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
-                    <p className="text-xs text-amber-700 flex items-start gap-2">
+                    <p className="text-xs text-amber-700 dark:text-amber-400 flex items-start gap-2">
                       <ShieldCheckIcon className="w-4 h-4 flex-shrink-0" /> ⚠️
                       Disclaimer: Cost-sharing arrangement. Verify driver
                       identity before boarding.
                     </p>
                   </div>
-                </div>
+                </motion.div>
               )}
           </>
         )}
@@ -438,9 +481,12 @@ export default function RideShareDetail() {
         {/* ========== DRIVER VIEW ========== */}
         {isDriver && (
           <>
-            {/* Pending Requests */}
             {pendingRequests.length > 0 && (
-              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 mb-6">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 mb-6 border border-gray-100 dark:border-gray-700"
+              >
                 <h2 className="text-lg font-semibold mb-4 flex items-center gap-2 text-amber-600">
                   <UserGroupIcon className="w-5 h-5" /> Pending Requests (
                   {pendingRequests.length})
@@ -457,7 +503,7 @@ export default function RideShareDetail() {
                             {req.passenger?.name?.[0]?.toUpperCase() || "P"}
                           </div>
                           <div>
-                            <p className="font-semibold">
+                            <p className="font-semibold text-gray-900 dark:text-white">
                               {req.passenger?.name}
                             </p>
                             <p className="text-xs text-gray-500">
@@ -467,8 +513,9 @@ export default function RideShareDetail() {
                           </div>
                         </div>
                         <div className="mt-2">
-                          <p className="text-sm text-gray-600">
-                            🎫 {req.seatsRequested} seat(s) requested
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                            🎫 {req.seatsRequested} seat(s) requested • ₹
+                            {req.totalAmount}
                           </p>
                           {req.message && (
                             <p className="text-sm text-gray-500 italic mt-1">
@@ -481,14 +528,14 @@ export default function RideShareDetail() {
                         <button
                           onClick={() => handleApprove(req._id)}
                           disabled={processingId === req._id}
-                          className="px-4 py-1.5 bg-green-500 text-white rounded-lg text-sm"
+                          className="px-4 py-1.5 bg-green-500 hover:bg-green-600 text-white rounded-lg text-sm transition-colors"
                         >
                           Approve
                         </button>
                         <button
                           onClick={() => handleReject(req._id)}
                           disabled={processingId === req._id}
-                          className="px-4 py-1.5 bg-red-500 text-white rounded-lg text-sm"
+                          className="px-4 py-1.5 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm transition-colors"
                         >
                           Reject
                         </button>
@@ -496,12 +543,15 @@ export default function RideShareDetail() {
                     </div>
                   </div>
                 ))}
-              </div>
+              </motion.div>
             )}
 
-            {/* Approved Passengers */}
             {approvedRequests.length > 0 && (
-              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 mb-6">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 mb-6 border border-gray-100 dark:border-gray-700"
+              >
                 <h2 className="text-lg font-semibold mb-4 flex items-center gap-2 text-green-600">
                   <CheckCircleIcon className="w-5 h-5" /> Confirmed Passengers (
                   {approvedRequests.length})
@@ -516,13 +566,15 @@ export default function RideShareDetail() {
                         {req.passenger?.name?.[0]?.toUpperCase() || "P"}
                       </div>
                       <div>
-                        <p className="font-semibold">{req.passenger?.name}</p>
+                        <p className="font-semibold text-gray-900 dark:text-white">
+                          {req.passenger?.name}
+                        </p>
                         <p className="text-xs text-gray-500">
                           <PhoneIcon className="w-3 h-3 inline mr-1" />{" "}
                           {req.passenger?.phone || "Not available"}
                         </p>
                       </div>
-                      <div className="ml-auto">
+                      <div className="ml-auto text-right">
                         <span
                           className={`text-xs px-2 py-0.5 rounded-full ${req.paymentStatus === "paid" ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}
                         >
@@ -531,28 +583,182 @@ export default function RideShareDetail() {
                             : "Pending ⏳"}
                         </span>
                         <p className="text-xs text-gray-500 mt-1">
-                          {req.seatsRequested} seat(s)
+                          {req.seatsRequested} seat(s) • ₹{req.totalAmount}
                         </p>
                       </div>
                     </div>
                   </div>
                 ))}
-              </div>
+              </motion.div>
             )}
 
-            {/* No Requests */}
             {pendingRequests.length === 0 && approvedRequests.length === 0 && (
-              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 mb-6 text-center">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 mb-6 text-center border border-gray-100 dark:border-gray-700"
+              >
                 <UserGroupIcon className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                <h3 className="text-lg font-semibold">No Requests Yet</h3>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  No Requests Yet
+                </h3>
                 <p className="text-gray-500">
                   Share this trip link with potential passengers
                 </p>
-              </div>
+              </motion.div>
             )}
           </>
         )}
       </div>
+
+      {/* ========== DRIVER DETAIL MODAL ========== */}
+      {showDriverModal && trip?.driver && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            onClick={() => setShowDriverModal(false)}
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+          />
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            className="relative w-full max-w-lg bg-white dark:bg-gray-900 rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto"
+          >
+            {/* Header */}
+            <div className="bg-gradient-to-r from-amber-500 to-amber-600 p-6 text-center">
+              <button
+                onClick={() => setShowDriverModal(false)}
+                className="absolute top-4 right-4 p-1.5 bg-white/20 rounded-full hover:bg-white/30 transition-colors"
+              >
+                <XMarkIcon className="w-5 h-5 text-white" />
+              </button>
+              <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center text-3xl font-bold text-amber-600 mx-auto mb-3 shadow-lg">
+                {trip.driver?.name?.[0]?.toUpperCase() || "D"}
+              </div>
+              <h2 className="text-xl font-bold text-white">
+                {trip.driver?.name || "Driver"}
+              </h2>
+              <p className="text-amber-100 text-sm flex items-center justify-center gap-1 mt-1">
+                <ShieldCheckIcon className="w-4 h-4" /> Verified Driver
+              </p>
+            </div>
+
+            {/* Content */}
+            <div className="p-6 space-y-4">
+              {/* Contact Info */}
+              <div className="bg-amber-50 dark:bg-amber-900/20 rounded-xl p-4 border border-amber-200 dark:border-amber-800">
+                <h3 className="font-semibold text-amber-800 dark:text-amber-400 mb-3 flex items-center gap-2">
+                  <PhoneIcon className="w-5 h-5" /> Contact Information
+                </h3>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-500">Phone</span>
+                    <a
+                      href={`tel:${trip.driver?.phone}`}
+                      className="text-amber-600 font-bold text-lg hover:underline"
+                    >
+                      {trip.driver?.phone || "N/A"}
+                    </a>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-500">Email</span>
+                    <a
+                      href={`mailto:${trip.driver?.email}`}
+                      className="text-blue-600 text-sm hover:underline"
+                    >
+                      {trip.driver?.email || "N/A"}
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              {/* Stats */}
+              <div className="grid grid-cols-3 gap-3">
+                <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-3 text-center">
+                  <p className="text-2xl font-bold text-amber-500">
+                    {trip.totalRidesDone || 0}
+                  </p>
+                  <p className="text-xs text-gray-500">Rides Done</p>
+                </div>
+                <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-3 text-center">
+                  <p className="text-2xl font-bold text-green-500">
+                    {trip.driverRating || "N/A"}
+                  </p>
+                  <p className="text-xs text-gray-500">Rating</p>
+                </div>
+                <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-3 text-center">
+                  <p className="text-2xl font-bold text-blue-500">
+                    {trip.driver?.createdAt
+                      ? Math.floor(
+                          (Date.now() - new Date(trip.driver.createdAt)) /
+                            (365 * 24 * 60 * 60 * 1000),
+                        )
+                      : "N/A"}
+                  </p>
+                  <p className="text-xs text-gray-500">Years on Wheelz</p>
+                </div>
+              </div>
+
+              {/* Trip Info */}
+              <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-4">
+                <h3 className="font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                  Trip Information
+                </h3>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Route</span>
+                    <span className="font-medium text-gray-900 dark:text-white">
+                      {trip.fromCity} → {trip.toCity}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Date & Time</span>
+                    <span className="font-medium text-gray-900 dark:text-white">
+                      {new Date(trip.departureDate).toLocaleDateString()} at{" "}
+                      {trip.departureTime}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Price per Seat</span>
+                    <span className="font-bold text-amber-500">
+                      ₹{trip.pricePerSeat}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Seats</span>
+                    <span className="font-medium text-gray-900 dark:text-white">
+                      {trip.availableSeats}/{trip.totalSeats} available
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Preferences */}
+              <div className="flex flex-wrap gap-2">
+                {trip.womenOnly && (
+                  <span className="text-xs bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-400 px-2 py-1 rounded-full">
+                    👩 Women Only
+                  </span>
+                )}
+                {trip.petsAllowed && (
+                  <span className="text-xs bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 px-2 py-1 rounded-full">
+                    🐾 Pets Allowed
+                  </span>
+                )}
+                {trip.acAvailable && (
+                  <span className="text-xs bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 px-2 py-1 rounded-full">
+                    ❄️ AC
+                  </span>
+                )}
+                <span className="text-xs bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300 px-2 py-1 rounded-full">
+                  🧳 {trip.luggageAllowed} Luggage
+                </span>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }
