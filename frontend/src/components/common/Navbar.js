@@ -17,7 +17,7 @@ import {
   HeartIcon,
   ShieldCheckIcon,
 } from "@heroicons/react/24/outline";
-
+import Logo from "./Logo";
 export default function Navbar() {
   const { user, logout, isAdmin, isAuthenticated } = useAuth();
   const { dark, toggle } = useTheme();
@@ -73,12 +73,7 @@ export default function Navbar() {
             className="flex items-center gap-1.5 group"
             onClick={() => window.scrollTo(0, 0)}
           >
-            <div className="w-7 h-7 bg-gradient-to-r from-amber-500 to-amber-600 rounded-lg flex items-center justify-center font-bold text-gray-900 text-sm">
-              W
-            </div>
-            <span className="font-semibold text-lg text-gray-900 dark:text-white hidden sm:inline">
-              Wheelz
-            </span>
+            <Logo size="md" />
           </Link>
 
           {/* Desktop Navigation */}
