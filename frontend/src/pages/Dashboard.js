@@ -67,7 +67,8 @@ export default function Dashboard() {
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [processingPayment, setProcessingPayment] = useState(false);
-
+  const [showPassengerModal, setShowPassengerModal] = useState(false);
+  const [selectedPassenger, setSelectedPassenger] = useState(null);
   // Rideshare states
   const [myTrips, setMyTrips] = useState([]);
   const [myRides, setMyRides] = useState([]);
@@ -107,7 +108,10 @@ export default function Dashboard() {
       chatEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages]);
-
+  const viewPassengerDetails = (request) => {
+    setSelectedPassenger(request);
+    setShowPassengerModal(true);
+  };
   const fetchDashboardData = async () => {
     try {
       const [bookingsRes, wishlistRes, statsRes] = await Promise.all([
@@ -729,6 +733,19 @@ export default function Dashboard() {
                   navigate={navigate}
                   onCancel={cancelTrip}
                   cancellingTrip={cancellingTrip}
+                  onViewPassengers={async (trip) => {
+                    try {
+                      const res = await rideShareAPI.getTripRequests(trip._id);
+                      const requests = res.data.requests || [];
+                      if (requests.length > 0) {
+                        viewPassengerDetails(requests[0]);
+                      } else {
+                        toast.error("No passenger requests found");
+                      }
+                    } catch (error) {
+                      toast.error("Failed to load passenger details");
+                    }
+                  }}
                 />
               ))
             )}
@@ -1073,7 +1090,166 @@ export default function Dashboard() {
           </div>
         )}
       </AnimatePresence>
+      {/* ========== PASSENGER DETAIL MODAL ========== */}
+      <AnimatePresence>
+        {showPassengerModal && selectedPassenger && (
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowPassengerModal(false)}
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              className="relative w-full max-w-lg bg-white dark:bg-gray-900 rounded-2xl shadow-2xl overflow-hidden"
+            >
+              {/* Header */}
+              <div className="bg-gradient-to-r from-amber-500 to-amber-600 p-5">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-bold text-white">
+                    Passenger Details
+                  </h3>
+                  <button
+                    onClick={() => setShowPassengerModal(false)}
+                    className="p-1 rounded-full hover:bg-white/20"
+                  >
+                    <XMarkIcon className="w-5 h-5 text-white" />
+                  </button>
+                </div>
+              </div>
 
+              {/* Content */}
+              <div className="p-6 space-y-4">
+                {/* Passenger Avatar & Name */}
+                <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 bg-gradient-to-r from-amber-500 to-amber-600 rounded-full flex items-center justify-center text-2xl font-bold text-white">
+                    {selectedPassenger.passenger?.name?.[0]?.toUpperCase() ||
+                      "P"}
+                  </div>
+                  <div>
+                    <h4 className="text-xl font-bold text-gray-900 dark:text-white">
+                      {selectedPassenger.passenger?.name || "Passenger"}
+                    </h4>
+                    <p className="text-sm text-gray-500">
+                      {selectedPassenger.passenger?.email}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Details Grid */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                    <p className="text-xs text-gray-500">Phone</p>
+                    <p className="font-medium text-sm">
+                      {selectedPassenger.passenger?.phone || "Not shared yet"}
+                    </p>
+                  </div>
+                  <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                    <p className="text-xs text-gray-500">Seats Requested</p>
+                    <p className="font-medium text-sm">
+                      {selectedPassenger.seatsRequested}
+                    </p>
+                  </div>
+                  <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                    <p className="text-xs text-gray-500">Status</p>
+                    <span
+                      className={`text-xs px-2 py-0.5 rounded-full ${
+                        selectedPassenger.status === "approved"
+                          ? "bg-green-100 text-green-700"
+                          : selectedPassenger.status === "pending"
+                            ? "bg-yellow-100 text-yellow-700"
+                            : "bg-red-100 text-red-700"
+                      }`}
+                    >
+                      {selectedPassenger.status}
+                    </span>
+                  </div>
+                  <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                    <p className="text-xs text-gray-500">Payment</p>
+                    <span
+                      className={`text-xs px-2 py-0.5 rounded-full ${
+                        selectedPassenger.paymentStatus === "paid"
+                          ? "bg-green-100 text-green-700"
+                          : "bg-yellow-100 text-yellow-700"
+                      }`}
+                    >
+                      {selectedPassenger.paymentStatus || "pending"}
+                    </span>
+                  </div>
+                  <div className="col-span-2 p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                    <p className="text-xs text-gray-500">Amount</p>
+                    <p className="font-bold text-amber-500">
+                      ₹{selectedPassenger.totalAmount}
+                    </p>
+                  </div>
+                  {selectedPassenger.message && (
+                    <div className="col-span-2 p-3 bg-amber-50 dark:bg-amber-900/20 rounded-xl">
+                      <p className="text-xs text-gray-500">Message</p>
+                      <p className="text-sm italic">
+                        "{selectedPassenger.message}"
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Action Buttons */}
+                {selectedPassenger.status === "pending" && (
+                  <div className="flex gap-3 pt-2">
+                    <button
+                      onClick={async () => {
+                        await rideShareAPI.respondToRequest(
+                          selectedPassenger._id,
+                          { action: "approve" },
+                        );
+                        toast.success("Passenger approved!");
+                        setShowPassengerModal(false);
+                        fetchRideShareData();
+                      }}
+                      className="flex-1 py-2.5 bg-green-500 hover:bg-green-600 text-white rounded-xl font-medium"
+                    >
+                      ✅ Approve
+                    </button>
+                    <button
+                      onClick={async () => {
+                        await rideShareAPI.respondToRequest(
+                          selectedPassenger._id,
+                          { action: "reject" },
+                        );
+                        toast.success("Passenger rejected");
+                        setShowPassengerModal(false);
+                        fetchRideShareData();
+                      }}
+                      className="flex-1 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-xl font-medium"
+                    >
+                      ❌ Reject
+                    </button>
+                  </div>
+                )}
+
+                {selectedPassenger.status === "approved" &&
+                  selectedPassenger.paymentStatus === "paid" && (
+                    <div className="pt-2">
+                      <button
+                        onClick={() => {
+                          setShowPassengerModal(false);
+                          openChat(selectedPassenger);
+                        }}
+                        className="w-full py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-medium flex items-center justify-center gap-2"
+                      >
+                        <ChatBubbleLeftRightIcon className="w-5 h-5" /> Chat
+                        with Passenger
+                      </button>
+                    </div>
+                  )}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
       {/* ========== RATING MODAL ========== */}
       <AnimatePresence>
         {showRating && ratingRide && (
@@ -1375,7 +1551,13 @@ function WishlistCard({ item, navigate }) {
   );
 }
 
-function TripCard({ trip, navigate, onCancel, cancellingTrip }) {
+function TripCard({
+  trip,
+  navigate,
+  onCancel,
+  cancellingTrip,
+  onViewPassengers,
+}) {
   return (
     <motion.div
       variants={itemVariants}
@@ -1424,14 +1606,28 @@ function TripCard({ trip, navigate, onCancel, cancellingTrip }) {
                 {trip.pendingRequests} pending
               </span>
             )}
+            {trip.approvedPassengers > 0 && (
+              <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">
+                {trip.approvedPassengers} approved
+              </span>
+            )}
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          {/* View Passengers Button */}
+          {(trip.pendingRequests > 0 || trip.approvedPassengers > 0) && (
+            <button
+              onClick={() => onViewPassengers(trip)}
+              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-sm flex items-center gap-1"
+            >
+              <UserGroupIcon className="w-4 h-4" /> Passengers
+            </button>
+          )}
           <button
             onClick={() => navigate(`/rideshare/${trip._id}`)}
             className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 text-sm"
           >
-            View
+            View Trip
           </button>
           {(trip.status === "active" || trip.status === "full") && (
             <button
