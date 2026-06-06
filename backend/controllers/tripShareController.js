@@ -351,12 +351,10 @@ exports.getTripRequests = async (req, res) => {
       trip.driver.toString() !== req.user._id.toString() &&
       req.user.role !== "admin"
     ) {
-      return res
-        .status(403)
-        .json({
-          success: false,
-          message: "Not authorized to view these requests",
-        });
+      return res.status(403).json({
+        success: false,
+        message: "Not authorized to view these requests",
+      });
     }
 
     const requests = await TripRequest.find({ trip: tripId })
@@ -394,21 +392,17 @@ exports.requestSeat = async (req, res) => {
     }
 
     if (trip.driver.toString() === req.user._id.toString()) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "You cannot request a seat on your own trip",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "You cannot request a seat on your own trip",
+      });
     }
 
     if (trip.availableSeats < seatsRequested) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: `Only ${trip.availableSeats} seat(s) available`,
-        });
+      return res.status(400).json({
+        success: false,
+        message: `Only ${trip.availableSeats} seat(s) available`,
+      });
     }
 
     const existingRequest = await TripRequest.findOne({
@@ -484,12 +478,10 @@ exports.respondToRequest = async (req, res) => {
     } else if (action === "reject") {
       request.status = "rejected";
     } else {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "Invalid action. Use approve or reject",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "Invalid action. Use approve or reject",
+      });
     }
 
     await request.save();
@@ -525,12 +517,10 @@ exports.cancelRequest = async (req, res) => {
     }
 
     if (["cancelled", "completed", "rejected"].includes(request.status)) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: `Request is already ${request.status}`,
-        });
+      return res.status(400).json({
+        success: false,
+        message: `Request is already ${request.status}`,
+      });
     }
 
     // If request was approved, restore seats
@@ -597,7 +587,7 @@ exports.createPaymentOrder = async (req, res) => {
     const options = {
       amount: amountInPaise,
       currency: "INR",
-      receipt: `ride_${requestId}_${Date.now()}`,
+      receipt: `ride_${requestId.slice(-10)}_${Date.now().toString().slice(-8)}`,
       payment_capture: 1,
       notes: {
         requestId: requestId.toString(),
@@ -813,12 +803,10 @@ exports.rateUser = async (req, res) => {
     );
 
     if (!request || request.status !== "completed") {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "Can only rate after trip completion",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "Can only rate after trip completion",
+      });
     }
 
     if (
