@@ -1,6 +1,6 @@
 const User = require("../models/User");
 const Vehicle = require("../models/Vehicle");
-const { sendEmail } = require("../services/emailService");
+const sendEmail = require("../services/emailService");
 const { createNotification } = require("../utils/notificationHelper");
 
 // Vendor Registration

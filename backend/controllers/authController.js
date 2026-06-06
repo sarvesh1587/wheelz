@@ -6,8 +6,7 @@ const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
 const { OAuth2Client } = require("google-auth-library");
 const User = require("../models/User");
-const { sendEmail } = require("../services/emailService");
-
+const sendEmail = require("../services/emailService");
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const sendTokenResponse = (user, statusCode, res) => {
