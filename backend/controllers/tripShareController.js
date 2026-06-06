@@ -337,20 +337,27 @@ exports.getDriverRequests = async (req, res) => {
 };
 
 // ─── GET REQUESTS FOR A SPECIFIC TRIP ────────────────────────────────────────
+// ─── GET REQUESTS FOR A SPECIFIC TRIP ────────────────────────────────────────
 exports.getTripRequests = async (req, res) => {
   try {
     const { tripId } = req.params;
 
+    console.log("🔍 Fetching requests for trip:", tripId);
+    console.log("👤 User ID:", req.user._id);
+
     const trip = await TripShare.findById(tripId);
-    if (!trip)
+    if (!trip) {
       return res
         .status(404)
         .json({ success: false, message: "Trip not found" });
+    }
 
-    if (
-      trip.driver.toString() !== req.user._id.toString() &&
-      req.user.role !== "admin"
-    ) {
+    const isDriver = trip.driver.toString() === req.user._id.toString();
+    const isAdmin = req.user.role === "admin";
+
+    // ✅ Allow if user is driver OR admin
+    if (!isDriver && !isAdmin) {
+      console.log("❌ Unauthorized - User is not the driver");
       return res.status(403).json({
         success: false,
         message: "Not authorized to view these requests",
@@ -360,6 +367,8 @@ exports.getTripRequests = async (req, res) => {
     const requests = await TripRequest.find({ trip: tripId })
       .populate("passenger", "name email phone")
       .sort({ createdAt: -1 });
+
+    console.log(`✅ Found ${requests.length} requests`);
 
     res.json({ success: true, requests });
   } catch (err) {
@@ -672,39 +681,44 @@ exports.verifyPayment = async (req, res) => {
 };
 
 // ─── SEND MESSAGE ────────────────────────────────────────────────────────────
+// ─── SEND MESSAGE ────────────────────────────────────────────────────────────
 exports.sendMessage = async (req, res) => {
   try {
     const { text } = req.body;
-    const request = await TripRequest.findById(req.params.requestId).populate(
-      "trip",
-      "driver",
-    );
 
-    if (!request)
+    if (!text || !text.trim()) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Message cannot be empty" });
+    }
+
+    const request = await TripRequest.findById(req.params.requestId);
+
+    if (!request) {
       return res
         .status(404)
         .json({ success: false, message: "Request not found" });
+    }
 
-    const isDriver = request.trip.driver.toString() === req.user._id.toString();
-    const isPassenger =
-      request.passenger.toString() === req.user._id.toString();
-
-    if (!isDriver && !isPassenger) {
-      return res
-        .status(403)
-        .json({ success: false, message: "Not authorized" });
+    // Initialize messages array if not exists
+    if (!request.messages) {
+      request.messages = [];
     }
 
     request.messages.push({
       sender: req.user._id,
-      text,
+      text: text.trim(),
       timestamp: new Date(),
+      read: false,
     });
+
     await request.save();
 
     const msg = request.messages[request.messages.length - 1];
+
     res.json({ success: true, message: msg });
   } catch (err) {
+    console.error("Send message error:", err);
     res.status(500).json({ success: false, message: err.message });
   }
 };
