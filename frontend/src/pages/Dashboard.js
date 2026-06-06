@@ -13,7 +13,6 @@ import {
   paymentAPI,
   rideShareAPI,
 } from "../services/api";
-import PaymentReceipt from "../components/PaymentReceipt";
 import toast from "react-hot-toast";
 import {
   CalendarIcon,
