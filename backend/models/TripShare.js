@@ -132,7 +132,7 @@ const TripRequestSchema = new mongoose.Schema(
     totalAmount: { type: Number, required: true },
     paymentStatus: {
       type: String,
-      enum: ["pending", "held", "released", "refunded"],
+      enum: ["pending", "paid", "held", "released", "refunded"],
       default: "pending",
     },
     razorpayOrderId: { type: String },
