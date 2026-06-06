@@ -13,6 +13,7 @@ import {
   paymentAPI,
   rideShareAPI,
 } from "../services/api";
+import PaymentReceipt from "../components/PaymentReceipt";
 import toast from "react-hot-toast";
 import {
   CalendarIcon,
@@ -96,7 +97,8 @@ export default function Dashboard() {
   const [reportRide, setReportRide] = useState(null);
   const [reportReason, setReportReason] = useState("");
   const [submittingReport, setSubmittingReport] = useState(false);
-
+  const [showReceipt, setShowReceipt] = useState(false);
+  const [receiptBooking, setReceiptBooking] = useState(null);
   useEffect(() => {
     fetchDashboardData();
     fetchRideShareData();
@@ -1315,7 +1317,16 @@ export default function Dashboard() {
           </div>
         )}
       </AnimatePresence>
-
+      {/* ========== RECEIPT MODAL ========== */}
+      {showReceipt && receiptBooking && (
+        <PaymentReceipt
+          booking={receiptBooking}
+          onClose={() => {
+            setShowReceipt(false);
+            setReceiptBooking(null);
+          }}
+        />
+      )}
       {/* ========== REPORT MODAL ========== */}
       <AnimatePresence>
         {showReport && reportRide && (
@@ -1470,8 +1481,11 @@ function BookingCard({
                   </button>
                 ) : (
                   <button
-                    onClick={() => toast.success("Receipt downloaded!")}
-                    className="text-xs bg-green-500 text-white px-3 py-1.5 rounded-lg"
+                    onClick={() => {
+                      setReceiptBooking(booking);
+                      setShowReceipt(true);
+                    }}
+                    className="text-xs bg-green-500 hover:bg-green-600 text-white px-3 py-1.5 rounded-lg transition-colors"
                   >
                     📥 Receipt
                   </button>
