@@ -38,25 +38,29 @@ export default function RideShareDetail() {
       const tripRes = await rideShareAPI.getOne(id);
       setTrip(tripRes.data.trip);
 
-      // Only fetch requests if user is driver
-      if (tripRes.data.trip?.driver?._id === user?._id) {
+      const isDriver = tripRes.data.trip?.driver?._id === user?._id;
+
+      if (isDriver) {
+        // Driver - fetch all requests
         try {
           const requestsRes = await rideShareAPI.getTripRequests(id);
           setRequests(requestsRes.data.requests || []);
         } catch (err) {
-          console.log("Cannot fetch requests - user may not be driver");
+          console.log("Cannot fetch requests:", err);
           setRequests([]);
         }
       } else {
-        // Passenger - check their own request status
+        // Passenger - fetch their own rides to find this request
         try {
-          const requestsRes = await rideShareAPI.getTripRequests(id);
-          const myReq = requestsRes.data.requests?.find(
-            (r) => r.passenger?._id === user?._id,
+          const ridesRes = await rideShareAPI.getMyRides();
+          const myRides = ridesRes.data.rides || [];
+          const myReq = myRides.find(
+            (r) => r.trip?._id === id || r.trip === id,
           );
           if (myReq) setRequests([myReq]);
           else setRequests([]);
         } catch (err) {
+          console.log("Cannot fetch ride:", err);
           setRequests([]);
         }
       }
