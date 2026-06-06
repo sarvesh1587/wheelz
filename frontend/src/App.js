@@ -12,7 +12,8 @@ import { ThemeProvider } from "./context/ThemeContext";
 import Navbar from "./components/common/Navbar";
 import Footer from "./components/common/Footer";
 import LoadingSpinner from "./components/common/LoadingSpinner";
-
+// Add this import near the other imports
+import LoadingScreen from "./components/common/LoadingScreen";
 // Pages
 import About from "./pages/About";
 import Contact from "./pages/Contact";
@@ -343,13 +344,23 @@ function AppRoutes() {
   );
 }
 
+// ========== Replace only the App component ==========
+
 export default function App() {
+  const [appLoading, setAppLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    // Show loading screen for 2.5 seconds then show app
+    const timer = setTimeout(() => {
+      setAppLoading(false);
+    }, 2500);
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <ThemeProvider>
       <AuthProvider>
-        <Router>
-          <AppRoutes />
-        </Router>
+        <Router>{appLoading ? <LoadingScreen /> : <AppRoutes />}</Router>
       </AuthProvider>
     </ThemeProvider>
   );
