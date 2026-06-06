@@ -1,5 +1,5 @@
 /**
- * WHEELZ - Ultra Premium Loading Experience
+ * WHEELZ - MEGA ULTRA LOADING EXPERIENCE v3.0
  * File: frontend/src/components/common/LoadingScreen.js
  */
 
@@ -7,346 +7,533 @@ import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function LoadingScreen() {
-  const [phase, setPhase] = useState("countdown"); // countdown → drive → ready
+  const [phase, setPhase] = useState("countdown");
   const [countdown, setCountdown] = useState(3);
   const [progress, setProgress] = useState(0);
+  const [boost, setBoost] = useState(false);
+  const [drift, setDrift] = useState(false);
+  const [nitroParticles, setNitroParticles] = useState([]);
+  const [smokeTrail, setSmokeTrail] = useState([]);
   const [showEasterEgg, setShowEasterEgg] = useState(false);
   const [clickCount, setClickCount] = useState(0);
-  const [funFact, setFunFact] = useState(0);
+  const [speed, setSpeed] = useState(0);
+  const [gear, setGear] = useState(1);
+  const [score, setScore] = useState(0);
+  const carRef = useRef(null);
 
-  const funFacts = [
-    "Did you know? Carpooling reduces CO2 by 50% 🌍",
-    "Fun fact: India's longest road trip is 4000+ km! 🛣️",
-    "Tip: Book early for up to 40% discount 💰",
-    "Wheelz fact: 10,000+ happy travelers joined this month 🎉",
-    "Travel hack: Split costs = Travel more! ✈️",
-    "Mumbai to Goa? ₹499 per seat only 🏖️",
-    "Safety first: All drivers are verified ✅",
-    "Wheelz is in 50+ cities across India 🇮🇳",
-  ];
+  // Generate smoke particles
+  useEffect(() => {
+    if (phase === "drive") {
+      const interval = setInterval(() => {
+        setSmokeTrail((prev) => {
+          const newTrail = [
+            ...prev,
+            { id: Date.now(), x: Math.random() * 100, opacity: 1 },
+          ];
+          return newTrail.slice(-30);
+        });
+      }, 50);
+      return () => clearInterval(interval);
+    }
+  }, [phase]);
+
+  // Generate nitro particles
+  useEffect(() => {
+    if (boost && phase === "drive") {
+      const interval = setInterval(() => {
+        setNitroParticles((prev) => {
+          const newParticles = [
+            ...prev,
+            {
+              id: Date.now(),
+              x: Math.random() * 20 - 10,
+              y: Math.random() * 20 - 10,
+            },
+          ];
+          return newParticles.slice(-20);
+        });
+      }, 50);
+      return () => clearInterval(interval);
+    }
+  }, [boost, phase]);
+
+  // Speed and gear system
+  useEffect(() => {
+    if (phase === "drive") {
+      const interval = setInterval(() => {
+        setSpeed((prev) => {
+          const newSpeed = prev + (boost ? 15 : 5) + Math.random() * 10;
+          if (newSpeed > 280) return 280;
+          return newSpeed;
+        });
+      }, 200);
+      return () => clearInterval(interval);
+    }
+  }, [phase, boost]);
 
   useEffect(() => {
-    // COUNTDOWN PHASE
-    if (phase === "countdown" && countdown > 0) {
-      const timer = setTimeout(() => setCountdown((prev) => prev - 1), 800);
-      return () => clearTimeout(timer);
-    }
-    if (phase === "countdown" && countdown === 0) {
-      setTimeout(() => setPhase("drive"), 300);
-    }
+    if (speed < 60) setGear(1);
+    else if (speed < 120) setGear(2);
+    else if (speed < 180) setGear(3);
+    else if (speed < 240) setGear(4);
+    else setGear(5);
+  }, [speed]);
 
-    // DRIVE PHASE - Progress loading
+  // Progress loading
+  useEffect(() => {
     if (phase === "drive") {
       const interval = setInterval(() => {
         setProgress((prev) => {
           if (prev >= 100) {
             clearInterval(interval);
-            setTimeout(() => setPhase("ready"), 500);
+            setTimeout(() => setPhase("ready"), 800);
             return 100;
           }
-          // Random but faster progress
-          return Math.min(prev + Math.random() * 8 + 2, 100);
+          return Math.min(prev + (boost ? 4 : 1.5), 100);
         });
       }, 100);
+      return () => clearInterval(interval);
+    }
+  }, [phase, boost]);
 
-      // Rotate fun facts
-      const factInterval = setInterval(() => {
-        setFunFact((prev) => (prev + 1) % funFacts.length);
-      }, 2000);
-
-      return () => {
-        clearInterval(interval);
-        clearInterval(factInterval);
-      };
+  // Countdown timer
+  useEffect(() => {
+    if (phase === "countdown" && countdown > 0) {
+      const timer = setTimeout(() => setCountdown((prev) => prev - 1), 900);
+      return () => clearTimeout(timer);
+    }
+    if (phase === "countdown" && countdown === 0) {
+      setTimeout(() => {
+        setPhase("drive");
+        setBoost(true);
+        setTimeout(() => setBoost(false), 1500);
+      }, 500);
     }
   }, [phase, countdown]);
 
-  const handleLogoClick = () => {
-    setClickCount((prev) => {
-      const newCount = prev + 1;
-      if (newCount === 5) {
-        setShowEasterEgg(true);
-        setTimeout(() => setShowEasterEgg(false), 3000);
-        return 0;
+  // Keyboard controls
+  useEffect(() => {
+    const handleKeyPress = (e) => {
+      if (e.code === "Space") {
+        e.preventDefault();
+        setBoost(true);
+        setScore((prev) => prev + 10);
+        setTimeout(() => setBoost(false), 1000);
       }
-      return newCount;
-    });
-  };
+      if (e.code === "KeyD") {
+        setDrift(true);
+        setScore((prev) => prev + 25);
+        setTimeout(() => setDrift(false), 800);
+      }
+      if (e.code === "KeyW") {
+        setClickCount((prev) => {
+          const newCount = prev + 1;
+          if (newCount >= 5) {
+            setShowEasterEgg(true);
+            setTimeout(() => setShowEasterEgg(false), 4000);
+            return 0;
+          }
+          return newCount;
+        });
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyPress);
+    return () => window.removeEventListener("keydown", handleKeyPress);
+  }, []);
 
   return (
-    <div className="fixed inset-0 bg-[#0A0F1A] z-[99999] overflow-hidden cursor-wait">
-      {/* ⭐ ANIMATED STARS BACKGROUND */}
+    <div className="fixed inset-0 bg-[#060B14] z-[99999] overflow-hidden select-none">
+      {/* 🌌 GALAXY BACKGROUND */}
       <div className="absolute inset-0">
-        {[...Array(50)].map((_, i) => (
+        {/* Nebula effect */}
+        <div
+          className="absolute top-0 left-0 w-full h-full opacity-20"
+          style={{
+            background: `
+              radial-gradient(ellipse at 20% 50%, rgba(245,158,11,0.3) 0%, transparent 50%),
+              radial-gradient(ellipse at 80% 20%, rgba(251,191,36,0.2) 0%, transparent 50%),
+              radial-gradient(ellipse at 50% 80%, rgba(245,158,11,0.15) 0%, transparent 50%)
+            `,
+          }}
+        />
+
+        {/* Stars */}
+        {[...Array(100)].map((_, i) => (
           <motion.div
-            key={i}
-            className="absolute w-1 h-1 bg-white rounded-full"
+            key={`star-${i}`}
+            className="absolute rounded-full"
             style={{
+              width: `${Math.random() * 3 + 1}px`,
+              height: `${Math.random() * 3 + 1}px`,
               left: `${Math.random() * 100}%`,
               top: `${Math.random() * 100}%`,
+              background: Math.random() > 0.8 ? "#fbbf24" : "#ffffff",
             }}
             animate={{
-              opacity: [0.2, 1, 0.2],
+              opacity: [0.1, Math.random() * 0.8 + 0.2, 0.1],
               scale: [0.8, 1.5, 0.8],
             }}
             transition={{
-              duration: 1.5 + Math.random() * 3,
+              duration: 2 + Math.random() * 4,
               repeat: Infinity,
-              delay: Math.random() * 2,
+              delay: Math.random() * 3,
+            }}
+          />
+        ))}
+
+        {/* Shooting stars */}
+        {[...Array(3)].map((_, i) => (
+          <motion.div
+            key={`shooting-${i}`}
+            className="absolute h-0.5 w-20 bg-gradient-to-r from-transparent via-amber-400 to-transparent"
+            style={{
+              top: `${Math.random() * 50}%`,
+              left: `${Math.random() * 80}%`,
+              transform: "rotate(-25deg)",
+            }}
+            animate={{
+              x: [-100, window.innerWidth + 100],
+              opacity: [1, 0],
+            }}
+            transition={{
+              duration: 1.5,
+              repeat: Infinity,
+              delay: i * 3 + Math.random() * 2,
+              ease: "linear",
             }}
           />
         ))}
       </div>
 
-      {/* 🌐 MOVING GRID */}
-      <motion.div
-        className="absolute inset-0 opacity-[0.02]"
-        style={{
-          backgroundImage: `radial-gradient(circle, rgba(245,158,11,0.3) 1px, transparent 1px)`,
-          backgroundSize: "50px 50px",
-        }}
-        animate={{ backgroundPosition: ["0px 0px", "50px 50px"] }}
-        transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-      />
+      {/* 🏙️ CITY SKYLINE AT BOTTOM */}
+      <div className="absolute bottom-0 left-0 right-0 h-32 opacity-10">
+        <div className="flex items-end justify-around h-full">
+          {[...Array(20)].map((_, i) => (
+            <motion.div
+              key={`building-${i}`}
+              className="bg-amber-400"
+              style={{
+                width: `${Math.random() * 30 + 15}px`,
+                height: `${Math.random() * 100 + 20}%`,
+              }}
+              animate={{ opacity: [0.3, 0.6, 0.3] }}
+              transition={{
+                duration: 2 + Math.random() * 3,
+                repeat: Infinity,
+                delay: Math.random() * 2,
+              }}
+            />
+          ))}
+        </div>
+      </div>
 
-      {/* 🚗 RACING CIRCUIT (Background) */}
-      <svg
-        className="absolute inset-0 w-full h-full opacity-5"
-        viewBox="0 0 1000 1000"
-      >
-        <motion.path
-          d="M 100 500 Q 250 200, 500 200 Q 750 200, 900 500 Q 750 800, 500 800 Q 250 800, 100 500 Z"
-          fill="none"
-          stroke="#f59e0b"
-          strokeWidth="2"
-          initial={{ pathLength: 0 }}
-          animate={{ pathLength: 1 }}
-          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-        />
-        <motion.circle
-          r="5"
-          fill="#fbbf24"
-          initial={{ offsetDistance: "0%" }}
-          animate={{ offsetDistance: "100%" }}
-          transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-          style={{
-            offsetPath:
-              "path('M 100 500 Q 250 200, 500 200 Q 750 200, 900 500 Q 750 800, 500 800 Q 250 800, 100 500 Z')",
-          }}
-        />
-      </svg>
-
-      {/* 🎯 MAIN CONTENT */}
+      {/* MAIN CONTENT */}
       <div className="relative z-10 h-full flex flex-col items-center justify-center">
         {/* COUNTDOWN PHASE */}
         <AnimatePresence>
           {phase === "countdown" && (
             <motion.div
               key="countdown"
-              initial={{ scale: 3, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0, opacity: 0 }}
-              className="text-center"
+              className="text-center relative"
             >
-              {countdown > 0 ? (
-                <motion.div
-                  key={countdown}
-                  initial={{ scale: 2, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  exit={{ scale: 0, opacity: 0 }}
-                  className="relative"
-                >
-                  <div className="text-[200px] font-black text-transparent bg-clip-text bg-gradient-to-b from-amber-300 to-amber-600 leading-none">
-                    {countdown}
-                  </div>
+              {/* Traffic Lights */}
+              <div className="flex flex-col gap-3 mb-8 mx-auto w-16 bg-gray-900/80 backdrop-blur-sm rounded-2xl p-3 border border-gray-800">
+                {[0, 1, 2].map((light) => (
                   <motion.div
-                    className="absolute inset-0 text-[200px] font-black text-amber-400/20 blur-xl leading-none"
-                    animate={{ scale: [1, 1.2, 1], opacity: [0.2, 0.5, 0.2] }}
-                    transition={{ duration: 0.8, repeat: Infinity }}
-                  >
-                    {countdown}
-                  </motion.div>
-                </motion.div>
-              ) : (
+                    key={light}
+                    className="w-10 h-10 rounded-full mx-auto"
+                    style={{
+                      background:
+                        countdown <= light
+                          ? light === 2
+                            ? "#ef4444"
+                            : light === 1
+                              ? "#f59e0b"
+                              : "#10b981"
+                          : "#374151",
+                    }}
+                    animate={
+                      countdown <= light
+                        ? {
+                            boxShadow: [
+                              `0 0 20px ${light === 2 ? "#ef4444" : light === 1 ? "#f59e0b" : "#10b981"}40`,
+                              `0 0 40px ${light === 2 ? "#ef4444" : light === 1 ? "#f59e0b" : "#10b981"}80`,
+                              `0 0 20px ${light === 2 ? "#ef4444" : light === 1 ? "#f59e0b" : "#10b981"}40`,
+                            ],
+                          }
+                        : {}
+                    }
+                    transition={{ duration: 0.5, repeat: Infinity }}
+                  />
+                ))}
+              </div>
+
+              {/* Countdown Number */}
+              <motion.div
+                key={countdown}
+                initial={{ scale: 3, opacity: 0, rotateY: 180 }}
+                animate={{ scale: 1, opacity: 1, rotateY: 0 }}
+                exit={{ scale: 0.5, opacity: 0 }}
+                className="relative"
+              >
+                <div className="text-[250px] font-black bg-gradient-to-b from-amber-200 via-amber-400 to-amber-700 bg-clip-text text-transparent leading-none">
+                  {countdown > 0 ? countdown : "GO!"}
+                </div>
                 <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  className="text-8xl"
+                  className="absolute inset-0 text-[250px] font-black text-amber-500/30 blur-2xl leading-none"
+                  animate={{ scale: [1, 1.3, 1], opacity: [0.3, 0.6, 0.3] }}
+                  transition={{ duration: 0.5, repeat: Infinity }}
                 >
-                  🏁
+                  {countdown > 0 ? countdown : "GO!"}
                 </motion.div>
-              )}
+              </motion.div>
+
+              <p className="text-gray-500 text-sm mt-4 tracking-widest uppercase">
+                {countdown > 0 ? "Get Ready..." : "HERE WE GO!"}
+              </p>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* DRIVE PHASE */}
+        {/* DRIVE PHASE - THE MAIN SHOW */}
         <AnimatePresence>
           {phase === "drive" && (
             <motion.div
               key="drive"
-              initial={{ opacity: 0, y: 50 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-center space-y-8"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="w-full max-w-4xl mx-auto px-8"
             >
-              {/* Clickable Logo */}
-              <motion.div
-                onClick={handleLogoClick}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="cursor-pointer relative inline-block"
-              >
-                <motion.div
-                  className="absolute inset-0 bg-amber-500 rounded-3xl blur-2xl"
-                  animate={{ opacity: [0.3, 0.6, 0.3], scale: [1, 1.1, 1] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                />
-                <div className="relative w-28 h-28 bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 rounded-3xl flex items-center justify-center shadow-2xl shadow-amber-500/30">
-                  <motion.span
-                    animate={{ rotate: [0, 5, -5, 0] }}
-                    transition={{ duration: 0.5, repeat: Infinity }}
-                    className="text-6xl font-black text-white"
-                  >
-                    W
-                  </motion.span>
-                </div>
-                <motion.div
-                  className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-white text-xs font-bold"
-                  animate={{ scale: [1, 1.2, 1] }}
-                  transition={{ duration: 1, repeat: Infinity }}
-                >
-                  {clickCount}
-                </motion.div>
-              </motion.div>
-
-              {/* Brand */}
-              <div>
-                <h1 className="text-7xl font-black text-white tracking-tighter">
-                  <motion.span
+              {/* HEADER WITH SPEED STATS */}
+              <div className="flex items-center justify-between mb-12 text-xs">
+                <div className="flex items-center gap-4">
+                  <motion.div
+                    className="flex items-center gap-2 bg-white/[0.03] backdrop-blur-sm rounded-lg px-3 py-1.5 border border-white/[0.05]"
                     animate={{
-                      backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
+                      borderColor: boost
+                        ? "rgba(245,158,11,0.5)"
+                        : "rgba(255,255,255,0.05)",
                     }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                    className="bg-gradient-to-r from-amber-400 via-yellow-200 to-amber-400 bg-[length:200%] bg-clip-text text-transparent"
-                    style={{ backgroundSize: "200% 100%" }}
                   >
-                    WHEELZ
-                  </motion.span>
-                </h1>
-                <motion.p
-                  animate={{ opacity: [0.4, 1, 0.4] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                  className="text-gray-500 text-sm tracking-[0.5em] uppercase mt-2"
-                >
-                  Premium Ridesharing
-                </motion.p>
+                    <span className="text-gray-500">GEAR</span>
+                    <motion.span
+                      key={gear}
+                      initial={{ scale: 2 }}
+                      animate={{ scale: 1 }}
+                      className="text-amber-400 font-bold text-lg"
+                    >
+                      {gear}
+                    </motion.span>
+                  </motion.div>
+
+                  <div className="flex items-center gap-2 bg-white/[0.03] backdrop-blur-sm rounded-lg px-3 py-1.5 border border-white/[0.05]">
+                    <span className="text-gray-500">RPM</span>
+                    <motion.span className="text-green-400 font-mono font-bold">
+                      {Math.round(speed * 30)}
+                    </motion.span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2 bg-white/[0.03] backdrop-blur-sm rounded-lg px-3 py-1.5 border border-white/[0.05]">
+                    <span className="text-gray-500">SCORE</span>
+                    <motion.span className="text-amber-400 font-bold">
+                      {score}
+                    </motion.span>
+                  </div>
+
+                  <motion.div
+                    animate={{ opacity: boost ? 1 : 0.3 }}
+                    className="text-xs text-red-400 font-bold"
+                  >
+                    {boost ? "🔥 NITRO ACTIVE!" : "Press SPACE for NOS"}
+                  </motion.div>
+                </div>
               </div>
 
-              {/* RACING CAR ANIMATION */}
-              <div className="relative w-80 h-20 mx-auto">
-                {/* Road */}
-                <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/[0.05] rounded-full overflow-hidden">
-                  {[...Array(8)].map((_, i) => (
+              {/* SPEEDOMETER */}
+              <div className="text-center mb-12">
+                <motion.div
+                  className="inline-block relative"
+                  animate={drift ? { rotate: [-5, 5, -5, 5] } : {}}
+                  transition={{ duration: 0.1, repeat: drift ? Infinity : 0 }}
+                >
+                  <div className="text-[180px] font-black text-white leading-none tracking-tighter tabular-nums">
+                    <motion.span
+                      animate={{ color: boost ? "#fbbf24" : "#ffffff" }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      {Math.round(speed)}
+                    </motion.span>
+                  </div>
+                  <div className="absolute -top-4 right-0 text-4xl text-gray-600 font-bold">
+                    KM/H
+                  </div>
+                </motion.div>
+              </div>
+
+              {/* THE RACING TRACK */}
+              <div className="relative h-40 mb-8 overflow-hidden">
+                {/* Track surface */}
+                <div className="absolute bottom-8 left-0 right-0 h-20 bg-gradient-to-b from-gray-800/50 to-gray-900/50 rounded-lg border border-white/[0.05]">
+                  {/* Track lines */}
+                  <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-yellow-500/20 transform -translate-y-1/2" />
+                  {[...Array(20)].map((_, i) => (
                     <motion.div
-                      key={i}
-                      className="absolute h-full w-8 bg-white/[0.1]"
-                      style={{ left: `${i * 40 + 5}px` }}
-                      animate={{ x: [-400, 400] }}
+                      key={`line-${i}`}
+                      className="absolute top-1/2 h-1 w-10 bg-yellow-500/40"
+                      style={{ left: `${i * 60 + 20}px` }}
+                      animate={{ x: [-800, 800] }}
                       transition={{
-                        duration: 2,
+                        duration: 3,
                         repeat: Infinity,
                         ease: "linear",
-                        delay: i * 0.1,
                       }}
                     />
                   ))}
                 </div>
 
-                {/* Multiple cars racing */}
+                {/* ENEMY CARS */}
                 <motion.div
-                  className="absolute top-0 text-5xl"
-                  animate={{ x: [0, 280, 0] }}
-                  transition={{
-                    duration: 2.5,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                  }}
-                >
-                  🏎️
-                  <motion.div
-                    className="absolute -right-4 top-1/2 text-amber-400 text-lg"
-                    animate={{ opacity: [1, 0, 1] }}
-                    transition={{ duration: 0.3, repeat: Infinity }}
-                  >
-                    ⚡
-                  </motion.div>
-                </motion.div>
-
-                <motion.div
-                  className="absolute top-3 text-4xl opacity-50"
-                  animate={{ x: [280, 0, 280] }}
-                  transition={{
-                    duration: 3,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                  }}
+                  className="absolute top-2 text-4xl"
+                  animate={{ x: [800, -100] }}
+                  transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
                 >
                   🚙
                 </motion.div>
+                <motion.div
+                  className="absolute top-2 text-5xl"
+                  animate={{ x: [900, -150] }}
+                  transition={{
+                    duration: 3.5,
+                    repeat: Infinity,
+                    ease: "linear",
+                    delay: 1,
+                  }}
+                >
+                  🚕
+                </motion.div>
+                <motion.div
+                  className="absolute top-2 text-3xl"
+                  animate={{ x: [1000, -50] }}
+                  transition={{
+                    duration: 5,
+                    repeat: Infinity,
+                    ease: "linear",
+                    delay: 0.5,
+                  }}
+                >
+                  🚌
+                </motion.div>
+
+                {/* PLAYER CAR */}
+                <motion.div
+                  ref={carRef}
+                  className="absolute top-1 text-6xl z-20"
+                  animate={{
+                    x: drift ? [30, 50, 70] : progress * 5,
+                    y: drift ? [0, -5, 0] : 0,
+                    rotate: drift ? [-5, 5, -5] : 0,
+                  }}
+                  transition={{ duration: 0.3 }}
+                  style={{ left: `${Math.min(progress * 5, 80)}%` }}
+                >
+                  {/* Car with effects */}
+                  <div className="relative">
+                    🏎️
+                    {/* NITRO FLAMES */}
+                    {boost && (
+                      <motion.div
+                        className="absolute -left-8 top-1/2 -translate-y-1/2 flex gap-0.5"
+                        animate={{ opacity: [1, 0.5, 1] }}
+                        transition={{ duration: 0.1, repeat: Infinity }}
+                      >
+                        {[...Array(5)].map((_, i) => (
+                          <motion.div
+                            key={`flame-${i}`}
+                            className="text-2xl"
+                            style={{
+                              filter: `blur(${i}px)`,
+                              opacity: 1 - i * 0.2,
+                            }}
+                          >
+                            🔥
+                          </motion.div>
+                        ))}
+                      </motion.div>
+                    )}
+                    {/* SMOKE TRAIL */}
+                    <div className="absolute -left-2 top-1/2 -translate-y-1/2">
+                      {smokeTrail.slice(-8).map((particle, i) => (
+                        <motion.div
+                          key={particle.id}
+                          className="absolute"
+                          initial={{ opacity: 0.8, scale: 1, x: 0 }}
+                          animate={{ opacity: 0, scale: 2, x: -50 - i * 10 }}
+                          transition={{ duration: 0.8 }}
+                          style={{ top: `${i * 8 - 20}px` }}
+                        >
+                          <div
+                            className="w-4 h-4 rounded-full blur-sm"
+                            style={{
+                              background:
+                                "radial-gradient(circle, rgba(255,255,255,0.6), rgba(200,200,200,0))",
+                            }}
+                          />
+                        </motion.div>
+                      ))}
+                    </div>
+                    {/* NITRO PARTICLES */}
+                    {boost &&
+                      nitroParticles.map((particle) => (
+                        <motion.div
+                          key={particle.id}
+                          className="absolute w-1.5 h-1.5 bg-amber-400 rounded-full"
+                          initial={{ x: 0, y: 0, opacity: 1, scale: 1 }}
+                          animate={{ x: -100, y: -20, opacity: 0, scale: 0 }}
+                          transition={{ duration: 0.5 }}
+                        />
+                      ))}
+                  </div>
+                </motion.div>
               </div>
 
-              {/* PROGRESS SECTION */}
+              {/* PROGRESS BAR */}
               <div className="space-y-3">
-                {/* Speedometer-style progress */}
-                <div className="relative w-72 h-3 mx-auto">
-                  <div className="absolute inset-0 bg-white/[0.03] rounded-full overflow-hidden backdrop-blur-sm border border-white/[0.05]">
-                    <motion.div
-                      className="h-full rounded-full"
-                      style={{
-                        background:
-                          "linear-gradient(90deg, #f59e0b, #fbbf24, #f59e0b)",
-                        width: `${progress}%`,
-                      }}
-                    />
-                  </div>
-                  {/* Speed markers */}
-                  {[25, 50, 75].map((mark) => (
+                <div className="relative h-2 bg-white/[0.03] rounded-full overflow-hidden border border-white/[0.05]">
+                  <motion.div
+                    className="h-full rounded-full"
+                    style={{
+                      background:
+                        "linear-gradient(90deg, #f59e0b, #fbbf24, #f59e0b)",
+                      width: `${progress}%`,
+                      boxShadow: "0 0 20px rgba(245,158,11,0.4)",
+                    }}
+                  />
+
+                  {/* Checkpoints */}
+                  {[25, 50, 75, 100].map((checkpoint) => (
                     <div
-                      key={mark}
-                      className="absolute top-0 w-0.5 h-3 bg-white/20"
-                      style={{ left: `${mark}%` }}
+                      key={checkpoint}
+                      className="absolute top-0 w-0.5 h-2 bg-white/20"
+                      style={{ left: `${checkpoint}%` }}
                     />
                   ))}
                 </div>
 
-                <div className="flex items-center justify-between">
+                {/* Controls hint */}
+                <div className="flex items-center justify-between text-xs text-gray-600">
                   <motion.span
-                    key={funFact}
-                    initial={{ opacity: 0, y: 5 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="text-xs text-amber-400/60 font-medium"
+                    animate={{ opacity: [0.3, 0.7, 0.3] }}
+                    transition={{ duration: 2, repeat: Infinity }}
                   >
-                    {funFacts[funFact]}
+                    ⌨️ SPACE = NITRO | D = DRIFT | W = ?
                   </motion.span>
-                  <span className="text-xs text-amber-400 font-mono font-bold">
+                  <span className="text-amber-400 font-mono">
                     {Math.round(progress)}%
                   </span>
-                </div>
-              </div>
-
-              {/* Speed Stats */}
-              <div className="flex gap-8 justify-center text-xs text-gray-600">
-                <div className="text-center">
-                  <p className="text-amber-400 font-bold">50+</p>
-                  <p>Cities</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-amber-400 font-bold">10K+</p>
-                  <p>Riders</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-amber-400 font-bold">₹499</p>
-                  <p>Starting</p>
                 </div>
               </div>
             </motion.div>
@@ -357,47 +544,43 @@ export default function LoadingScreen() {
         <AnimatePresence>
           {showEasterEgg && (
             <motion.div
-              initial={{ scale: 0, rotate: -180 }}
-              animate={{ scale: 1, rotate: 0 }}
-              exit={{ scale: 0, rotate: 180 }}
-              className="fixed inset-0 flex items-center justify-center z-50"
+              initial={{ scale: 0, rotateY: 180 }}
+              animate={{ scale: 1, rotateY: 0 }}
+              exit={{ scale: 0, rotateY: -180 }}
+              className="fixed inset-0 flex items-center justify-center z-50 bg-black/80 backdrop-blur-sm"
             >
-              <div className="text-center">
-                <motion.div
-                  animate={{ y: [0, -20, 0] }}
-                  transition={{ duration: 0.5, repeat: Infinity }}
-                  className="text-9xl"
-                >
-                  🏆
-                </motion.div>
-                <p className="text-2xl font-bold text-amber-400 mt-4">
-                  You found the secret!
+              <motion.div
+                animate={{ y: [0, -20, 0] }}
+                transition={{ duration: 0.5, repeat: Infinity }}
+                className="text-center"
+              >
+                <div className="text-9xl">🏆</div>
+                <h2 className="text-4xl font-black text-amber-400 mt-4">
+                  LEGENDARY!
+                </h2>
+                <p className="text-gray-400 mt-2">Secret code unlocked:</p>
+                <div className="mt-4 inline-block bg-amber-500 text-black font-bold text-2xl px-6 py-3 rounded-xl">
+                  WHEELZRACER50
+                </div>
+                <p className="text-gray-500 text-sm mt-2">
+                  50% OFF your next ride!
                 </p>
-                <p className="text-gray-400">
-                  Use code: WHEELZVIP for 50% off 🎉
-                </p>
-              </div>
+              </motion.div>
             </motion.div>
           )}
         </AnimatePresence>
       </div>
 
-      {/* Bottom Stats Bar */}
+      {/* BOTTOM CONTROLS BAR */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{
-          opacity: phase === "drive" ? 1 : 0,
-          y: phase === "drive" ? 0 : 20,
-        }}
-        className="absolute bottom-8 left-0 right-0 flex justify-center gap-8 text-xs text-gray-600"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: phase === "drive" ? 1 : 0 }}
+        className="absolute bottom-4 left-0 right-0 flex justify-center gap-6 text-xs text-gray-700"
       >
-        <span>🔒 Secure Payments</span>
-        <span className="w-1 h-1 bg-gray-700 rounded-full self-center" />
-        <span>✅ Verified Drivers</span>
-        <span className="w-1 h-1 bg-gray-700 rounded-full self-center" />
-        <span>⚡ Instant Booking</span>
-        <span className="w-1 h-1 bg-gray-700 rounded-full self-center" />
-        <span>🛡️ Trip Protection</span>
+        <span>🏎️ SPACE = Nitro Boost</span>
+        <span>🔄 D = Drift</span>
+        <span>🎯 W = Secret (5x)</span>
+        <span>⭐ Score: {score}</span>
       </motion.div>
     </div>
   );
