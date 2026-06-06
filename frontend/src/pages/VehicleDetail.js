@@ -8,7 +8,7 @@ import {
   kycAPI, // ✅ Add KYC API
 } from "../services/api";
 import { useAuth } from "../context/AuthContext";
-import { StarRating } from "../components/common/LoadingSpinner";
+import { StarRating } from "../components/common/StarRating";
 import LoadingSpinner from "../components/common/LoadingSpinner";
 import ReviewModal from "../components/ReviewModal";
 import {
