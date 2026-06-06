@@ -634,6 +634,8 @@ export default function Dashboard() {
                   onProcessPayment={processPayment}
                   onCancelBooking={cancelBooking}
                   processingPayment={processingPayment}
+                  setReceiptBooking={setReceiptBooking}
+                  setShowReceipt={setShowReceipt}
                 />
               ))
             )}
@@ -1420,6 +1422,8 @@ function BookingCard({
   onProcessPayment,
   onCancelBooking,
   processingPayment,
+  setReceiptBooking,
+  setShowReceipt,
 }) {
   return (
     <motion.div
