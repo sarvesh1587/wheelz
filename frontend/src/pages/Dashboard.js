@@ -43,7 +43,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { StarIcon as StarIconSolid } from "@heroicons/react/24/solid";
 import { motion, AnimatePresence } from "framer-motion";
-
+import PaymentReceipt from "../components/PaymentReceipt";
 // Animation variants
 const containerVariants = {
   hidden: { opacity: 0 },
