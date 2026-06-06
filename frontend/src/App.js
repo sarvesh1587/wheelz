@@ -1,4 +1,4 @@
-import React, { Suspense, lazy } from "react";
+import React, { Suspense, lazy, useState, useEffect } from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -12,8 +12,8 @@ import { ThemeProvider } from "./context/ThemeContext";
 import Navbar from "./components/common/Navbar";
 import Footer from "./components/common/Footer";
 import LoadingSpinner from "./components/common/LoadingSpinner";
-// Add this import near the other imports
-import LoadingScreen from "./components/common/LoadingScreen";
+import LoadingScreen from "./components/common/LoadingScreen"; // ✅ Import at top
+
 // Pages
 import About from "./pages/About";
 import Contact from "./pages/Contact";
@@ -42,6 +42,7 @@ const TripPlanner = lazy(() => import("./pages/TripPlanner"));
 const FindTrip = lazy(() => import("./pages/FindTrip"));
 const OfferTrip = lazy(() => import("./pages/OfferTrip"));
 const TripDetail = lazy(() => import("./pages/TripDetail"));
+
 // Admin Pages
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const AdminVehicles = lazy(() => import("./pages/AdminVehicles"));
@@ -65,19 +66,11 @@ const VendorPending = lazy(() => import("./pages/VendorPending"));
 const PrivateRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
 
-  console.log(
-    "🔒 PrivateRoute - isAuthenticated:",
-    isAuthenticated,
-    "loading:",
-    loading,
-  );
-
   if (loading) {
     return <LoadingSpinner />;
   }
 
   if (!isAuthenticated) {
-    console.log("🔒 Not authenticated, redirecting to login");
     return <Navigate to="/login" replace />;
   }
 
@@ -181,6 +174,7 @@ function AppRoutes() {
               }
             />
             <Route path="/rideshare/:id" element={<TripDetail />} />
+
             {/* Customer Routes */}
             <Route
               path="/dashboard"
@@ -338,22 +332,18 @@ function AppRoutes() {
         </Suspense>
       </main>
       <Footer />
-      <AIChatbot /> {/* ✅ Only ONE chatbot - the new AI one */}
+      <AIChatbot />
       <Toaster position="top-right" />
     </div>
   );
 }
 
-// ========== Replace only the App component ==========
-
+// ✅ FIXED App component
 export default function App() {
-  const [appLoading, setAppLoading] = React.useState(true);
+  const [appLoading, setAppLoading] = useState(true);
 
-  React.useEffect(() => {
-    // Show loading screen for 2.5 seconds then show app
-    const timer = setTimeout(() => {
-      setAppLoading(false);
-    }, 2500);
+  useEffect(() => {
+    const timer = setTimeout(() => setAppLoading(false), 2500);
     return () => clearTimeout(timer);
   }, []);
 
