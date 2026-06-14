@@ -16,6 +16,7 @@ import {
   SparklesIcon,
   HeartIcon,
   ShieldCheckIcon,
+  PlusCircleIcon,
 } from "@heroicons/react/24/outline";
 
 export default function Navbar() {
@@ -43,16 +44,16 @@ export default function Navbar() {
     navigate("/");
   };
 
-  // Desktop nav items
+  // Clean desktop nav items
   const navItems = [
-    { to: "/", label: "Home" },
-    { to: "/vehicles", label: "Vehicles" },
-    { to: "/find-trip", label: "Find Trip" },
-    { to: "/offer-trip", label: "Offer Trip" },
+    { to: "/", label: "Home", icon: HomeIcon },
+    { to: "/vehicles", label: "Vehicles", icon: TruckIcon },
+    { to: "/find-trip", label: "Find Trip", icon: UserGroupIcon },
+    { to: "/offer-trip", label: "Offer Trip", icon: PlusCircleIcon },
     {
-      to: "/trip-planner",
-      label: "Trip Planner",
-      icon: SparklesIcon,
+      to: "/vendor/register",
+      label: "List Vehicle",
+      icon: TruckIcon,
       highlight: true,
     },
   ];
@@ -67,40 +68,39 @@ export default function Navbar() {
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-14 md:h-16">
-          {/* Logo */}
+          {/* Logo + Trip Planner */}
           <Link
             to="/"
-            className="flex items-center gap-1.5 group"
+            className="flex items-center gap-2 group"
             onClick={() => window.scrollTo(0, 0)}
           >
-            <div className="w-7 h-7 bg-gradient-to-r from-amber-500 to-amber-600 rounded-lg flex items-center justify-center font-bold text-gray-900 text-sm">
+            <div className="w-8 h-8 bg-gradient-to-r from-amber-500 to-amber-600 rounded-lg flex items-center justify-center font-bold text-white text-sm">
               W
             </div>
-            <span className="font-semibold text-lg text-gray-900 dark:text-white hidden sm:inline">
-              Wheelz
-            </span>
+            <div className="flex items-center gap-1">
+              <span className="font-bold text-lg text-gray-900 dark:text-white">
+                Wheelz
+              </span>
+              <span className="text-[10px] bg-amber-500 text-white px-1.5 py-0.5 rounded-full font-medium">
+                AI
+              </span>
+            </div>
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-1">
+          <div className="hidden md:flex items-center gap-0.5">
             {navItems.map((item) => (
               <button
                 key={item.to}
                 onClick={() => navigate(item.to)}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-1 ${
-                  location.pathname === item.to ||
-                  location.pathname.startsWith(item.to + "/")
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-1.5 ${
+                  location.pathname === item.to
                     ? "bg-amber-500 text-white"
-                    : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-amber-500"
-                } ${item.highlight ? "bg-amber-50 dark:bg-amber-900/20" : ""}`}
+                    : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                } ${item.highlight ? "border border-amber-500 text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20" : ""}`}
               >
-                {item.icon && <SparklesIcon className="w-3.5 h-3.5" />}
+                {item.icon && <item.icon className="w-3.5 h-3.5" />}
                 {item.label}
-                {item.highlight && (
-                  <span className="text-[10px] bg-amber-500 text-white px-1.5 py-0.5 rounded-full ml-1">
-                    AI
-                  </span>
-                )}
               </button>
             ))}
           </div>
@@ -119,23 +119,32 @@ export default function Navbar() {
               )}
             </button>
 
+            {/* Trip Planner Quick Button */}
+            <button
+              onClick={() => navigate("/trip-planner")}
+              className="hidden md:flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 text-xs font-medium hover:bg-amber-100 dark:hover:bg-amber-900/40 transition-all"
+            >
+              <SparklesIcon className="w-3.5 h-3.5" />
+              AI Planner
+            </button>
+
             {isAuthenticated ? (
               <div className="relative">
                 <button
                   onClick={() => setProfileOpen(!profileOpen)}
                   className="flex items-center gap-1.5 pl-1.5 pr-2 py-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-all"
                 >
-                  <div className="w-7 h-7 bg-gradient-to-r from-amber-500 to-amber-600 rounded-full flex items-center justify-center text-xs font-bold text-gray-900">
+                  <div className="w-7 h-7 bg-gradient-to-r from-amber-500 to-amber-600 rounded-full flex items-center justify-center text-xs font-bold text-white">
                     {user?.name?.[0]?.toUpperCase() || "U"}
                   </div>
-                  <span className="text-sm font-medium hidden lg:block text-gray-700 dark:text-gray-200">
-                    {user?.name?.split(" ")[0] || "User"}
-                  </span>
                 </button>
 
                 {profileOpen && (
                   <div className="absolute right-0 top-full mt-2 w-56 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 py-1 z-50">
                     <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-700">
+                      <p className="text-sm font-medium text-gray-900 dark:text-white">
+                        {user?.name}
+                      </p>
                       <p className="text-xs text-gray-500">{user?.email}</p>
                     </div>
                     <button
@@ -163,7 +172,7 @@ export default function Navbar() {
                       }}
                       className="flex items-center gap-3 w-full px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700"
                     >
-                      <ShieldCheckIcon className="w-4 h-4" /> KYC Status
+                      <ShieldCheckIcon className="w-4 h-4" /> KYC
                     </button>
                     <button
                       onClick={() => {
@@ -172,10 +181,9 @@ export default function Navbar() {
                       }}
                       className="flex items-center gap-3 w-full px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 border-t border-gray-100 dark:border-gray-700 mt-1 pt-2"
                     >
-                      <UserGroupIcon className="w-4 h-4 text-amber-500" />
-                      Trip Requests
+                      <UserGroupIcon className="w-4 h-4 text-amber-500" /> Trip
+                      Requests
                     </button>
-
                     {isAdmin && (
                       <button
                         onClick={() => {
@@ -184,7 +192,7 @@ export default function Navbar() {
                         }}
                         className="flex items-center gap-3 w-full px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700"
                       >
-                        <UserCircleIcon className="w-4 h-4" /> Admin Panel
+                        <UserCircleIcon className="w-4 h-4" /> Admin
                       </button>
                     )}
                     <button
@@ -200,13 +208,13 @@ export default function Navbar() {
               <div className="hidden md:flex items-center gap-2">
                 <button
                   onClick={() => navigate("/login")}
-                  className="px-3 py-1.5 text-sm font-medium hover:text-amber-500"
+                  className="px-3 py-1.5 text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-amber-500"
                 >
                   Login
                 </button>
                 <button
                   onClick={() => navigate("/register")}
-                  className="px-3 py-1.5 bg-gradient-to-r from-amber-500 to-amber-600 text-white text-sm font-medium rounded-lg"
+                  className="px-3 py-1.5 bg-amber-500 text-white text-sm font-medium rounded-lg hover:bg-amber-600"
                 >
                   Sign Up
                 </button>
@@ -227,107 +235,73 @@ export default function Navbar() {
           </div>
         </div>
 
-        {/* Mobile Menu - Fixed Background */}
+        {/* Mobile Menu */}
         {menuOpen && (
-          <div className="md:hidden fixed top-14 left-0 right-0 bg-white dark:bg-gray-900 shadow-xl border-t border-gray-200 dark:border-gray-700 z-50 max-h-[calc(100vh-3.5rem)] overflow-y-auto">
-            <div className="py-3 px-4">
-              <button
-                onClick={() => {
-                  navigate("/");
-                  setMenuOpen(false);
-                }}
-                className="flex items-center gap-3 w-full px-4 py-3 rounded-lg text-left hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-              >
-                <HomeIcon className="w-5 h-5 text-gray-500" />
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
-                  Home
-                </span>
-              </button>
-              <button
-                onClick={() => {
-                  navigate("/vehicles");
-                  setMenuOpen(false);
-                }}
-                className="flex items-center gap-3 w-full px-4 py-3 rounded-lg text-left hover:bg-gray-100 dark:hover:bg-gray-800"
-              >
-                <TruckIcon className="w-5 h-5 text-gray-500" />
-                <span className="text-sm font-medium">Vehicles</span>
-              </button>
-              <button
-                onClick={() => {
-                  navigate("/find-trip");
-                  setMenuOpen(false);
-                }}
-                className="flex items-center gap-3 w-full px-4 py-3 rounded-lg text-left hover:bg-gray-100 dark:hover:bg-gray-800"
-              >
-                <UserGroupIcon className="w-5 h-5 text-gray-500" />
-                <span className="text-sm font-medium">Find Trip</span>
-              </button>
-              <button
-                onClick={() => {
-                  navigate("/offer-trip");
-                  setMenuOpen(false);
-                }}
-                className="flex items-center gap-3 w-full px-4 py-3 rounded-lg text-left hover:bg-gray-100 dark:hover:bg-gray-800"
-              >
-                <UserGroupIcon className="w-5 h-5 text-gray-500" />
-                <span className="text-sm font-medium">Offer Trip</span>
-              </button>
+          <div className="md:hidden fixed top-14 left-0 right-0 bg-white dark:bg-gray-900 shadow-xl border-t border-gray-200 dark:border-gray-700 z-50">
+            <div className="py-2 px-4 space-y-1">
+              {[
+                { to: "/", label: "Home", icon: HomeIcon },
+                { to: "/vehicles", label: "Vehicles", icon: TruckIcon },
+                { to: "/find-trip", label: "Find Trip", icon: UserGroupIcon },
+                {
+                  to: "/offer-trip",
+                  label: "Offer Trip",
+                  icon: PlusCircleIcon,
+                },
+                {
+                  to: "/vendor/register",
+                  label: "List Vehicle",
+                  icon: TruckIcon,
+                },
+                {
+                  to: "/trip-planner",
+                  label: "AI Trip Planner",
+                  icon: SparklesIcon,
+                  highlight: true,
+                },
+              ].map((item) => (
+                <button
+                  key={item.to}
+                  onClick={() => {
+                    navigate(item.to);
+                    setMenuOpen(false);
+                  }}
+                  className={`flex items-center gap-3 w-full px-4 py-3 rounded-lg text-left text-sm font-medium ${
+                    item.highlight
+                      ? "bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400"
+                      : "text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
+                  }`}
+                >
+                  <item.icon
+                    className={`w-5 h-5 ${item.highlight ? "text-amber-500" : "text-gray-400"}`}
+                  />
+                  {item.label}
+                </button>
+              ))}
 
-              {/* Trip Planner - Highlighted */}
-              <button
-                onClick={() => {
-                  navigate("/trip-planner");
-                  setMenuOpen(false);
-                }}
-                className="flex items-center gap-3 w-full px-4 py-3 rounded-lg text-left bg-amber-50 dark:bg-amber-900/20 mt-2"
-              >
-                <SparklesIcon className="w-5 h-5 text-amber-500" />
-                <span className="text-sm font-medium text-amber-700 dark:text-amber-400">
-                  AI Trip Planner
-                </span>
-                <span className="text-xs bg-amber-500 text-white px-1.5 py-0.5 rounded-full ml-auto">
-                  AI
-                </span>
-              </button>
-
-              {/* Trip Requests - Mobile */}
-              <button
-                onClick={() => {
-                  navigate("/trip-requests");
-                  setMenuOpen(false);
-                }}
-                className="flex items-center gap-3 w-full px-4 py-3 rounded-lg text-left hover:bg-gray-100 dark:hover:bg-gray-800 mt-1"
-              >
-                <UserGroupIcon className="w-5 h-5 text-amber-500" />
-                <span className="text-sm font-medium">Trip Requests</span>
-              </button>
-
-              <div className="my-3 border-t border-gray-200 dark:border-gray-700"></div>
-
-              {!isAuthenticated ? (
-                <div className="flex gap-3 px-4 pt-2">
-                  <button
-                    onClick={() => {
-                      navigate("/login");
-                      setMenuOpen(false);
-                    }}
-                    className="flex-1 py-2.5 text-sm font-medium border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800"
-                  >
-                    Login
-                  </button>
-                  <button
-                    onClick={() => {
-                      navigate("/register");
-                      setMenuOpen(false);
-                    }}
-                    className="flex-1 py-2.5 text-sm font-medium bg-gradient-to-r from-amber-500 to-amber-600 text-white rounded-lg"
-                  >
-                    Sign Up
-                  </button>
-                </div>
-              ) : (
-                <div className="px-4 pt-2">
+              <div className="border-t border-gray-200 dark:border-gray-700 pt-2 mt-2">
+                {!isAuthenticated ? (
+                  <div className="flex gap-3 px-1">
+                    <button
+                      onClick={() => {
+                        navigate("/login");
+                        setMenuOpen(false);
+                      }}
+                      className="flex-1 py-2.5 text-sm font-medium border border-gray-300 dark:border-gray-600 rounded-lg"
+                    >
+                      Login
+                    </button>
+                    <button
+                      onClick={() => {
+                        navigate("/register");
+                        setMenuOpen(false);
+                      }}
+                      className="flex-1 py-2.5 text-sm font-medium bg-amber-500 text-white rounded-lg"
+                    >
+                      Sign Up
+                    </button>
+                  </div>
+                ) : (
                   <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                     <div className="w-10 h-10 bg-gradient-to-r from-amber-500 to-amber-600 rounded-full flex items-center justify-center text-white font-bold">
                       {user?.name?.[0]?.toUpperCase() || "U"}
@@ -339,8 +313,8 @@ export default function Navbar() {
                       <p className="text-xs text-gray-500">{user?.email}</p>
                     </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </div>
         )}
