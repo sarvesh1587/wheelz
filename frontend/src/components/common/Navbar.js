@@ -17,6 +17,10 @@ import {
   HeartIcon,
   ShieldCheckIcon,
   PlusCircleIcon,
+  BuildingStorefrontIcon,
+  ChartBarIcon,
+  UsersIcon,
+  ArrowLeftOnRectangleIcon,
 } from "@heroicons/react/24/outline";
 
 export default function Navbar() {
@@ -25,6 +29,7 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [adminMode, setAdminMode] = useState(true);
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -39,12 +44,31 @@ export default function Navbar() {
     setProfileOpen(false);
   }, [location]);
 
+  useEffect(() => {
+    // Auto-detect admin mode based on URL
+    if (location.pathname.startsWith("/admin")) {
+      setAdminMode(true);
+    } else {
+      setAdminMode(false);
+    }
+  }, [location]);
+
   const handleLogout = () => {
     logout();
     navigate("/");
   };
 
-  const navItems = [
+  // Admin nav items - Clean & Minimal
+  const adminNavItems = [
+    { to: "/admin", label: "Dashboard", icon: HomeIcon },
+    { to: "/admin/vehicles", label: "Vehicles", icon: TruckIcon },
+    { to: "/admin/users", label: "Users", icon: UsersIcon },
+    { to: "/admin/vendors", label: "Vendors", icon: BuildingStorefrontIcon },
+    { to: "/admin/reports", label: "Reports", icon: ChartBarIcon },
+  ];
+
+  // User nav items - Full features
+  const userNavItems = [
     { to: "/", label: "Home", icon: HomeIcon },
     { to: "/vehicles", label: "Vehicles", icon: TruckIcon },
     { to: "/find-trip", label: "Find Trip", icon: UserGroupIcon },
@@ -57,6 +81,8 @@ export default function Navbar() {
     },
   ];
 
+  const navItems = isAdmin && adminMode ? adminNavItems : userNavItems;
+
   return (
     <nav
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
@@ -67,9 +93,9 @@ export default function Navbar() {
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-14 md:h-16">
-          {/* Logo - Clean, No AI badge */}
+          {/* Logo */}
           <Link
-            to="/"
+            to={isAdmin && adminMode ? "/admin" : "/"}
             className="flex items-center gap-2 group"
             onClick={() => window.scrollTo(0, 0)}
           >
@@ -79,6 +105,11 @@ export default function Navbar() {
             <span className="font-bold text-lg text-gray-900 dark:text-white">
               Wheelz
             </span>
+            {isAdmin && adminMode && (
+              <span className="text-[10px] bg-red-500 text-white px-1.5 py-0.5 rounded-full font-medium">
+                ADMIN
+              </span>
+            )}
           </Link>
 
           {/* Desktop Navigation */}
@@ -88,7 +119,8 @@ export default function Navbar() {
                 key={item.to}
                 onClick={() => navigate(item.to)}
                 className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-1.5 ${
-                  location.pathname === item.to
+                  location.pathname === item.to ||
+                  (item.to !== "/" && location.pathname.startsWith(item.to))
                     ? "bg-amber-500 text-white"
                     : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
                 } ${item.highlight ? "border border-amber-500 text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20" : ""}`}
@@ -122,63 +154,100 @@ export default function Navbar() {
                   <div className="w-7 h-7 bg-gradient-to-r from-amber-500 to-amber-600 rounded-full flex items-center justify-center text-xs font-bold text-white">
                     {user?.name?.[0]?.toUpperCase() || "U"}
                   </div>
+                  {isAdmin && (
+                    <span className="hidden sm:inline text-[10px] bg-red-500 text-white px-1 py-0.5 rounded-full">
+                      ADMIN
+                    </span>
+                  )}
                 </button>
 
                 {profileOpen && (
                   <div className="absolute right-0 top-full mt-2 w-56 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 py-1 z-50">
+                    {/* User Info */}
                     <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-700">
                       <p className="text-sm font-medium text-gray-900 dark:text-white">
                         {user?.name}
                       </p>
                       <p className="text-xs text-gray-500">{user?.email}</p>
+                      {isAdmin && (
+                        <span className="text-[10px] bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400 px-1.5 py-0.5 rounded-full mt-1 inline-block">
+                          Admin Access
+                        </span>
+                      )}
                     </div>
 
-                    {/* Dashboard */}
-                    <button
-                      onClick={() => {
-                        navigate("/dashboard");
-                        setProfileOpen(false);
-                      }}
-                      className="flex items-center gap-3 w-full px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700"
-                    >
-                      <CalendarDaysIcon className="w-4 h-4" /> Dashboard
-                    </button>
+                    {/* Admin: Switch to User View */}
+                    {isAdmin && adminMode && (
+                      <button
+                        onClick={() => {
+                          navigate("/dashboard");
+                          setProfileOpen(false);
+                        }}
+                        className="flex items-center gap-3 w-full px-4 py-2 text-sm hover:bg-amber-50 dark:hover:bg-amber-900/20 text-amber-600 dark:text-amber-400 border-b border-gray-100 dark:border-gray-700"
+                      >
+                        <ArrowLeftOnRectangleIcon className="w-4 h-4" />
+                        Switch to User View
+                      </button>
+                    )}
 
-                    {/* Wishlist */}
-                    <button
-                      onClick={() => {
-                        navigate("/wishlist");
-                        setProfileOpen(false);
-                      }}
-                      className="flex items-center gap-3 w-full px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700"
-                    >
-                      <HeartIcon className="w-4 h-4" /> Wishlist
-                    </button>
+                    {/* User: Switch to Admin View (if admin) */}
+                    {isAdmin && !adminMode && (
+                      <button
+                        onClick={() => {
+                          navigate("/admin");
+                          setProfileOpen(false);
+                        }}
+                        className="flex items-center gap-3 w-full px-4 py-2 text-sm hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 border-b border-gray-100 dark:border-gray-700"
+                      >
+                        <ShieldCheckIcon className="w-4 h-4" />
+                        Switch to Admin View
+                      </button>
+                    )}
 
-                    {/* KYC */}
-                    <button
-                      onClick={() => {
-                        navigate("/kyc");
-                        setProfileOpen(false);
-                      }}
-                      className="flex items-center gap-3 w-full px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700"
-                    >
-                      <ShieldCheckIcon className="w-4 h-4" /> KYC
-                    </button>
+                    {/* User Menu Items */}
+                    {(!isAdmin || !adminMode) && (
+                      <>
+                        <button
+                          onClick={() => {
+                            navigate("/dashboard");
+                            setProfileOpen(false);
+                          }}
+                          className="flex items-center gap-3 w-full px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700"
+                        >
+                          <CalendarDaysIcon className="w-4 h-4" /> Dashboard
+                        </button>
+                        <button
+                          onClick={() => {
+                            navigate("/wishlist");
+                            setProfileOpen(false);
+                          }}
+                          className="flex items-center gap-3 w-full px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700"
+                        >
+                          <HeartIcon className="w-4 h-4" /> Wishlist
+                        </button>
+                        <button
+                          onClick={() => {
+                            navigate("/kyc");
+                            setProfileOpen(false);
+                          }}
+                          className="flex items-center gap-3 w-full px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700"
+                        >
+                          <ShieldCheckIcon className="w-4 h-4" /> KYC
+                        </button>
+                        <button
+                          onClick={() => {
+                            navigate("/trip-requests");
+                            setProfileOpen(false);
+                          }}
+                          className="flex items-center gap-3 w-full px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700"
+                        >
+                          <UserGroupIcon className="w-4 h-4 text-amber-500" />{" "}
+                          Trip Requests
+                        </button>
+                      </>
+                    )}
 
-                    {/* Trip Requests */}
-                    <button
-                      onClick={() => {
-                        navigate("/trip-requests");
-                        setProfileOpen(false);
-                      }}
-                      className="flex items-center gap-3 w-full px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 border-t border-gray-100 dark:border-gray-700 mt-1 pt-2"
-                    >
-                      <UserGroupIcon className="w-4 h-4 text-amber-500" /> Trip
-                      Requests
-                    </button>
-
-                    {/* AI Trip Planner - Below Trip Requests */}
+                    {/* AI Trip Planner */}
                     <button
                       onClick={() => {
                         navigate("/trip-planner");
@@ -192,20 +261,7 @@ export default function Navbar() {
                       </span>
                     </button>
 
-                    {/* Admin */}
-                    {isAdmin && (
-                      <button
-                        onClick={() => {
-                          navigate("/admin");
-                          setProfileOpen(false);
-                        }}
-                        className="flex items-center gap-3 w-full px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 border-t border-gray-100 dark:border-gray-700 mt-1 pt-2"
-                      >
-                        <UserCircleIcon className="w-4 h-4" /> Admin Panel
-                      </button>
-                    )}
-
-                    {/* Logout - Bottom */}
+                    {/* Logout */}
                     <button
                       onClick={handleLogout}
                       className="flex items-center gap-3 w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 border-t border-gray-100 dark:border-gray-700 mt-1 pt-2"
@@ -248,43 +304,35 @@ export default function Navbar() {
 
         {/* Mobile Menu */}
         {menuOpen && (
-          <div className="md:hidden fixed top-14 left-0 right-0 bg-white dark:bg-gray-900 shadow-xl border-t border-gray-200 dark:border-gray-700 z-50">
+          <div className="md:hidden fixed top-14 left-0 right-0 bg-white dark:bg-gray-900 shadow-xl border-t border-gray-200 dark:border-gray-700 z-50 max-h-[calc(100vh-3.5rem)] overflow-y-auto">
             <div className="py-2 px-4 space-y-1">
-              {[
-                { to: "/", label: "Home", icon: HomeIcon },
-                { to: "/vehicles", label: "Vehicles", icon: TruckIcon },
-                { to: "/find-trip", label: "Find Trip", icon: UserGroupIcon },
-                {
-                  to: "/offer-trip",
-                  label: "Offer Trip",
-                  icon: PlusCircleIcon,
-                },
-                {
-                  to: "/vendor/register",
-                  label: "List Vehicle",
-                  icon: TruckIcon,
-                },
-              ].map((item) => (
+              {navItems.map((item) => (
                 <button
                   key={item.to}
                   onClick={() => {
                     navigate(item.to);
                     setMenuOpen(false);
                   }}
-                  className="flex items-center gap-3 w-full px-4 py-3 rounded-lg text-left text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
+                  className={`flex items-center gap-3 w-full px-4 py-3 rounded-lg text-left text-sm font-medium ${
+                    item.highlight
+                      ? "border border-amber-500 text-amber-600 dark:text-amber-400"
+                      : "text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
+                  }`}
                 >
-                  <item.icon className="w-5 h-5 text-gray-400" />
+                  <item.icon
+                    className={`w-5 h-5 ${item.highlight ? "text-amber-500" : "text-gray-400"}`}
+                  />
                   {item.label}
                 </button>
               ))}
 
-              {/* AI Trip Planner in mobile */}
+              {/* AI Trip Planner */}
               <button
                 onClick={() => {
                   navigate("/trip-planner");
                   setMenuOpen(false);
                 }}
-                className="flex items-center gap-3 w-full px-4 py-3 rounded-lg text-left text-sm font-medium bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400"
+                className="flex items-center gap-3 w-full px-4 py-3 rounded-lg text-left text-sm font-medium bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 mt-1"
               >
                 <SparklesIcon className="w-5 h-5 text-amber-500" />
                 AI Trip Planner
@@ -292,6 +340,20 @@ export default function Navbar() {
                   AI
                 </span>
               </button>
+
+              {/* Admin Switch */}
+              {isAdmin && (
+                <button
+                  onClick={() => {
+                    adminMode ? navigate("/dashboard") : navigate("/admin");
+                    setMenuOpen(false);
+                  }}
+                  className="flex items-center gap-3 w-full px-4 py-3 rounded-lg text-left text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 mt-1"
+                >
+                  <ArrowLeftOnRectangleIcon className="w-5 h-5" />
+                  {adminMode ? "Switch to User View" : "Switch to Admin View"}
+                </button>
+              )}
 
               <div className="border-t border-gray-200 dark:border-gray-700 pt-2 mt-2">
                 {!isAuthenticated ? (
