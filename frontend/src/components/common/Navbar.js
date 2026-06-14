@@ -44,7 +44,6 @@ export default function Navbar() {
     navigate("/");
   };
 
-  // Clean desktop nav items
   const navItems = [
     { to: "/", label: "Home", icon: HomeIcon },
     { to: "/vehicles", label: "Vehicles", icon: TruckIcon },
@@ -68,7 +67,7 @@ export default function Navbar() {
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-14 md:h-16">
-          {/* Logo + Trip Planner */}
+          {/* Logo - Clean, No AI badge */}
           <Link
             to="/"
             className="flex items-center gap-2 group"
@@ -77,14 +76,9 @@ export default function Navbar() {
             <div className="w-8 h-8 bg-gradient-to-r from-amber-500 to-amber-600 rounded-lg flex items-center justify-center font-bold text-white text-sm">
               W
             </div>
-            <div className="flex items-center gap-1">
-              <span className="font-bold text-lg text-gray-900 dark:text-white">
-                Wheelz
-              </span>
-              <span className="text-[10px] bg-amber-500 text-white px-1.5 py-0.5 rounded-full font-medium">
-                AI
-              </span>
-            </div>
+            <span className="font-bold text-lg text-gray-900 dark:text-white">
+              Wheelz
+            </span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -119,15 +113,6 @@ export default function Navbar() {
               )}
             </button>
 
-            {/* Trip Planner Quick Button */}
-            <button
-              onClick={() => navigate("/trip-planner")}
-              className="hidden md:flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 text-xs font-medium hover:bg-amber-100 dark:hover:bg-amber-900/40 transition-all"
-            >
-              <SparklesIcon className="w-3.5 h-3.5" />
-              AI Planner
-            </button>
-
             {isAuthenticated ? (
               <div className="relative">
                 <button
@@ -147,6 +132,8 @@ export default function Navbar() {
                       </p>
                       <p className="text-xs text-gray-500">{user?.email}</p>
                     </div>
+
+                    {/* Dashboard */}
                     <button
                       onClick={() => {
                         navigate("/dashboard");
@@ -156,6 +143,8 @@ export default function Navbar() {
                     >
                       <CalendarDaysIcon className="w-4 h-4" /> Dashboard
                     </button>
+
+                    {/* Wishlist */}
                     <button
                       onClick={() => {
                         navigate("/wishlist");
@@ -165,6 +154,8 @@ export default function Navbar() {
                     >
                       <HeartIcon className="w-4 h-4" /> Wishlist
                     </button>
+
+                    {/* KYC */}
                     <button
                       onClick={() => {
                         navigate("/kyc");
@@ -174,6 +165,8 @@ export default function Navbar() {
                     >
                       <ShieldCheckIcon className="w-4 h-4" /> KYC
                     </button>
+
+                    {/* Trip Requests */}
                     <button
                       onClick={() => {
                         navigate("/trip-requests");
@@ -184,20 +177,38 @@ export default function Navbar() {
                       <UserGroupIcon className="w-4 h-4 text-amber-500" /> Trip
                       Requests
                     </button>
+
+                    {/* AI Trip Planner - Below Trip Requests */}
+                    <button
+                      onClick={() => {
+                        navigate("/trip-planner");
+                        setProfileOpen(false);
+                      }}
+                      className="flex items-center gap-3 w-full px-4 py-2 text-sm hover:bg-amber-50 dark:hover:bg-amber-900/20 text-amber-600 dark:text-amber-400"
+                    >
+                      <SparklesIcon className="w-4 h-4" /> AI Trip Planner
+                      <span className="text-[10px] bg-amber-500 text-white px-1.5 py-0.5 rounded-full ml-auto">
+                        AI
+                      </span>
+                    </button>
+
+                    {/* Admin */}
                     {isAdmin && (
                       <button
                         onClick={() => {
                           navigate("/admin");
                           setProfileOpen(false);
                         }}
-                        className="flex items-center gap-3 w-full px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700"
+                        className="flex items-center gap-3 w-full px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 border-t border-gray-100 dark:border-gray-700 mt-1 pt-2"
                       >
-                        <UserCircleIcon className="w-4 h-4" /> Admin
+                        <UserCircleIcon className="w-4 h-4" /> Admin Panel
                       </button>
                     )}
+
+                    {/* Logout - Bottom */}
                     <button
                       onClick={handleLogout}
-                      className="flex items-center gap-3 w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+                      className="flex items-center gap-3 w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 border-t border-gray-100 dark:border-gray-700 mt-1 pt-2"
                     >
                       <ArrowRightOnRectangleIcon className="w-4 h-4" /> Logout
                     </button>
@@ -253,12 +264,6 @@ export default function Navbar() {
                   label: "List Vehicle",
                   icon: TruckIcon,
                 },
-                {
-                  to: "/trip-planner",
-                  label: "AI Trip Planner",
-                  icon: SparklesIcon,
-                  highlight: true,
-                },
               ].map((item) => (
                 <button
                   key={item.to}
@@ -266,18 +271,27 @@ export default function Navbar() {
                     navigate(item.to);
                     setMenuOpen(false);
                   }}
-                  className={`flex items-center gap-3 w-full px-4 py-3 rounded-lg text-left text-sm font-medium ${
-                    item.highlight
-                      ? "bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400"
-                      : "text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
-                  }`}
+                  className="flex items-center gap-3 w-full px-4 py-3 rounded-lg text-left text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
                 >
-                  <item.icon
-                    className={`w-5 h-5 ${item.highlight ? "text-amber-500" : "text-gray-400"}`}
-                  />
+                  <item.icon className="w-5 h-5 text-gray-400" />
                   {item.label}
                 </button>
               ))}
+
+              {/* AI Trip Planner in mobile */}
+              <button
+                onClick={() => {
+                  navigate("/trip-planner");
+                  setMenuOpen(false);
+                }}
+                className="flex items-center gap-3 w-full px-4 py-3 rounded-lg text-left text-sm font-medium bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400"
+              >
+                <SparklesIcon className="w-5 h-5 text-amber-500" />
+                AI Trip Planner
+                <span className="text-[10px] bg-amber-500 text-white px-1.5 py-0.5 rounded-full ml-auto">
+                  AI
+                </span>
+              </button>
 
               <div className="border-t border-gray-200 dark:border-gray-700 pt-2 mt-2">
                 {!isAuthenticated ? (
