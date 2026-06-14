@@ -51,7 +51,7 @@ const AdminReports = lazy(() => import("./pages/AdminReports"));
 const AdminVendorDetails = lazy(() => import("./pages/AdminVendorDetails"));
 const AddVehicle = lazy(() => import("./pages/AddVehicle"));
 const EditVehicle = lazy(() => import("./pages/EditVehicle"));
-
+const AdminUsers = lazy(() => import("./pages/AdminUsers"));
 // Vendor Pages
 const VendorDashboard = lazy(() => import("./pages/VendorDashboard"));
 const VendorVehicles = lazy(() => import("./pages/VendorVehicles"));
@@ -108,7 +108,6 @@ function AppRoutes() {
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/offers" element={<Offers />} />
-
             {/* Auth Routes */}
             <Route
               path="/login"
@@ -160,7 +159,6 @@ function AppRoutes() {
                 </PrivateRoute>
               }
             />
-
             {/* Vendor Registration */}
             <Route path="/vendor/register" element={<VendorRegister />} />
             <Route path="/vendor-pending" element={<VendorPending />} />
@@ -174,7 +172,6 @@ function AppRoutes() {
               }
             />
             <Route path="/rideshare/:id" element={<TripDetail />} />
-
             {/* Customer Routes */}
             <Route
               path="/dashboard"
@@ -225,7 +222,6 @@ function AppRoutes() {
                 </PrivateRoute>
               }
             />
-
             {/* Vendor Routes */}
             <Route
               path="/vendor/dashboard"
@@ -267,7 +263,6 @@ function AppRoutes() {
                 </PrivateRoute>
               }
             />
-
             {/* Admin Routes */}
             <Route
               path="/admin"
@@ -325,7 +320,14 @@ function AppRoutes() {
                 </AdminRoute>
               }
             />
-
+            <Route
+              path="/admin/users"
+              element={
+                <AdminRoute>
+                  <AdminUsers />
+                </AdminRoute>
+              }
+            />
             {/* 404 */}
             <Route path="*" element={<NotFound />} />
           </Routes>
