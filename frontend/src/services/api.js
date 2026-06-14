@@ -127,6 +127,16 @@ export const rideShareAPI = {
   cancelTrip: (tripId, reason) =>
     api.put(`/rideshare/${tripId}/cancel`, { reason }),
 };
+export const promoAPI = {
+  generateReferral: () => api.post("/promo/referral/generate"),
+  applyReferral: (data) => api.post("/promo/referral/apply", data),
+  validatePromo: (data) => api.post("/promo/validate", data),
+  applyPromo: (data) => api.post("/promo/apply", data),
+  getReferralStats: () => api.get("/promo/referral/stats"),
+  getReferralHistory: () => api.get("/promo/referral/history"),
+  getWalletBalance: () => api.get("/promo/wallet/balance"),
+  getWalletTransactions: () => api.get("/promo/wallet/transactions"),
+};
 export const vehicleAPI = {
   getAll: (params) => api.get("/vehicles", { params }),
   getOne: (id) => api.get(`/vehicles/${id}`),

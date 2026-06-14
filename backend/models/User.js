@@ -110,7 +110,38 @@ const UserSchema = new mongoose.Schema(
       ifscCode: { type: String, default: "" },
       bankName: { type: String, default: "" },
     },
+    // Add these inside the UserSchema definition, before the closing `},` on line ~115
 
+    // ========== REFERRAL & WALLET FIELDS ==========
+    referralCode: {
+      type: String,
+      unique: true,
+      sparse: true,
+      uppercase: true,
+    },
+    referredBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+    walletBalance: {
+      type: Number,
+      default: 0,
+    },
+    totalReferralEarnings: {
+      type: Number,
+      default: 0,
+    },
+
+    // ========== PROMO CODE FIELDS ==========
+    promoCodesUsed: [
+      {
+        code: String,
+        usedAt: Date,
+        bookingId: { type: mongoose.Schema.Types.ObjectId, ref: "Booking" },
+        discountAmount: Number,
+      },
+    ],
     // Vendor Approval Status
     isVendorApproved: {
       type: Boolean,
