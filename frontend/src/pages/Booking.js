@@ -1,7 +1,7 @@
-// frontend/src/pages/Booking.jsx - COMPLETE WORKING VERSION
+// frontend/src/pages/Booking.jsx - COMPLETE WITH PROMO CODE
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { vehicleAPI, bookingAPI } from "../services/api";
+import { vehicleAPI, bookingAPI, promoAPI } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import LoadingSpinner from "../components/common/LoadingSpinner";
 import DatePicker from "react-datepicker";
@@ -13,6 +13,7 @@ import {
   MapPinIcon,
   UserGroupIcon,
   SparklesIcon,
+  TicketIcon,
 } from "@heroicons/react/24/outline";
 
 export default function Booking() {
@@ -32,6 +33,13 @@ export default function Booking() {
   });
   const [creatingBooking, setCreatingBooking] = useState(false);
   const [checkingAvailability, setCheckingAvailability] = useState(false);
+
+  // Promo Code States
+  const [promoCode, setPromoCode] = useState("");
+  const [appliedPromo, setAppliedPromo] = useState(null);
+  const [applyingPromo, setApplyingPromo] = useState(false);
+  const [promoDiscount, setPromoDiscount] = useState(0);
+
   let toastId = null;
 
   useEffect(() => {
@@ -90,9 +98,42 @@ export default function Booking() {
   const extrasPerDay = calculateExtrasCost();
   const subtotal = pricePerDay * totalDays;
   const extrasTotal = extrasPerDay * totalDays;
-  const total = subtotal + extrasTotal;
+  const total = subtotal + extrasTotal - promoDiscount;
 
-  // ✅ FIXED: Optimistic booking with timeout fallback
+  // ─── PROMO CODE FUNCTIONS ──────────────────────────────────────────────────
+
+  const applyPromoCode = async () => {
+    if (!promoCode) return;
+    setApplyingPromo(true);
+    try {
+      const res = await promoAPI.validatePromo({
+        code: promoCode,
+        amount: subtotal + extrasTotal,
+      });
+      if (res.data.success) {
+        setAppliedPromo(res.data.promo);
+        setPromoDiscount(res.data.promo.discountAmount);
+        toast.success(
+          `🎉 Promo applied! You save ₹${res.data.promo.discountAmount}`,
+        );
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Invalid promo code");
+      setAppliedPromo(null);
+      setPromoDiscount(0);
+    } finally {
+      setApplyingPromo(false);
+    }
+  };
+
+  const removePromo = () => {
+    setAppliedPromo(null);
+    setPromoCode("");
+    setPromoDiscount(0);
+  };
+
+  // ─── CREATE BOOKING ────────────────────────────────────────────────────────
+
   const handleCreateBooking = async () => {
     if (!startDate || !endDate) {
       toast.error("Please select both pickup and return dates");
@@ -113,47 +154,32 @@ export default function Booking() {
       endDate: endDate.toISOString(),
       pickupLocation: vehicle?.locationName || vehicle?.city,
       extras: extras,
+      promoCode: appliedPromo?.code || null,
+      promoDiscount: promoDiscount,
     };
 
     console.log("Creating booking:", bookingData);
 
-    // ✅ Create a timeout promise (8 seconds)
     const timeoutPromise = new Promise((_, reject) => {
       setTimeout(() => reject(new Error("timeout")), 8000);
     });
 
     try {
-      // ✅ Race between API call and timeout
-      const result = await Promise.race([
-        bookingAPI.create(bookingData),
-        timeoutPromise,
-      ]);
-
+      await Promise.race([bookingAPI.create(bookingData), timeoutPromise]);
       toast.dismiss(toastId);
       toast.success("Booking confirmed! 🎉");
-
-      setTimeout(() => {
-        navigate("/dashboard");
-      }, 1500);
+      setTimeout(() => navigate("/dashboard"), 1500);
     } catch (err) {
       console.error("Booking error:", err);
       toast.dismiss(toastId);
 
-      // ✅ Even on timeout, show this message
       if (err.message === "timeout") {
         toast.loading("Booking processing... Check dashboard in a moment.", {
           duration: 4000,
         });
-        setTimeout(() => {
-          navigate("/dashboard");
-        }, 2000);
+        setTimeout(() => navigate("/dashboard"), 2000);
       } else {
         toast.error(err.response?.data?.message || "Booking failed");
-        setCreatingBooking(false);
-      }
-    } finally {
-      // Don't set creatingBooking false here if we're redirecting
-      if (!err || err.message !== "timeout") {
         setCreatingBooking(false);
       }
     }
@@ -175,6 +201,7 @@ export default function Booking() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Left Column */}
           <div className="lg:col-span-2 space-y-6">
             {/* Vehicle Summary Card */}
             <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg border border-gray-100 dark:border-gray-700">
@@ -381,12 +408,92 @@ export default function Booking() {
                   </div>
                 )}
 
+                {/* ─── PROMO CODE SECTION ─── */}
+                <div className="border-t border-gray-200 dark:border-gray-700 pt-3 mt-3">
+                  <label className="text-xs font-medium text-gray-500 mb-2 flex items-center gap-1">
+                    <TicketIcon className="w-3.5 h-3.5" /> Promo Code
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={promoCode}
+                      onChange={(e) =>
+                        setPromoCode(e.target.value.toUpperCase())
+                      }
+                      placeholder="Enter code"
+                      disabled={!!appliedPromo}
+                      className="flex-1 px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 uppercase focus:outline-none focus:ring-1 focus:ring-amber-500 disabled:opacity-50"
+                    />
+                    {appliedPromo ? (
+                      <button
+                        onClick={removePromo}
+                        className="px-3 py-2 text-xs bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                      >
+                        ✕
+                      </button>
+                    ) : (
+                      <button
+                        onClick={applyPromoCode}
+                        disabled={!promoCode || applyingPromo}
+                        className="px-3 py-2 text-xs bg-amber-500 text-white rounded-lg hover:bg-amber-600 disabled:opacity-50 transition-colors"
+                      >
+                        {applyingPromo ? "..." : "Apply"}
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Applied Promo Display */}
+                  {appliedPromo && (
+                    <div className="mt-2 flex justify-between items-center bg-green-50 dark:bg-green-900/20 p-2 rounded-lg">
+                      <span className="text-xs text-green-700 dark:text-green-400">
+                        ✅ {appliedPromo.code} applied
+                      </span>
+                      <span className="text-xs font-bold text-green-700 dark:text-green-400">
+                        -₹{promoDiscount.toLocaleString()}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Quick Promo Chips */}
+                  {!appliedPromo && (
+                    <div className="flex flex-wrap gap-1 mt-2">
+                      {["WELCOME50", "FLAT100", "FESTIVAL200"].map((code) => (
+                        <button
+                          key={code}
+                          onClick={() => setPromoCode(code)}
+                          className="text-[10px] bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 px-2 py-1 rounded-full hover:bg-amber-200 transition-colors"
+                        >
+                          {code}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Promo Discount Line */}
+                {promoDiscount > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-green-600 dark:text-green-400">
+                      Promo Discount
+                    </span>
+                    <span className="font-medium text-green-600 dark:text-green-400">
+                      -₹{promoDiscount.toLocaleString()}
+                    </span>
+                  </div>
+                )}
+
+                {/* Total */}
                 <div className="border-t border-gray-200 dark:border-gray-700 pt-3 mt-3">
                   <div className="flex justify-between items-center">
                     <span className="font-bold text-gray-900 dark:text-white">
                       Total
                     </span>
                     <div className="text-right">
+                      {promoDiscount > 0 && (
+                        <span className="text-xs text-gray-400 line-through block">
+                          ₹{(subtotal + extrasTotal).toLocaleString()}
+                        </span>
+                      )}
                       <span className="text-2xl font-bold text-amber-500">
                         ₹{total.toLocaleString()}
                       </span>
@@ -396,6 +503,7 @@ export default function Booking() {
                 </div>
               </div>
 
+              {/* Confirm Button */}
               <button
                 onClick={handleCreateBooking}
                 disabled={
