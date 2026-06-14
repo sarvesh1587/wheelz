@@ -1,5 +1,5 @@
 /**
- * User Dashboard — With Complete My Rides Section
+ * User Dashboard — With Confetti & Skeleton Loaders
  * File: frontend/src/pages/Dashboard.js
  */
 
@@ -43,6 +43,9 @@ import {
 import { StarIcon as StarIconSolid } from "@heroicons/react/24/solid";
 import { motion, AnimatePresence } from "framer-motion";
 import PaymentReceipt from "../components/PaymentReceipt";
+import { useConfetti } from "../hooks/useConfetti";
+import { DashboardSkeleton } from "../components/common/Skeleton";
+
 // Animation variants
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -57,6 +60,7 @@ const itemVariants = {
 export default function Dashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { fireBookingConfetti, firePaymentConfetti } = useConfetti();
 
   // State
   const [bookings, setBookings] = useState([]);
@@ -69,6 +73,7 @@ export default function Dashboard() {
   const [processingPayment, setProcessingPayment] = useState(false);
   const [showPassengerModal, setShowPassengerModal] = useState(false);
   const [selectedPassenger, setSelectedPassenger] = useState(null);
+
   // Rideshare states
   const [myTrips, setMyTrips] = useState([]);
   const [myRides, setMyRides] = useState([]);
@@ -96,8 +101,11 @@ export default function Dashboard() {
   const [reportRide, setReportRide] = useState(null);
   const [reportReason, setReportReason] = useState("");
   const [submittingReport, setSubmittingReport] = useState(false);
+
+  // Receipt states
   const [showReceipt, setShowReceipt] = useState(false);
   const [receiptBooking, setReceiptBooking] = useState(null);
+
   useEffect(() => {
     fetchDashboardData();
     fetchRideShareData();
@@ -109,10 +117,12 @@ export default function Dashboard() {
       chatEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages]);
+
   const viewPassengerDetails = (request) => {
     setSelectedPassenger(request);
     setShowPassengerModal(true);
   };
+
   const fetchDashboardData = async () => {
     try {
       const [bookingsRes, wishlistRes, statsRes] = await Promise.all([
@@ -205,6 +215,7 @@ export default function Dashboard() {
                   razorpaySignature: response.razorpay_signature,
                 });
                 toast.success("✅ Payment successful! Ride confirmed.");
+                firePaymentConfetti(); // 🎉
                 fetchRideShareData();
               } catch (error) {
                 toast.error("Payment verification failed");
@@ -360,7 +371,6 @@ export default function Dashboard() {
       toast.loading("Creating payment order...", { id: "payment" });
       const orderResponse = await paymentAPI.createOrder(booking._id);
       toast.dismiss("payment");
-
       if (!orderResponse.data.orderId) {
         toast.error("Failed to create payment order");
         setProcessingPayment(false);
@@ -386,6 +396,7 @@ export default function Dashboard() {
             toast.dismiss("verify");
             if (verifyResponse.data.success) {
               toast.success("✅ Payment successful!");
+              fireBookingConfetti(); // 🎉
               fetchDashboardData();
               setShowBookingModal(false);
             } else {
@@ -404,7 +415,6 @@ export default function Dashboard() {
           },
         },
       };
-
       const razorpay = new window.Razorpay(options);
       razorpay.open();
     } catch (error) {
@@ -473,11 +483,7 @@ export default function Dashboard() {
         icon: "🏁",
         label: "Completed",
       };
-    return {
-      bg: "bg-gray-100 text-gray-700",
-      icon: "📋",
-      label: status,
-    };
+    return { bg: "bg-gray-100 text-gray-700", icon: "📋", label: status };
   };
 
   // ─── FILTER RIDES ───────────────────────────────────────────────────────
@@ -487,7 +493,6 @@ export default function Dashboard() {
       ["pending", "approved"].includes(r.status) ||
       (r.status === "approved" && r.paymentStatus === "paid"),
   );
-
   const pastRides = myRides.filter((r) =>
     ["completed", "cancelled", "rejected"].includes(r.status),
   );
@@ -521,17 +526,10 @@ export default function Dashboard() {
     },
   ];
 
+  // ─── SKELETON LOADING ───────────────────────────────────────────────────
+
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center pt-20 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-950">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-500 dark:text-gray-400">
-            Loading dashboard...
-          </p>
-        </div>
-      </div>
-    );
+    return <DashboardSkeleton />;
   }
 
   return (
@@ -592,11 +590,7 @@ export default function Dashboard() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-t-lg transition-all whitespace-nowrap font-medium text-sm ${
-                activeTab === tab.id
-                  ? "bg-amber-500 text-white shadow-lg shadow-amber-500/25"
-                  : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
-              }`}
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-t-lg transition-all whitespace-nowrap font-medium text-sm ${activeTab === tab.id ? "bg-amber-500 text-white shadow-lg shadow-amber-500/25" : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"}`}
             >
               <tab.icon className="w-4 h-4" /> {tab.label}
               {tab.id === "myrides" && myRides.length > 0 && (
@@ -712,7 +706,7 @@ export default function Dashboard() {
           </motion.div>
         )}
 
-        {/* ========== MY SHARED TRIPS TAB (DRIVER) ========== */}
+        {/* ========== MY SHARED TRIPS TAB ========== */}
         {activeTab === "mytrips" && (
           <motion.div
             variants={containerVariants}
@@ -740,11 +734,9 @@ export default function Dashboard() {
                     try {
                       const res = await rideShareAPI.getTripRequests(trip._id);
                       const requests = res.data.requests || [];
-                      if (requests.length > 0) {
+                      if (requests.length > 0)
                         viewPassengerDetails(requests[0]);
-                      } else {
-                        toast.error("No passenger requests found");
-                      }
+                      else toast.error("No passenger requests found");
                     } catch (error) {
                       toast.error("Failed to load passenger details");
                     }
@@ -755,20 +747,15 @@ export default function Dashboard() {
           </motion.div>
         )}
 
-        {/* ========== MY RIDES TAB (PASSENGER) - COMPLETE ========== */}
+        {/* ========== MY RIDES TAB ========== */}
         {activeTab === "myrides" && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-            {/* Ride Sub-tabs */}
             <div className="flex gap-4 mb-6">
               {["upcoming", "past", "all"].map((subtab) => (
                 <button
                   key={subtab}
                   onClick={() => setActiveTab(subtab)}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                    activeTab === subtab
-                      ? "bg-amber-500 text-white"
-                      : "bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700"
-                  }`}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === subtab ? "bg-amber-500 text-white" : "bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700"}`}
                 >
                   {subtab === "upcoming" &&
                     `Upcoming (${upcomingRides.length})`}
@@ -782,7 +769,7 @@ export default function Dashboard() {
               <EmptyState
                 icon={UserGroupIcon}
                 title="No Rides Found"
-                description="Find a trip and request a seat to start carpooling!"
+                description="Find a trip and request a seat!"
                 action="Find a Trip"
                 onAction={() => navigate("/find-trip")}
               />
@@ -804,7 +791,6 @@ export default function Dashboard() {
                     ride.status,
                     ride.paymentStatus,
                   );
-
                   return (
                     <motion.div
                       key={ride._id}
@@ -813,9 +799,7 @@ export default function Dashboard() {
                     >
                       <div className="p-5">
                         <div className="flex flex-wrap justify-between items-start gap-4">
-                          {/* Left - Route Info */}
                           <div className="flex-1 min-w-0">
-                            {/* Route */}
                             <div className="flex items-center gap-3 mb-3">
                               <MapPinIcon className="w-5 h-5 text-amber-500 flex-shrink-0" />
                               <div className="flex items-center gap-2 min-w-0">
@@ -829,8 +813,6 @@ export default function Dashboard() {
                                 </span>
                               </div>
                             </div>
-
-                            {/* Trip Details Grid */}
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
                               <div className="flex items-center gap-2 text-sm text-gray-500">
                                 <CalendarIcon className="w-4 h-4 text-gray-400" />
@@ -857,8 +839,6 @@ export default function Dashboard() {
                                 </span>
                               </div>
                             </div>
-
-                            {/* Driver Info */}
                             <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700/30 rounded-xl">
                               <div className="w-10 h-10 bg-gradient-to-r from-amber-500 to-amber-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
                                 {trip?.driver?.name?.[0]?.toUpperCase() || "D"}
@@ -878,18 +858,13 @@ export default function Dashboard() {
                                 )}
                             </div>
                           </div>
-
-                          {/* Right - Status & Actions */}
                           <div className="text-right flex-shrink-0">
                             <span
                               className={`inline-flex items-center gap-1 text-xs px-3 py-1.5 rounded-full font-medium mb-3 ${statusBadge.bg}`}
                             >
                               {statusBadge.icon} {statusBadge.label}
                             </span>
-
-                            {/* Action Buttons */}
                             <div className="flex flex-wrap gap-2 justify-end">
-                              {/* Pending - Cancel */}
                               {ride.status === "pending" && (
                                 <button
                                   onClick={() => cancelRideRequest(ride._id)}
@@ -901,8 +876,6 @@ export default function Dashboard() {
                                     : "Cancel"}
                                 </button>
                               )}
-
-                              {/* Approved - Pay Now */}
                               {ride.status === "approved" &&
                                 ride.paymentStatus !== "paid" && (
                                   <button
@@ -915,13 +888,13 @@ export default function Dashboard() {
                                     {processingRidePayment === ride._id ? (
                                       <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
                                     ) : (
-                                      <CreditCardIcon className="w-3 h-3" />
+                                      <>
+                                        <CreditCardIcon className="w-3 h-3" />
+                                        Pay ₹{ride.totalAmount}
+                                      </>
                                     )}
-                                    Pay ₹{ride.totalAmount}
                                   </button>
                                 )}
-
-                              {/* Confirmed - Chat */}
                               {(ride.paymentStatus === "paid" ||
                                 ride.status === "completed") && (
                                 <>
@@ -942,8 +915,6 @@ export default function Dashboard() {
                                   </button>
                                 </>
                               )}
-
-                              {/* Completed - Rate */}
                               {ride.status === "completed" &&
                                 !ride.driverRatedByPassenger && (
                                   <button
@@ -953,8 +924,6 @@ export default function Dashboard() {
                                     <StarIcon className="w-3 h-3" /> Rate
                                   </button>
                                 )}
-
-                              {/* Report Button */}
                               {["approved", "completed"].includes(
                                 ride.status,
                               ) && (
@@ -969,8 +938,6 @@ export default function Dashboard() {
                             </div>
                           </div>
                         </div>
-
-                        {/* Payment Confirmed Banner */}
                         {ride.paymentStatus === "paid" &&
                           ride.status === "approved" && (
                             <div className="mt-4 p-3 bg-green-50 dark:bg-green-900/20 rounded-xl border border-green-200 dark:border-green-800 flex items-center justify-between">
@@ -1012,7 +979,6 @@ export default function Dashboard() {
               exit={{ opacity: 0, scale: 0.9 }}
               className="relative w-full max-w-lg bg-white dark:bg-gray-900 rounded-2xl shadow-2xl overflow-hidden"
             >
-              {/* Chat Header */}
               <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-amber-500 to-amber-600">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-amber-600 font-bold">
@@ -1034,8 +1000,6 @@ export default function Dashboard() {
                   <XMarkIcon className="w-5 h-5 text-white" />
                 </button>
               </div>
-
-              {/* Messages */}
               <div className="h-80 overflow-y-auto p-4 space-y-3">
                 {messages.length === 0 ? (
                   <div className="text-center py-12">
@@ -1051,12 +1015,7 @@ export default function Dashboard() {
                       className={`flex ${msg.sender?._id === user?._id || msg.sender === user?._id ? "justify-end" : "justify-start"}`}
                     >
                       <div
-                        className={`max-w-[75%] px-4 py-2 rounded-2xl ${
-                          msg.sender?._id === user?._id ||
-                          msg.sender === user?._id
-                            ? "bg-amber-500 text-white rounded-br-md"
-                            : "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white rounded-bl-md"
-                        }`}
+                        className={`max-w-[75%] px-4 py-2 rounded-2xl ${msg.sender?._id === user?._id || msg.sender === user?._id ? "bg-amber-500 text-white rounded-br-md" : "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white rounded-bl-md"}`}
                       >
                         <p className="text-sm">{msg.text}</p>
                         <p className="text-xs mt-1 opacity-70">
@@ -1068,8 +1027,6 @@ export default function Dashboard() {
                 )}
                 <div ref={chatEndRef} />
               </div>
-
-              {/* Input */}
               <div className="p-4 border-t border-gray-200 dark:border-gray-700">
                 <div className="flex gap-2">
                   <input
@@ -1093,6 +1050,7 @@ export default function Dashboard() {
           </div>
         )}
       </AnimatePresence>
+
       {/* ========== PASSENGER DETAIL MODAL ========== */}
       <AnimatePresence>
         {showPassengerModal && selectedPassenger && (
@@ -1110,7 +1068,6 @@ export default function Dashboard() {
               exit={{ opacity: 0, scale: 0.9 }}
               className="relative w-full max-w-lg bg-white dark:bg-gray-900 rounded-2xl shadow-2xl overflow-hidden"
             >
-              {/* Header */}
               <div className="bg-gradient-to-r from-amber-500 to-amber-600 p-5">
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-bold text-white">
@@ -1124,10 +1081,7 @@ export default function Dashboard() {
                   </button>
                 </div>
               </div>
-
-              {/* Content */}
               <div className="p-6 space-y-4">
-                {/* Passenger Avatar & Name */}
                 <div className="flex items-center gap-4">
                   <div className="w-16 h-16 bg-gradient-to-r from-amber-500 to-amber-600 rounded-full flex items-center justify-center text-2xl font-bold text-white">
                     {selectedPassenger.passenger?.name?.[0]?.toUpperCase() ||
@@ -1142,8 +1096,6 @@ export default function Dashboard() {
                     </p>
                   </div>
                 </div>
-
-                {/* Details Grid */}
                 <div className="grid grid-cols-2 gap-3">
                   <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
                     <p className="text-xs text-gray-500">Phone</p>
@@ -1160,13 +1112,7 @@ export default function Dashboard() {
                   <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
                     <p className="text-xs text-gray-500">Status</p>
                     <span
-                      className={`text-xs px-2 py-0.5 rounded-full ${
-                        selectedPassenger.status === "approved"
-                          ? "bg-green-100 text-green-700"
-                          : selectedPassenger.status === "pending"
-                            ? "bg-yellow-100 text-yellow-700"
-                            : "bg-red-100 text-red-700"
-                      }`}
+                      className={`text-xs px-2 py-0.5 rounded-full ${selectedPassenger.status === "approved" ? "bg-green-100 text-green-700" : selectedPassenger.status === "pending" ? "bg-yellow-100 text-yellow-700" : "bg-red-100 text-red-700"}`}
                     >
                       {selectedPassenger.status}
                     </span>
@@ -1174,11 +1120,7 @@ export default function Dashboard() {
                   <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
                     <p className="text-xs text-gray-500">Payment</p>
                     <span
-                      className={`text-xs px-2 py-0.5 rounded-full ${
-                        selectedPassenger.paymentStatus === "paid"
-                          ? "bg-green-100 text-green-700"
-                          : "bg-yellow-100 text-yellow-700"
-                      }`}
+                      className={`text-xs px-2 py-0.5 rounded-full ${selectedPassenger.paymentStatus === "paid" ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}
                     >
                       {selectedPassenger.paymentStatus || "pending"}
                     </span>
@@ -1198,8 +1140,6 @@ export default function Dashboard() {
                     </div>
                   )}
                 </div>
-
-                {/* Action Buttons */}
                 {selectedPassenger.status === "pending" && (
                   <div className="flex gap-3 pt-2">
                     <button
@@ -1232,7 +1172,6 @@ export default function Dashboard() {
                     </button>
                   </div>
                 )}
-
                 {selectedPassenger.status === "approved" &&
                   selectedPassenger.paymentStatus === "paid" && (
                     <div className="pt-2">
@@ -1253,6 +1192,7 @@ export default function Dashboard() {
           </div>
         )}
       </AnimatePresence>
+
       {/* ========== RATING MODAL ========== */}
       <AnimatePresence>
         {showRating && ratingRide && (
@@ -1273,8 +1213,6 @@ export default function Dashboard() {
               <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
                 Rate Your Driver
               </h3>
-
-              {/* Stars */}
               <div className="flex justify-center gap-2 mb-6">
                 {[1, 2, 3, 4, 5].map((star) => (
                   <button
@@ -1290,7 +1228,6 @@ export default function Dashboard() {
                   </button>
                 ))}
               </div>
-
               <textarea
                 value={review}
                 onChange={(e) => setReview(e.target.value)}
@@ -1298,7 +1235,6 @@ export default function Dashboard() {
                 rows={3}
                 className="w-full px-4 py-3 bg-gray-100 dark:bg-gray-800 rounded-xl text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-amber-500 resize-none"
               />
-
               <div className="flex gap-3">
                 <button
                   onClick={() => setShowRating(false)}
@@ -1318,6 +1254,7 @@ export default function Dashboard() {
           </div>
         )}
       </AnimatePresence>
+
       {/* ========== RECEIPT MODAL ========== */}
       {showReceipt && receiptBooking && (
         <PaymentReceipt
@@ -1328,6 +1265,7 @@ export default function Dashboard() {
           }}
         />
       )}
+
       {/* ========== REPORT MODAL ========== */}
       <AnimatePresence>
         {showReport && reportRide && (
@@ -1353,12 +1291,10 @@ export default function Dashboard() {
                   Report Issue
                 </h3>
               </div>
-
               <p className="text-sm text-gray-500 mb-4">
                 Report an issue with driver:{" "}
                 <strong>{reportRide.trip?.driver?.name}</strong>
               </p>
-
               <textarea
                 value={reportReason}
                 onChange={(e) => setReportReason(e.target.value)}
@@ -1366,7 +1302,6 @@ export default function Dashboard() {
                 rows={4}
                 className="w-full px-4 py-3 bg-gray-100 dark:bg-gray-800 rounded-xl text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-red-500 resize-none"
               />
-
               <div className="flex gap-3">
                 <button
                   onClick={() => setShowReport(false)}
@@ -1447,22 +1382,12 @@ function BookingCard({
               </p>
               <div className="flex items-center gap-2 mt-1">
                 <span
-                  className={`text-xs px-2 py-0.5 rounded-full ${
-                    booking.status === "confirmed"
-                      ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                      : booking.status === "pending"
-                        ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400"
-                        : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
-                  }`}
+                  className={`text-xs px-2 py-0.5 rounded-full ${booking.status === "confirmed" ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : booking.status === "pending" ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400" : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"}`}
                 >
                   {booking.status?.toUpperCase()}
                 </span>
                 <span
-                  className={`text-xs px-2 py-0.5 rounded-full ${
-                    booking.paymentStatus === "paid"
-                      ? "bg-green-100 text-green-700"
-                      : "bg-yellow-100 text-yellow-700"
-                  }`}
+                  className={`text-xs px-2 py-0.5 rounded-full ${booking.paymentStatus === "paid" ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}
                 >
                   {booking.paymentStatus?.toUpperCase()}
                 </span>
@@ -1610,11 +1535,7 @@ function TripCard({
           </div>
           <div className="flex items-center gap-2">
             <span
-              className={`text-xs px-2 py-1 rounded-full ${
-                trip.status === "active"
-                  ? "bg-green-100 text-green-700"
-                  : "bg-gray-100 text-gray-700"
-              }`}
+              className={`text-xs px-2 py-1 rounded-full ${trip.status === "active" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700"}`}
             >
               {trip.status}
             </span>
@@ -1631,7 +1552,6 @@ function TripCard({
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
-          {/* View Passengers Button */}
           {(trip.pendingRequests > 0 || trip.approvedPassengers > 0) && (
             <button
               onClick={() => onViewPassengers(trip)}
