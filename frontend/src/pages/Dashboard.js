@@ -1,5 +1,5 @@
 /**
- * User Dashboard — With Confetti, Skeleton Loaders & Live Tracking
+ * User Dashboard — Complete Working Version
  * File: frontend/src/pages/Dashboard.js
  */
 
@@ -39,6 +39,7 @@ import {
   XMarkIcon,
   PaperAirplaneIcon,
   InformationCircleIcon,
+  EllipsisHorizontalIcon,
 } from "@heroicons/react/24/outline";
 import { StarIcon as StarIconSolid } from "@heroicons/react/24/solid";
 import { motion, AnimatePresence } from "framer-motion";
@@ -99,8 +100,10 @@ export default function Dashboard() {
   const [pickupCoords, setPickupCoords] = useState(null);
   const [dropCoords, setDropCoords] = useState(null);
   const [trackingInterval, setTrackingInterval] = useState(null);
-  const [isSharing, setIsSharing] = useState(false);
-  const [shareInterval, setShareInterval] = useState(null);
+  
+  // PER-TRIP sharing state (not global!)
+  const [sharingTrips, setSharingTrips] = useState({});
+  const [shareIntervals, setShareIntervals] = useState({});
 
   useEffect(() => { fetchDashboardData(); fetchRideShareData(); }, []);
   useEffect(() => { if (chatEndRef.current) chatEndRef.current.scrollIntoView({ behavior: "smooth" }); }, [messages]);
@@ -174,10 +177,14 @@ export default function Dashboard() {
     finally { setProcessingRidePayment(null); }
   };
 
+  // ─── PER-TRIP LOCATION SHARING ──────────────────────────────────────────
+
   const startSharingLocation = async (trip) => {
     if (!navigator.geolocation) { toast.error("Geolocation not supported"); return; }
-    setIsSharing(true);
+    
+    setSharingTrips(prev => ({ ...prev, [trip._id]: true }));
     toast.success("📍 Sharing your location live!");
+
     const shareLocation = () => {
       navigator.geolocation.getCurrentPosition(async (pos) => {
         try {
@@ -185,23 +192,31 @@ export default function Dashboard() {
           const API = process.env.REACT_APP_API_URL || "https://wheelz-ldq2.onrender.com/api";
           const res = await fetch(`${API}/rideshare/${trip._id}/requests`, { headers: { Authorization: `Bearer ${token}` } });
           const data = await res.json();
-          const approvedReq = data.requests?.find(r => r.status === "approved");
-          if (approvedReq) {
+          
+          // ONLY approved + paid passengers
+          const activePassengers = (data.requests || []).filter(r => r.status === "approved" && r.paymentStatus === "paid");
+          
+          for (const req of activePassengers) {
             await fetch(`${API}/tracking/update`, {
-              method: "POST", headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-              body: JSON.stringify({ requestId: approvedReq._id, latitude: pos.coords.latitude, longitude: pos.coords.longitude, speed: pos.coords.speed || 0, heading: pos.coords.heading || 0, accuracy: pos.coords.accuracy }),
+              method: "POST",
+              headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+              body: JSON.stringify({ requestId: req._id, latitude: pos.coords.latitude, longitude: pos.coords.longitude, speed: pos.coords.speed || 0, heading: pos.coords.heading || 0, accuracy: pos.coords.accuracy }),
             });
           }
-        } catch (err) { console.log("Location update failed:", err); }
-      }, (err) => console.log("GPS error:", err), { enableHighAccuracy: true });
+        } catch (err) { console.log("Location update failed:", err.message); }
+      }, (err) => console.log("GPS error:", err.message), { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
     };
+
     shareLocation();
-    setShareInterval(setInterval(shareLocation, 10000));
+    const interval = setInterval(shareLocation, 10000);
+    setShareIntervals(prev => ({ ...prev, [trip._id]: interval }));
   };
 
-  const stopSharingLocation = () => {
-    if (shareInterval) clearInterval(shareInterval);
-    setIsSharing(false);
+  const stopSharingLocation = (tripId) => {
+    const interval = shareIntervals[tripId];
+    if (interval) clearInterval(interval);
+    setSharingTrips(prev => ({ ...prev, [tripId]: false }));
+    setShareIntervals(prev => { const newI = { ...prev }; delete newI[tripId]; return newI; });
     toast.success("Location sharing stopped");
   };
 
@@ -221,7 +236,7 @@ export default function Dashboard() {
       const res = await fetch(`${API}/tracking/${ride._id}`, { headers: { Authorization: `Bearer ${token}` } });
       const data = await res.json();
       if (data.success && data.location) setDriverCoords([data.location.latitude, data.location.longitude]);
-    } catch (err) { console.log("Driver hasn't shared location yet"); }
+    } catch (err) {}
     const interval = setInterval(async () => {
       try {
         const token = localStorage.getItem("wheelz_token");
@@ -370,7 +385,7 @@ export default function Dashboard() {
 
         {activeTab === "mytrips" && (
           <motion.div variants={containerVariants} initial="hidden" animate="visible" className="space-y-4">
-            {myTrips.length === 0 ? <EmptyState icon={TruckIcon} title="No Trips Offered" description="Share your journey and split costs!" action="Offer a Trip" onAction={() => navigate("/offer-trip")} /> : myTrips.map((trip) => (<TripCard key={trip._id} trip={trip} navigate={navigate} onCancel={cancelTrip} cancellingTrip={cancellingTrip} isSharing={isSharing} startSharingLocation={startSharingLocation} stopSharingLocation={stopSharingLocation} onViewPassengers={async (trip) => { try { const res = await rideShareAPI.getTripRequests(trip._id); const requests = res.data.requests || []; if (requests.length > 0) viewPassengerDetails(requests[0]); else toast.error("No passenger requests found"); } catch (error) { toast.error("Failed to load passenger details"); } }} />))}
+            {myTrips.length === 0 ? <EmptyState icon={TruckIcon} title="No Trips Offered" description="Share your journey and split costs!" action="Offer a Trip" onAction={() => navigate("/offer-trip")} /> : myTrips.map((trip) => (<TripCard key={trip._id} trip={trip} navigate={navigate} onCancel={cancelTrip} cancellingTrip={cancellingTrip} isSharing={sharingTrips[trip._id] || false} startSharingLocation={startSharingLocation} stopSharingLocation={() => stopSharingLocation(trip._id)} onViewPassengers={async (trip) => { try { const res = await rideShareAPI.getTripRequests(trip._id); const requests = res.data.requests || []; if (requests.length > 0) viewPassengerDetails(requests[0]); else toast.error("No passenger requests found"); } catch (error) { toast.error("Failed to load passenger details"); } }} />))}
           </motion.div>
         )}
 
