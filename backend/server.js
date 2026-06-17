@@ -56,6 +56,8 @@ app.use("/api/trip-planner", require("./routes/tripPlanner"));
 app.use("/api/rideshare", require("./routes/tripShare"));
 // app.use("/api/chatbot", require("./routes/chatbotRoutes"));
 // app.use("/api/otp", require("./routes/otpRoutes"));
+app.use("/api/promo", require("./routes/promo"));
+app.use("/api/tracking", require("./routes/tracking"));
 // ─── Health Check ───────────────────────────────────────────────────────────
 app.get("/api/health", (req, res) => {
   res.json({
