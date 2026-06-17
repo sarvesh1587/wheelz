@@ -46,7 +46,7 @@ import PaymentReceipt from "../components/PaymentReceipt";
 import { useConfetti } from "../hooks/useConfetti";
 import { DashboardSkeleton } from "../components/common/Skeleton";
 import TrackingMap from "../components/TrackingMap";
-import { MapPinIcon } from "@heroicons/react/24/outline"; // Add MapPinIcon if not already imported
+// import { MapPinIcon } from "@heroicons/react/24/outline"; // Add MapPinIcon if not already imported
 // Animation variants
 const containerVariants = {
   hidden: { opacity: 0 },
