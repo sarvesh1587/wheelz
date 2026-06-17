@@ -283,9 +283,11 @@ exports.getMyTrips = async (req, res) => {
           trip: t._id,
           status: "pending",
         });
+        // Count BOTH approved AND paid passengers
         const approved = await TripRequest.countDocuments({
           trip: t._id,
           status: "approved",
+          paymentStatus: "paid", // ← ADD THIS
         });
         return {
           ...t.toObject(),
