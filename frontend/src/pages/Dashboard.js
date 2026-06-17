@@ -483,7 +483,7 @@ function TripCard({ trip, navigate, onCancel, cancellingTrip, onViewPassengers, 
         <div className="flex flex-wrap gap-2">
           {(trip.pendingRequests > 0 || trip.approvedPassengers > 0) && (<button onClick={() => onViewPassengers(trip)} className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-sm flex items-center gap-1"><UserGroupIcon className="w-4 h-4" /> Passengers</button>)}
           <button onClick={() => navigate(`/rideshare/${trip._id}`)} className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 text-sm">View Trip</button>
-          {trip.status === "active" &&  (
+          {trip.status === "active" &&(
             isSharing ? (
               <button onClick={stopSharingLocation} className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 text-sm flex items-center gap-1">⏹ Stop Sharing</button>
             ) : (
