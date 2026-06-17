@@ -45,7 +45,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import PaymentReceipt from "../components/PaymentReceipt";
 import { useConfetti } from "../hooks/useConfetti";
 import { DashboardSkeleton } from "../components/common/Skeleton";
-
+import TrackingMap from "../components/TrackingMap";
+import { MapPinIcon } from "@heroicons/react/24/outline"; // Add MapPinIcon if not already imported
 // Animation variants
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -105,7 +106,12 @@ export default function Dashboard() {
   // Receipt states
   const [showReceipt, setShowReceipt] = useState(false);
   const [receiptBooking, setReceiptBooking] = useState(null);
-
+  // Tracking states
+  const [trackingRide, setTrackingRide] = useState(null);
+  const [driverCoords, setDriverCoords] = useState(null);
+  const [pickupCoords, setPickupCoords] = useState(null);
+  const [dropCoords, setDropCoords] = useState(null);
+  const [trackingInterval, setTrackingInterval] = useState(null);
   useEffect(() => {
     fetchDashboardData();
     fetchRideShareData();
@@ -261,7 +267,55 @@ export default function Dashboard() {
       setMessages([]);
     }
   };
+  const openTracking = async (ride) => {
+    const trip = ride.trip;
+    setTrackingRide(ride);
 
+    // Set approximate pickup/drop (replace with actual coordinates later)
+    setPickupCoords([19.076, 72.8777]); // Mumbai example
+    setDropCoords([15.2993, 74.124]); // Goa example
+
+    try {
+      const token = localStorage.getItem("wheelz_token");
+      const res = await fetch(
+        `${process.env.REACT_APP_API_URL || "https://wheelz-ldq2.onrender.com/api"}/tracking/${ride._id}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+      const data = await res.json();
+      if (data.success && data.location) {
+        setDriverCoords([data.location.latitude, data.location.longitude]);
+      }
+    } catch (err) {
+      console.log("Driver hasn't shared location yet");
+    }
+
+    // Auto-refresh every 10 seconds
+    const interval = setInterval(async () => {
+      try {
+        const token = localStorage.getItem("wheelz_token");
+        const res = await fetch(
+          `${process.env.REACT_APP_API_URL || "https://wheelz-ldq2.onrender.com/api"}/tracking/${ride._id}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          },
+        );
+        const data = await res.json();
+        if (data.success && data.location) {
+          setDriverCoords([data.location.latitude, data.location.longitude]);
+        }
+      } catch (err) {}
+    }, 10000);
+
+    setTrackingInterval(interval);
+  };
+
+  const closeTracking = () => {
+    if (trackingInterval) clearInterval(trackingInterval);
+    setTrackingRide(null);
+    setTrackingInterval(null);
+  };
   const sendMessage = async () => {
     if (!newMessage.trim() || !chatRide) return;
     setSendingMessage(true);
@@ -895,6 +949,17 @@ export default function Dashboard() {
                                     )}
                                   </button>
                                 )}
+                              {/* Add this near Chat/View buttons for paid rides */}
+                              {ride.paymentStatus === "paid" &&
+                                ride.status === "approved" && (
+                                  <button
+                                    onClick={() => setTrackingRide(ride)}
+                                    className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded-lg flex items-center gap-1 transition-colors"
+                                  >
+                                    <MapPinIcon className="w-3 h-3" /> Track
+                                  </button>
+                                )}
+
                               {(ride.paymentStatus === "paid" ||
                                 ride.status === "completed") && (
                                 <>
@@ -1131,6 +1196,55 @@ export default function Dashboard() {
                       ₹{selectedPassenger.totalAmount}
                     </p>
                   </div>
+                  {/* ========== LIVE TRACKING MODAL ========== */}
+                  {trackingRide && (
+                    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+                      <div
+                        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                        onClick={closeTracking}
+                      />
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-white dark:bg-gray-900 rounded-2xl shadow-2xl"
+                      >
+                        {/* Header */}
+                        <div className="sticky top-0 bg-gradient-to-r from-blue-600 to-blue-700 p-4 flex justify-between items-center z-10 rounded-t-2xl">
+                          <div>
+                            <h3 className="text-white font-bold text-lg">
+                              📍 Live Tracking
+                            </h3>
+                            <p className="text-blue-100 text-xs">
+                              {trackingRide?.trip?.fromCity} →{" "}
+                              {trackingRide?.trip?.toCity}
+                            </p>
+                          </div>
+                          <button
+                            onClick={closeTracking}
+                            className="text-white text-2xl hover:bg-white/20 rounded-full w-8 h-8 flex items-center justify-center"
+                          >
+                            ✕
+                          </button>
+                        </div>
+
+                        {/* Map */}
+                        <div className="p-4">
+                          <TrackingMap
+                            driverLocation={driverCoords}
+                            pickup={pickupCoords}
+                            drop={dropCoords}
+                            onCallDriver={() => {
+                              if (trackingRide?.trip?.driver?.phone) {
+                                window.location.href = `tel:${trackingRide.trip.driver.phone}`;
+                              } else {
+                                toast.error("Driver phone not available");
+                              }
+                            }}
+                          />
+                        </div>
+                      </motion.div>
+                    </div>
+                  )}
                   {selectedPassenger.message && (
                     <div className="col-span-2 p-3 bg-amber-50 dark:bg-amber-900/20 rounded-xl">
                       <p className="text-xs text-gray-500">Message</p>
@@ -1265,7 +1379,36 @@ export default function Dashboard() {
           }}
         />
       )}
-
+      {/* ========== TRACKING MODAL ========== */}
+      {trackingRide && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={() => setTrackingRide(false)}
+          />
+          <div className="relative w-full max-w-2xl bg-white dark:bg-gray-900 rounded-2xl shadow-2xl overflow-hidden">
+            <div className="p-4 border-b flex justify-between items-center bg-gradient-to-r from-blue-500 to-blue-600">
+              <h3 className="text-white font-bold text-lg">Live Tracking</h3>
+              <button
+                onClick={() => setTrackingRide(false)}
+                className="text-white text-2xl"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="p-4">
+              <TrackingMap
+                driverLocation={driverCoords}
+                pickup={pickupCoords}
+                drop={dropCoords}
+                onCallDriver={() =>
+                  (window.location.href = `tel:${trackingRide?.trip?.driver?.phone}`)
+                }
+              />
+            </div>
+          </div>
+        </div>
+      )}
       {/* ========== REPORT MODAL ========== */}
       <AnimatePresence>
         {showReport && reportRide && (
