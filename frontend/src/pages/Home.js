@@ -97,7 +97,7 @@ export default function Home() {
                     : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
                 }`}
               >
-                {tab === "all" ? "All" : tab === "car" ? "🚗 Cars" : "🏍️ Bikes"}
+                {tab === "all" ? "All" : tab === "car" ? "Cars" : "Bikes"}
               </button>
             ))}
           </div>

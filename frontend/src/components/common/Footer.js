@@ -11,6 +11,7 @@ import {
   CreditCardIcon,
   DevicePhoneMobileIcon,
   BuildingStorefrontIcon,
+  BuildingLibraryIcon,
   HeartIcon,
 } from "@heroicons/react/24/outline";
 import toast from "react-hot-toast";
@@ -55,9 +56,9 @@ export default function Footer() {
 
   // Footer sections data
   const quickLinks = [
-    { label: "Browse Cars", path: "/vehicles?category=car", icon: "🚗" },
-    { label: "Browse Bikes", path: "/vehicles?category=bike", icon: "🏍️" },
-    { label: "All Vehicles", path: "/vehicles", icon: "🚙" },
+    { label: "Browse Cars", path: "/vehicles?category=car" },
+    { label: "Browse Bikes", path: "/vehicles?category=bike" },
+    { label: "All Vehicles", path: "/vehicles" },
     { label: "How it Works", path: "/#how-it-works", isHash: true },
   ];
 
@@ -90,19 +91,17 @@ export default function Footer() {
   ];
 
   const paymentMethods = [
-    { name: "Razorpay", icon: "💳", color: "from-blue-500 to-blue-600" },
-    { name: "UPI", icon: "📱", color: "from-green-500 to-green-600" },
-    { name: "Cards", icon: "💳", color: "from-purple-500 to-purple-600" },
-    { name: "NetBanking", icon: "🏦", color: "from-orange-500 to-orange-600" },
+    { name: "Razorpay", icon: <CreditCardIcon className="w-4 h-4" /> },
+    { name: "UPI", icon: <DevicePhoneMobileIcon className="w-4 h-4" /> },
+    { name: "Cards", icon: <CreditCardIcon className="w-4 h-4" /> },
+    { name: "NetBanking", icon: <BuildingLibraryIcon className="w-4 h-4" /> },
   ];
 
   return (
     <>
       <footer className="relative bg-gradient-to-br from-gray-900 via-gray-900 to-gray-800 text-gray-400 mt-auto overflow-hidden">
-        {/* Animated Background Gradient */}
-        <div className="absolute inset-0 bg-gradient-to-r from-amber-500/5 to-pink-500/5 animate-pulse" />
-        <div className="absolute top-0 left-0 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl animate-float" />
-        <div className="absolute bottom-0 right-0 w-96 h-96 bg-pink-500/10 rounded-full blur-3xl animate-float delay-1000" />
+        {/* Subtle amber glow */}
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl" />
 
         <div className="relative max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
@@ -293,9 +292,9 @@ export default function Footer() {
                     <motion.div
                       key={method.name}
                       whileHover={{ scale: 1.05, y: -2 }}
-                      className={`px-3 py-1.5 bg-gradient-to-r ${method.color} bg-opacity-20 rounded-lg text-white text-xs font-medium flex items-center gap-1`}
+                      className="px-3 py-1.5 bg-gray-800 border border-gray-700 rounded-lg text-gray-300 text-xs font-medium flex items-center gap-1.5"
                     >
-                      <span>{method.icon}</span>
+                      <span className="text-amber-400">{method.icon}</span>
                       <span>{method.name}</span>
                     </motion.div>
                   ))}

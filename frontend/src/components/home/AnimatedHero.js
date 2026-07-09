@@ -76,12 +76,12 @@ export default function AnimatedHero() {
   };
 
   const quickTags = [
-    { label: "🚗 Cars", query: "car", type: "category" },
-    { label: "🏍️ Bikes", query: "bike", type: "category" },
-    { label: "⚡ Electric", query: "electric", type: "fuelType" },
-    { label: "🏙️ Mumbai", query: "Mumbai", type: "city" },
-    { label: "🌆 Bangalore", query: "Bangalore", type: "city" },
-    { label: "🏛️ Delhi", query: "Delhi", type: "city" },
+    { label: "Cars", query: "car", type: "category" },
+    { label: "Bikes", query: "bike", type: "category" },
+    { label: "Electric", query: "electric", type: "fuelType" },
+    { label: "Mumbai", query: "Mumbai", type: "city" },
+    { label: "Bangalore", query: "Bangalore", type: "city" },
+    { label: "Delhi", query: "Delhi", type: "city" },
   ];
 
   const handleTagClick = (tag) => {
@@ -120,28 +120,8 @@ export default function AnimatedHero() {
         ))}
       </div>
 
-      {/* Animated Gradient Orbs */}
-      <div className="absolute top-20 -left-20 w-96 h-96 bg-amber-500/20 rounded-full blur-3xl animate-pulse" />
-      <div className="absolute bottom-20 -right-20 w-96 h-96 bg-pink-500/20 rounded-full blur-3xl animate-pulse delay-1000" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-purple-500/10 rounded-full blur-3xl" />
-
-      {/* Floating Particles */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {[...Array(30)].map((_, i) => (
-          <div
-            key={i}
-            className="absolute rounded-full bg-amber-400/30"
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              width: `${2 + Math.random() * 6}px`,
-              height: `${2 + Math.random() * 6}px`,
-              animation: `float ${3 + Math.random() * 5}s ease-in-out infinite`,
-              animationDelay: `${Math.random() * 5}s`,
-            }}
-          />
-        ))}
-      </div>
+      {/* Single subtle amber glow for warmth */}
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[700px] h-[700px] bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
 
       {/* Content */}
       <div className="relative container mx-auto px-4 min-h-screen flex items-center py-20">
@@ -157,7 +137,7 @@ export default function AnimatedHero() {
           {/* Main Heading */}
           <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold leading-tight mb-6">
             <span className="text-white block">Rent the Perfect</span>
-            <span className="bg-gradient-to-r from-amber-400 via-orange-500 to-pink-500 bg-clip-text text-transparent animate-gradient bg-[length:200%_auto]">
+            <span className="bg-gradient-to-r from-amber-300 via-amber-400 to-orange-500 bg-clip-text text-transparent animate-gradient bg-[length:200%_auto]">
               Ride
             </span>
           </h1>
