@@ -38,6 +38,21 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use("/backend/uploads", express.static(path.join(__dirname, "uploads")));
 
 // ─── Routes ─────────────────────────────────────────────────────────────────
+// Add these lines before the existing routes (after line 40)
+const {
+  loginLimiter,
+  apiLimiter,
+  authLimiter,
+  resetLimiter,
+} = require("./middleware/rateLimiter");
+
+// Apply rate limiters to specific auth endpoints
+app.use("/api/auth/login", loginLimiter);
+app.use("/api/auth/register", authLimiter);
+app.use("/api/auth/forgot-password", resetLimiter);
+
+// Apply API limiter to all /api routes
+app.use("/api", apiLimiter);
 app.use("/api/vendor", require("./routes/vendor"));
 app.use("/api/auth", require("./routes/auth"));
 app.use("/api/users", require("./routes/users"));
