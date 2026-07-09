@@ -1,10 +1,12 @@
 /**
  * Authentication & Authorization Middleware
+ * File: backend/middleware/auth.js
  */
 
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 
+// ─── Protect routes — user must be logged in ────────────────────────────────
 exports.protect = async (req, res, next) => {
   let token;
 
@@ -43,6 +45,7 @@ exports.protect = async (req, res, next) => {
   }
 };
 
+// ─── Restrict to specific roles ─────────────────────────────────────────────
 exports.authorize = (...roles) => {
   return (req, res, next) => {
     if (!roles.includes(req.user.role)) {
@@ -55,6 +58,18 @@ exports.authorize = (...roles) => {
   };
 };
 
+// ─── Admin only middleware ───────────────────────────────────────────────────
+exports.adminOnly = (req, res, next) => {
+  if (!req.user || req.user.role !== "admin") {
+    return res.status(403).json({
+      success: false,
+      message: "Admin access required.",
+    });
+  }
+  next();
+};
+
+// ─── Optional auth — attach user if token exists, but don't block ───────────
 exports.optionalAuth = async (req, res, next) => {
   let token;
   if (
