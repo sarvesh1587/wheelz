@@ -11,8 +11,6 @@ const {
   googleLogin,
 } = require("../controllers/authController");
 const { protect } = require("../middleware/auth");
-
-// Security middleware
 const {
   loginLimiter,
   authLimiter,
@@ -27,7 +25,6 @@ const {
   validateUpdateProfile,
 } = require("../middleware/validate");
 
-// Public routes with rate limiting + validation
 router.post("/register", authLimiter, validateRegister, register);
 router.post("/login", loginLimiter, validateLogin, login);
 router.post(
@@ -43,8 +40,6 @@ router.post(
   resetPassword,
 );
 router.post("/google/google-login", googleLogin);
-
-// Protected routes with validation
 router.get("/me", protect, getMe);
 router.put("/profile", protect, validateUpdateProfile, updateProfile);
 router.put("/change-password", protect, validateChangePassword, changePassword);
