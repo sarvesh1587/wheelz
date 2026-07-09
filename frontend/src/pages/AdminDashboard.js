@@ -141,7 +141,7 @@ export default function AdminDashboard() {
       label: "Total Bookings",
       value: dashboardData?.totalBookings || 0,
       icon: CalendarIcon,
-      color: "from-purple-500 to-purple-600",
+      color: "from-slate-500 to-slate-600",
     },
     {
       label: "Pending KYC",

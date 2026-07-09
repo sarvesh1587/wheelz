@@ -331,7 +331,7 @@ export default function VendorDashboard() {
       label: "Completed",
       value: stats?.completedBookings || 0,
       icon: ChartBarIcon,
-      color: "from-purple-500 to-purple-600",
+      color: "from-slate-500 to-slate-600",
     },
     {
       label: "Total Revenue",

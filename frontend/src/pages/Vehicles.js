@@ -146,8 +146,8 @@ export default function Vehicles() {
 
   // Get title based on category filter
   const getTitle = () => {
-    if (filters.category === "car") return "🚗 Cars";
-    if (filters.category === "bike") return "🏍️ Bikes";
+    if (filters.category === "car") return "Cars";
+    if (filters.category === "bike") return "Bikes";
     return "All Vehicles";
   };
 
@@ -212,7 +212,7 @@ export default function Vehicles() {
                 : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
             }`}
           >
-            🚗 Cars
+            Cars
           </button>
           <button
             onClick={() => updateFilter("category", "bike")}
@@ -222,7 +222,7 @@ export default function Vehicles() {
                 : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
             }`}
           >
-            🏍️ Bikes
+            Bikes
           </button>
         </div>
 

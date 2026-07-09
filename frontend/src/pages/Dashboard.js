@@ -40,6 +40,7 @@ import {
   PaperAirplaneIcon,
   InformationCircleIcon,
   EllipsisHorizontalIcon,
+  StopCircleIcon,
 } from "@heroicons/react/24/outline";
 import { StarIcon as StarIconSolid } from "@heroicons/react/24/solid";
 import { motion, AnimatePresence } from "framer-motion";
@@ -449,7 +450,7 @@ export default function Dashboard() {
       {showReceipt && receiptBooking && (<PaymentReceipt booking={receiptBooking} onClose={() => { setShowReceipt(false); setReceiptBooking(null); }} />)}
 
       {/* TRACKING MODAL */}
-      {trackingRide && (<div className="fixed inset-0 z-[9999] flex items-center justify-center p-4"><div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={closeTracking} /><div className="relative w-full max-w-2xl bg-white dark:bg-gray-900 rounded-2xl shadow-2xl overflow-hidden"><div className="p-4 border-b flex justify-between items-center bg-gradient-to-r from-blue-500 to-blue-600"><h3 className="text-white font-bold text-lg">📍 Live Tracking</h3><button onClick={closeTracking} className="text-white text-2xl">✕</button></div><div className="p-4"><TrackingMap driverLocation={driverCoords} pickup={pickupCoords} drop={dropCoords} onCallDriver={() => window.location.href = `tel:${trackingRide?.trip?.driver?.phone}`} /></div></div></div>)}
+      {trackingRide && (<div className="fixed inset-0 z-[9999] flex items-center justify-center p-4"><div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={closeTracking} /><div className="relative w-full max-w-2xl bg-white dark:bg-gray-900 rounded-2xl shadow-2xl overflow-hidden"><div className="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center bg-gradient-to-r from-amber-500 to-amber-600"><h3 className="text-white font-bold text-lg flex items-center gap-2"><MapPinIcon className="w-5 h-5" /> Live Tracking</h3><button onClick={closeTracking} className="p-1 rounded-full hover:bg-white/20 transition-colors"><XMarkIcon className="w-5 h-5 text-white" /></button></div><div className="p-4"><TrackingMap driverLocation={driverCoords} pickup={pickupCoords} drop={dropCoords} onCallDriver={() => window.location.href = `tel:${trackingRide?.trip?.driver?.phone}`} /></div></div></div>)}
 
       {/* REPORT MODAL */}
       <AnimatePresence>{showReport && reportRide && (<div className="fixed inset-0 z-[9999] flex items-center justify-center p-4"><motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowReport(false)} className="absolute inset-0 bg-black/60 backdrop-blur-sm" /><motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="relative w-full max-w-md bg-white dark:bg-gray-900 rounded-2xl shadow-2xl p-6"><div className="flex items-center gap-3 mb-4"><div className="w-10 h-10 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center"><ExclamationTriangleIcon className="w-5 h-5 text-red-500" /></div><h3 className="text-lg font-bold text-gray-900 dark:text-white">Report Issue</h3></div><p className="text-sm text-gray-500 mb-4">Report an issue with driver: <strong>{reportRide.trip?.driver?.name}</strong></p><textarea value={reportReason} onChange={(e) => setReportReason(e.target.value)} placeholder="Describe the issue..." rows={4} className="w-full px-4 py-3 bg-gray-100 dark:bg-gray-800 rounded-xl text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-red-500 resize-none" /><div className="flex gap-3"><button onClick={() => setShowReport(false)} className="flex-1 px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">Cancel</button><button onClick={submitReport} disabled={submittingReport || !reportReason.trim()} className="flex-1 px-4 py-2.5 bg-red-500 hover:bg-red-600 disabled:bg-gray-300 text-white rounded-xl text-sm font-medium transition-colors">{submittingReport ? "Submitting..." : "Submit Report"}</button></div></motion.div></div>)}</AnimatePresence>
@@ -485,9 +486,9 @@ function TripCard({ trip, navigate, onCancel, cancellingTrip, onViewPassengers, 
           <button onClick={() => navigate(`/rideshare/${trip._id}`)} className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 text-sm">View Trip</button>
           {trip.status === "active" &&(
             isSharing ? (
-              <button onClick={stopSharingLocation} className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 text-sm flex items-center gap-1">⏹ Stop Sharing</button>
+              <button onClick={stopSharingLocation} className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 text-sm flex items-center gap-1.5"><StopCircleIcon className="w-4 h-4" /> Stop Sharing</button>
             ) : (
-              <button onClick={() => startSharingLocation(trip)} className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm flex items-center gap-1">📍 Share Location</button>
+              <button onClick={() => startSharingLocation(trip)} className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm flex items-center gap-1.5"><MapPinIcon className="w-4 h-4" /> Share Location</button>
             )
           )}
           {(trip.status === "active" || trip.status === "full") && (<button onClick={() => onCancel(trip._id)} disabled={cancellingTrip === trip._id} className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 text-sm">{cancellingTrip === trip._id ? "Cancelling..." : "Cancel"}</button>)}

@@ -18,6 +18,8 @@ import {
   CheckCircleIcon,
   CalendarDaysIcon,
   PhoneIcon,
+  FireIcon,
+  ChatBubbleLeftRightIcon,
   StarIcon as StarOutline,
 } from "@heroicons/react/24/outline";
 import {
@@ -372,8 +374,9 @@ export default function VehicleDetail() {
                   <span className="line-through text-gray-400">
                     ₹{vehicle.basePrice.toLocaleString()}
                   </span>
-                  <span className="ml-2 text-xs bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-2 py-0.5 rounded-lg">
-                    🔥 Peak Pricing
+                  <span className="ml-2 inline-flex items-center gap-1 text-xs bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-2 py-0.5 rounded-lg">
+                    <FireIcon className="w-3.5 h-3.5" />
+                    Peak Pricing
                   </span>
                 </div>
               )}
@@ -466,8 +469,8 @@ export default function VehicleDetail() {
           Reviews ({reviews.length})
         </h2>
         {reviews.length === 0 ? (
-          <div className="text-center py-12 text-gray-500 bg-gray-50 dark:bg-gray-800/50 rounded-2xl">
-            <p className="text-4xl mb-3">⭐</p>
+          <div className="flex flex-col items-center justify-center py-12 text-gray-500 bg-gray-50 dark:bg-gray-800/50 rounded-2xl">
+            <ChatBubbleLeftRightIcon className="w-10 h-10 mb-3 text-gray-400" />
             <p>No reviews yet. Be the first to review!</p>
           </div>
         ) : (
