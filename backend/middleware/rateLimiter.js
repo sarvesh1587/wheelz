@@ -25,11 +25,11 @@ function limitMessage(windowMinutes, max) {
 // 300 requests per 15 min per IP
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 300,
+  max: 1000,
   standardHeaders: true,
   legacyHeaders: false,
-  message: limitMessage(15, 300),
-  skip: (req) => req.method === "OPTIONS",
+  message: limitMessage(15, 1000),
+  skip: (req) => req.method === "GET",
 });
 
 // ─── Auth limiter — register, forgot password ─────────────────────────────────
