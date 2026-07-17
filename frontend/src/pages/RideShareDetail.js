@@ -45,15 +45,12 @@ export default function RideShareDetail() {
     try {
       const tripRes = await rideShareAPI.getOne(id);
       setTrip(tripRes.data.trip);
-
       const isDriver = tripRes.data.trip?.driver?._id === user?._id;
-
       if (isDriver) {
         try {
           const requestsRes = await rideShareAPI.getTripRequests(id);
           setRequests(requestsRes.data.requests || []);
         } catch (err) {
-          console.log("Cannot fetch requests:", err);
           setRequests([]);
         }
       } else {
@@ -66,12 +63,10 @@ export default function RideShareDetail() {
           if (myReq) setRequests([myReq]);
           else setRequests([]);
         } catch (err) {
-          console.log("Cannot fetch ride:", err);
           setRequests([]);
         }
       }
     } catch (error) {
-      console.error("Error fetching trip details:", error);
       toast.error("Failed to load trip details");
     } finally {
       setLoading(false);
@@ -80,7 +75,6 @@ export default function RideShareDetail() {
 
   const handleRequestSeat = async () => {
     try {
-      const finalPrice = offerPrice || trip.pricePerSeat;
       const response = await rideShareAPI.requestSeat({
         tripId: id,
         seatsRequested: 1,
@@ -98,17 +92,21 @@ export default function RideShareDetail() {
         fetchTripDetails();
       }
     } catch (error) {
-      const errorMsg =
-        error.response?.data?.message || "Failed to send request";
-      toast.error(errorMsg);
+      toast.error(error.response?.data?.message || "Failed to send request");
     }
   };
 
-  const handleApprove = async (requestId) => {
+  // ✅ FIXED: Pass acceptOffer flag when driver approves
+  const handleApprove = async (requestId, acceptOffer = false) => {
     setProcessingId(requestId);
     try {
-      await rideShareAPI.respondToRequest(requestId, { action: "approve" });
-      toast.success("Request approved! Passenger can now make payment.");
+      await rideShareAPI.respondToRequest(requestId, {
+        action: "approve",
+        acceptOffer: acceptOffer,
+      });
+      toast.success(
+        acceptOffer ? "Approved at negotiated price!" : "Request approved!",
+      );
       fetchTripDetails();
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to approve");
@@ -139,7 +137,6 @@ export default function RideShareDetail() {
         try {
           const orderRes = await rideShareAPI.createPayment(requestId);
           const orderData = orderRes.data;
-
           const options = {
             key: orderData.keyId,
             amount: orderData.amount,
@@ -174,15 +171,14 @@ export default function RideShareDetail() {
               },
             },
           };
-          const razorpay = new window.Razorpay(options);
-          razorpay.open();
+          new window.Razorpay(options).open();
         } catch (error) {
           toast.error("Failed to create payment order");
         }
       };
       document.body.appendChild(script);
     } catch (error) {
-      toast.error("Payment failed. Please try again.");
+      toast.error("Payment failed");
     } finally {
       setProcessingPayment(false);
     }
@@ -193,7 +189,6 @@ export default function RideShareDetail() {
     (r) => r.status === "pending" || r.status === "negotiating",
   );
   const approvedRequests = requests.filter((r) => r.status === "approved");
-
   const myRequest = requests.find((r) => r.passenger?._id === user?._id);
   const isApproved = myRequest?.status === "approved";
   const isPaid = myRequest?.paymentStatus === "paid";
@@ -291,14 +286,14 @@ export default function RideShareDetail() {
               </h2>
               <button
                 onClick={() => setShowDriverModal(true)}
-                className="text-sm text-amber-500 hover:text-amber-600 font-medium flex items-center gap-1 transition-colors"
+                className="text-sm text-amber-500 hover:text-amber-600 font-medium flex items-center gap-1"
               >
                 <EyeIcon className="w-4 h-4" /> View Full Profile
               </button>
             </div>
             <div className="flex items-center gap-4">
               <div
-                className="w-16 h-16 bg-gradient-to-r from-amber-500 to-amber-600 rounded-full flex items-center justify-center text-white font-bold text-xl cursor-pointer hover:scale-105 transition-transform shadow-lg"
+                className="w-16 h-16 bg-gradient-to-r from-amber-500 to-amber-600 rounded-full flex items-center justify-center text-white font-bold text-xl cursor-pointer"
                 onClick={() => setShowDriverModal(true)}
               >
                 {trip.driver?.name?.[0]?.toUpperCase() || "D"}
@@ -382,6 +377,11 @@ export default function RideShareDetail() {
                       ₹{myRequest?.totalAmount}
                     </span>
                   </div>
+                  {myRequest?.isNegotiated && (
+                    <p className="text-xs text-green-600 mt-1">
+                      💰 Negotiated price (Original: ₹{trip.pricePerSeat})
+                    </p>
+                  )}
                   <div className="flex justify-between items-center mt-2">
                     <span className="text-gray-600 dark:text-gray-400">
                       Seats:
@@ -470,8 +470,6 @@ export default function RideShareDetail() {
                     <SparklesIcon className="w-5 h-5 text-amber-500" /> Request
                     a Seat
                   </h2>
-
-                  {/* OFFER PRICE SECTION */}
                   <div className="mb-4">
                     <button
                       type="button"
@@ -505,12 +503,11 @@ export default function RideShareDetail() {
                     )}
                     {offerPrice && offerPrice < trip.pricePerSeat && (
                       <p className="text-xs text-green-600 mt-2">
-                        Your offer: ₹{offerPrice}/seat (You save ₹
+                        Your offer: ₹{offerPrice}/seat (Save ₹
                         {trip.pricePerSeat - offerPrice})
                       </p>
                     )}
                   </div>
-
                   <button
                     onClick={handleRequestSeat}
                     className="w-full py-3 bg-gradient-to-r from-amber-500 to-amber-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all"
@@ -522,8 +519,8 @@ export default function RideShareDetail() {
                   <div className="mt-4 p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
                     <p className="text-xs text-amber-700 dark:text-amber-400 flex items-start gap-2">
                       <ShieldCheckIcon className="w-4 h-4 flex-shrink-0" /> ⚠️
-                      Disclaimer: Cost-sharing arrangement. Verify driver
-                      identity before boarding.
+                      Cost-sharing arrangement. Verify driver identity before
+                      boarding.
                     </p>
                   </div>
                 </motion.div>
@@ -568,6 +565,12 @@ export default function RideShareDetail() {
                           <p className="text-sm text-gray-600 dark:text-gray-400">
                             🎫 {req.seatsRequested} seat(s) • ₹{req.totalAmount}
                           </p>
+                          {req.offerPrice && (
+                            <p className="text-sm text-amber-600 font-medium">
+                              💰 Offered: ₹{req.offerPrice}/seat (Listed: ₹
+                              {trip.pricePerSeat})
+                            </p>
+                          )}
                           {req.message && (
                             <p className="text-sm text-gray-500 italic mt-1">
                               💬 "{req.message}"
@@ -576,12 +579,17 @@ export default function RideShareDetail() {
                         </div>
                       </div>
                       <div className="flex gap-2">
+                        {/* ✅ FIXED: Pass acceptOffer=true when offer exists */}
                         <button
-                          onClick={() => handleApprove(req._id)}
+                          onClick={() =>
+                            handleApprove(req._id, !!req.offerPrice)
+                          }
                           disabled={processingId === req._id}
                           className="px-4 py-1.5 bg-green-500 hover:bg-green-600 text-white rounded-lg text-sm transition-colors"
                         >
-                          Approve
+                          {req.offerPrice
+                            ? `Approve at ₹${req.offerPrice}`
+                            : "Approve"}
                         </button>
                         <button
                           onClick={() => handleReject(req._id)}
@@ -635,6 +643,7 @@ export default function RideShareDetail() {
                         </span>
                         <p className="text-xs text-gray-500 mt-1">
                           {req.seatsRequested} seat(s) • ₹{req.totalAmount}
+                          {req.isNegotiated ? " (Negotiated)" : ""}
                         </p>
                       </div>
                     </div>
@@ -662,7 +671,6 @@ export default function RideShareDetail() {
         )}
       </div>
 
-      {/* DRIVER DETAIL MODAL */}
       {showDriverModal && trip?.driver && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
           <motion.div
@@ -679,7 +687,7 @@ export default function RideShareDetail() {
             <div className="bg-gradient-to-r from-amber-500 to-amber-600 p-6 text-center">
               <button
                 onClick={() => setShowDriverModal(false)}
-                className="absolute top-4 right-4 p-1.5 bg-white/20 rounded-full hover:bg-white/30 transition-colors"
+                className="absolute top-4 right-4 p-1.5 bg-white/20 rounded-full hover:bg-white/30"
               >
                 <XMarkIcon className="w-5 h-5 text-white" />
               </button>
@@ -696,7 +704,7 @@ export default function RideShareDetail() {
             <div className="p-6 space-y-4">
               <div className="bg-amber-50 dark:bg-amber-900/20 rounded-xl p-4 border border-amber-200 dark:border-amber-800">
                 <h3 className="font-semibold text-amber-800 dark:text-amber-400 mb-3 flex items-center gap-2">
-                  <PhoneIcon className="w-5 h-5" /> Contact Information
+                  <PhoneIcon className="w-5 h-5" /> Contact
                 </h3>
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
@@ -724,7 +732,7 @@ export default function RideShareDetail() {
                   <p className="text-2xl font-bold text-amber-500">
                     {trip.totalRidesDone || 0}
                   </p>
-                  <p className="text-xs text-gray-500">Rides Done</p>
+                  <p className="text-xs text-gray-500">Rides</p>
                 </div>
                 <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-3 text-center">
                   <p className="text-2xl font-bold text-green-500">
@@ -741,12 +749,12 @@ export default function RideShareDetail() {
                         )
                       : "N/A"}
                   </p>
-                  <p className="text-xs text-gray-500">Years on Wheelz</p>
+                  <p className="text-xs text-gray-500">Years</p>
                 </div>
               </div>
               <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-4">
                 <h3 className="font-semibold text-gray-700 dark:text-gray-300 mb-3">
-                  Trip Information
+                  Trip Info
                 </h3>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
@@ -756,22 +764,22 @@ export default function RideShareDetail() {
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-500">Date & Time</span>
+                    <span className="text-gray-500">Date</span>
                     <span className="font-medium text-gray-900 dark:text-white">
                       {new Date(trip.departureDate).toLocaleDateString()} at{" "}
                       {trip.departureTime}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-500">Price per Seat</span>
+                    <span className="text-gray-500">Price</span>
                     <span className="font-bold text-amber-500">
-                      ₹{trip.pricePerSeat}
+                      ₹{trip.pricePerSeat}/seat
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-500">Seats</span>
                     <span className="font-medium text-gray-900 dark:text-white">
-                      {trip.availableSeats}/{trip.totalSeats} available
+                      {trip.availableSeats}/{trip.totalSeats}
                     </span>
                   </div>
                 </div>
@@ -784,7 +792,7 @@ export default function RideShareDetail() {
                 )}
                 {trip.petsAllowed && (
                   <span className="text-xs bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 px-2 py-1 rounded-full">
-                    🐾 Pets Allowed
+                    🐾 Pets
                   </span>
                 )}
                 {trip.acAvailable && (
@@ -793,7 +801,7 @@ export default function RideShareDetail() {
                   </span>
                 )}
                 <span className="text-xs bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300 px-2 py-1 rounded-full">
-                  🧳 {trip.luggageAllowed} Luggage
+                  🧳 {trip.luggageAllowed}
                 </span>
               </div>
             </div>
