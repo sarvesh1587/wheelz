@@ -1,4 +1,4 @@
-// frontend/src/pages/Booking.jsx - COMPLETE WITH PROMO CODE
+// frontend/src/pages/Booking.jsx - WITH HOURLY RENTAL SUPPORT
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { vehicleAPI, bookingAPI, promoAPI } from "../services/api";
@@ -34,7 +34,11 @@ export default function Booking() {
   const [creatingBooking, setCreatingBooking] = useState(false);
   const [checkingAvailability, setCheckingAvailability] = useState(false);
 
-  // Promo Code States
+  // ─── HOURLY RENTAL STATES ─────────────────────────────────────────────────
+  const [rentalType, setRentalType] = useState("daily");
+  const [selectedHours, setSelectedHours] = useState(3);
+
+  // ─── PROMO CODE STATES ────────────────────────────────────────────────────
   const [promoCode, setPromoCode] = useState("");
   const [appliedPromo, setAppliedPromo] = useState(null);
   const [applyingPromo, setApplyingPromo] = useState(false);
@@ -51,12 +55,17 @@ export default function Booking() {
   }, [id, navigate]);
 
   const checkAvailability = async () => {
-    if (!startDate || !endDate) return;
+    if (!startDate) return;
+    // For hourly, only startDate needed
+    if (rentalType === "daily" && !endDate) return;
 
     setCheckingAvailability(true);
     try {
       const formattedStartDate = startDate.toISOString().split("T")[0];
-      const formattedEndDate = endDate.toISOString().split("T")[0];
+      const formattedEndDate =
+        rentalType === "hourly"
+          ? formattedStartDate
+          : endDate.toISOString().split("T")[0];
 
       const res = await vehicleAPI.checkAvailability(id, {
         startDate: formattedStartDate,
@@ -75,10 +84,19 @@ export default function Booking() {
   };
 
   useEffect(() => {
-    if (startDate && endDate) {
+    if (rentalType === "hourly" && startDate) {
+      checkAvailability();
+    } else if (rentalType === "daily" && startDate && endDate) {
       checkAvailability();
     }
-  }, [startDate, endDate]);
+  }, [startDate, endDate, rentalType]);
+
+  // Reset endDate when switching to hourly
+  useEffect(() => {
+    if (rentalType === "hourly") {
+      setEndDate(null);
+    }
+  }, [rentalType]);
 
   const calculateExtrasCost = () => {
     let cost = 0;
@@ -89,19 +107,29 @@ export default function Booking() {
     return cost;
   };
 
-  const totalDays =
-    startDate && endDate
-      ? Math.max(1, Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)))
-      : 0;
-
+  // ─── PRICE CALCULATIONS ───────────────────────────────────────────────────
   const pricePerDay = vehicle?.currentPrice || vehicle?.basePrice || 0;
+  const hourlyRate = Math.ceil(pricePerDay / 4);
+
+  const totalDays =
+    rentalType === "daily" && startDate && endDate
+      ? Math.max(1, Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)))
+      : 1;
+
   const extrasPerDay = calculateExtrasCost();
-  const subtotal = pricePerDay * totalDays;
-  const extrasTotal = extrasPerDay * totalDays;
+
+  const basePrice =
+    rentalType === "hourly"
+      ? hourlyRate * selectedHours
+      : pricePerDay * totalDays;
+
+  const extrasTotal =
+    rentalType === "hourly" ? extrasPerDay : extrasPerDay * totalDays;
+
+  const subtotal = basePrice;
   const total = subtotal + extrasTotal - promoDiscount;
 
-  // ─── PROMO CODE FUNCTIONS ──────────────────────────────────────────────────
-
+  // ─── PROMO CODE FUNCTIONS ─────────────────────────────────────────────────
   const applyPromoCode = async () => {
     if (!promoCode) return;
     setApplyingPromo(true);
@@ -132,14 +160,16 @@ export default function Booking() {
     setPromoDiscount(0);
   };
 
-  // ─── CREATE BOOKING ────────────────────────────────────────────────────────
-
+  // ─── CREATE BOOKING ───────────────────────────────────────────────────────
   const handleCreateBooking = async () => {
-    if (!startDate || !endDate) {
-      toast.error("Please select both pickup and return dates");
+    if (!startDate) {
+      toast.error("Please select a pickup date");
       return;
     }
-
+    if (rentalType === "daily" && !endDate) {
+      toast.error("Please select a return date");
+      return;
+    }
     if (availability && !availability.isAvailable) {
       toast.error("Vehicle not available for selected dates");
       return;
@@ -148,17 +178,20 @@ export default function Booking() {
     setCreatingBooking(true);
     toastId = toast.loading("Creating booking...");
 
+    // For hourly: endDate = startDate (same day)
+    const effectiveEndDate = rentalType === "hourly" ? startDate : endDate;
+
     const bookingData = {
       vehicleId: id,
       startDate: startDate.toISOString(),
-      endDate: endDate.toISOString(),
+      endDate: effectiveEndDate.toISOString(),
       pickupLocation: vehicle?.locationName || vehicle?.city,
       extras: extras,
       promoCode: appliedPromo?.code || null,
       promoDiscount: promoDiscount,
+      rentalType,
+      hours: rentalType === "hourly" ? selectedHours : undefined,
     };
-
-    console.log("Creating booking:", bookingData);
 
     const timeoutPromise = new Promise((_, reject) => {
       setTimeout(() => reject(new Error("timeout")), 8000);
@@ -201,7 +234,7 @@ export default function Booking() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Column */}
+          {/* ── Left Column ── */}
           <div className="lg:col-span-2 space-y-6">
             {/* Vehicle Summary Card */}
             <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg border border-gray-100 dark:border-gray-700">
@@ -222,6 +255,9 @@ export default function Booking() {
                     <span className="text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-2 py-0.5 rounded-full">
                       {vehicle.isAvailable ? "Available" : "Booked"}
                     </span>
+                    <span className="text-xs bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 px-2 py-0.5 rounded-full">
+                      ₹{pricePerDay}/day • ₹{hourlyRate}/hr
+                    </span>
                   </div>
                 </div>
               </div>
@@ -231,41 +267,97 @@ export default function Booking() {
             <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg border border-gray-100 dark:border-gray-700">
               <h3 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                 <CalendarIcon className="w-5 h-5 text-amber-500" />
-                Select Dates
+                Select Rental Type & Dates
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+              {/* ── Rental Type Toggle ── */}
+              <div className="flex gap-2 mb-5">
+                {[
+                  { key: "daily", label: "📅 Daily Rental" },
+                  { key: "hourly", label: "⏱️ Hourly Rental" },
+                ].map(({ key, label }) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setRentalType(key)}
+                    className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+                      rentalType === key
+                        ? "bg-amber-500 text-white shadow-md shadow-amber-500/30"
+                        : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-amber-50 dark:hover:bg-gray-600"
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+
+              {/* ── Hourly Duration Picker ── */}
+              {rentalType === "hourly" && (
+                <div className="mb-5 p-4 bg-amber-50 dark:bg-amber-900/10 rounded-xl border border-amber-200 dark:border-amber-800/30">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                    Select Duration
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {[3, 4, 5, 6, 8, 10, 12].map((h) => (
+                      <button
+                        key={h}
+                        type="button"
+                        onClick={() => setSelectedHours(h)}
+                        className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                          selectedHours === h
+                            ? "bg-amber-500 text-white shadow-sm"
+                            : "bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-600 hover:border-amber-400"
+                        }`}
+                      >
+                        {h}h
+                      </button>
+                    ))}
+                  </div>
+                  <p className="text-xs text-amber-600 dark:text-amber-400 mt-2">
+                    ₹{hourlyRate}/hr (daily rate ÷ 4) • Minimum 3 hours
+                  </p>
+                </div>
+              )}
+
+              {/* ── Date Pickers ── */}
+              <div
+                className={`grid grid-cols-1 ${rentalType === "daily" ? "md:grid-cols-2" : ""} gap-4`}
+              >
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Pickup Date
+                    {rentalType === "hourly" ? "Pickup Date" : "Pickup Date"}
                   </label>
                   <DatePicker
                     selected={startDate}
                     onChange={setStartDate}
                     selectsStart
                     startDate={startDate}
-                    endDate={endDate}
+                    endDate={rentalType === "daily" ? endDate : null}
                     minDate={new Date()}
                     className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-amber-500"
                     dateFormat="dd/MM/yyyy"
                     placeholderText="Select pickup date"
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Return Date
-                  </label>
-                  <DatePicker
-                    selected={endDate}
-                    onChange={setEndDate}
-                    selectsEnd
-                    startDate={startDate}
-                    endDate={endDate}
-                    minDate={startDate || new Date()}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-amber-500"
-                    dateFormat="dd/MM/yyyy"
-                    placeholderText="Select return date"
-                  />
-                </div>
+
+                {rentalType === "daily" && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Return Date
+                    </label>
+                    <DatePicker
+                      selected={endDate}
+                      onChange={setEndDate}
+                      selectsEnd
+                      startDate={startDate}
+                      endDate={endDate}
+                      minDate={startDate || new Date()}
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-amber-500"
+                      dateFormat="dd/MM/yyyy"
+                      placeholderText="Select return date"
+                    />
+                  </div>
+                )}
               </div>
 
               {checkingAvailability && (
@@ -344,7 +436,9 @@ export default function Booking() {
                         <div className="font-bold text-amber-600 dark:text-amber-400">
                           +₹{extra.price}
                         </div>
-                        <div className="text-xs text-gray-400">/day</div>
+                        <div className="text-xs text-gray-400">
+                          {rentalType === "hourly" ? "/booking" : "/day"}
+                        </div>
                       </div>
                       <input
                         type="checkbox"
@@ -364,7 +458,7 @@ export default function Booking() {
             </div>
           </div>
 
-          {/* Right Column - Price Summary */}
+          {/* ── Right Column: Price Summary ── */}
           <div className="lg:col-span-1">
             <div className="sticky top-24 bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg border border-gray-100 dark:border-gray-700">
               <h3 className="font-semibold text-lg text-gray-900 dark:text-white mb-4">
@@ -372,35 +466,64 @@ export default function Booking() {
               </h3>
 
               <div className="space-y-3 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-400">
-                    Rental Days
-                  </span>
-                  <span className="font-medium">
-                    {totalDays} {totalDays === 1 ? "day" : "days"}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-400">
-                    Price per day
-                  </span>
-                  <span className="font-medium">
-                    ₹{pricePerDay.toLocaleString()}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-400">
-                    Subtotal
-                  </span>
-                  <span className="font-medium">
-                    ₹{subtotal.toLocaleString()}
-                  </span>
-                </div>
+                {/* ── Daily vs Hourly breakdown ── */}
+                {rentalType === "daily" ? (
+                  <>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">
+                        Rental Days
+                      </span>
+                      <span className="font-medium">
+                        {totalDays} {totalDays === 1 ? "day" : "days"}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">
+                        Price per day
+                      </span>
+                      <span className="font-medium">
+                        ₹{pricePerDay.toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">
+                        Subtotal
+                      </span>
+                      <span className="font-medium">
+                        ₹{subtotal.toLocaleString()}
+                      </span>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">
+                        Duration
+                      </span>
+                      <span className="font-medium">{selectedHours} hours</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">
+                        Hourly rate
+                      </span>
+                      <span className="font-medium">₹{hourlyRate}/hr</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">
+                        ₹{hourlyRate} × {selectedHours} hrs
+                      </span>
+                      <span className="font-medium">
+                        ₹{subtotal.toLocaleString()}
+                      </span>
+                    </div>
+                  </>
+                )}
 
                 {extrasPerDay > 0 && (
                   <div className="flex justify-between">
                     <span className="text-gray-600 dark:text-gray-400">
-                      Extras ({totalDays} days)
+                      Extras
+                      {rentalType === "daily" ? ` (${totalDays} days)` : ""}
                     </span>
                     <span className="font-medium text-amber-600">
                       +₹{extrasTotal.toLocaleString()}
@@ -408,7 +531,7 @@ export default function Booking() {
                   </div>
                 )}
 
-                {/* ─── PROMO CODE SECTION ─── */}
+                {/* ── Promo Code Section ── */}
                 <div className="border-t border-gray-200 dark:border-gray-700 pt-3 mt-3">
                   <label className="text-xs font-medium text-gray-500 mb-2 flex items-center gap-1">
                     <TicketIcon className="w-3.5 h-3.5" /> Promo Code
@@ -442,7 +565,6 @@ export default function Booking() {
                     )}
                   </div>
 
-                  {/* Applied Promo Display */}
                   {appliedPromo && (
                     <div className="mt-2 flex justify-between items-center bg-green-50 dark:bg-green-900/20 p-2 rounded-lg">
                       <span className="text-xs text-green-700 dark:text-green-400">
@@ -454,7 +576,6 @@ export default function Booking() {
                     </div>
                   )}
 
-                  {/* Quick Promo Chips */}
                   {!appliedPromo && (
                     <div className="flex flex-wrap gap-1 mt-2">
                       {["WELCOME50", "FLAT100", "FESTIVAL200"].map((code) => (
@@ -470,7 +591,6 @@ export default function Booking() {
                   )}
                 </div>
 
-                {/* Promo Discount Line */}
                 {promoDiscount > 0 && (
                   <div className="flex justify-between text-sm">
                     <span className="text-green-600 dark:text-green-400">
@@ -482,7 +602,7 @@ export default function Booking() {
                   </div>
                 )}
 
-                {/* Total */}
+                {/* ── Total ── */}
                 <div className="border-t border-gray-200 dark:border-gray-700 pt-3 mt-3">
                   <div className="flex justify-between items-center">
                     <span className="font-bold text-gray-900 dark:text-white">
@@ -503,13 +623,13 @@ export default function Booking() {
                 </div>
               </div>
 
-              {/* Confirm Button */}
+              {/* ── Confirm Button ── */}
               <button
                 onClick={handleCreateBooking}
                 disabled={
                   creatingBooking ||
                   !startDate ||
-                  !endDate ||
+                  (rentalType === "daily" && !endDate) ||
                   (availability && !availability.isAvailable)
                 }
                 className="w-full bg-gradient-to-r from-amber-500 to-amber-600 text-white py-3 rounded-xl font-semibold mt-6 disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg transition-all"

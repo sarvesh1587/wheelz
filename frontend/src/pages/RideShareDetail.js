@@ -34,6 +34,8 @@ export default function RideShareDetail() {
   const [processingId, setProcessingId] = useState(null);
   const [processingPayment, setProcessingPayment] = useState(false);
   const [showDriverModal, setShowDriverModal] = useState(false);
+  const [offerPrice, setOfferPrice] = useState("");
+  const [showOffer, setShowOffer] = useState(false);
 
   useEffect(() => {
     fetchTripDetails();
@@ -78,12 +80,21 @@ export default function RideShareDetail() {
 
   const handleRequestSeat = async () => {
     try {
+      const finalPrice = offerPrice || trip.pricePerSeat;
       const response = await rideShareAPI.requestSeat({
         tripId: id,
         seatsRequested: 1,
+        message: offerPrice
+          ? `Offered: ₹${offerPrice}/seat (Listed: ₹${trip.pricePerSeat})`
+          : "",
+        offerPrice: offerPrice || null,
       });
       if (response.data.success) {
-        toast.success("Request sent to driver!");
+        toast.success(
+          offerPrice ? "Negotiation request sent!" : "Request sent to driver!",
+        );
+        setShowOffer(false);
+        setOfferPrice("");
         fetchTripDetails();
       }
     } catch (error) {
@@ -178,13 +189,16 @@ export default function RideShareDetail() {
   };
 
   const isDriver = user?._id === trip?.driver?._id;
-  const pendingRequests = requests.filter((r) => r.status === "pending");
+  const pendingRequests = requests.filter(
+    (r) => r.status === "pending" || r.status === "negotiating",
+  );
   const approvedRequests = requests.filter((r) => r.status === "approved");
 
   const myRequest = requests.find((r) => r.passenger?._id === user?._id);
   const isApproved = myRequest?.status === "approved";
   const isPaid = myRequest?.paymentStatus === "paid";
-  const isPending = myRequest?.status === "pending";
+  const isPending =
+    myRequest?.status === "pending" || myRequest?.status === "negotiating";
 
   if (loading) {
     return (
@@ -213,7 +227,6 @@ export default function RideShareDetail() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-950 pt-24 pb-12">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Back Button */}
         <button
           onClick={() => navigate(-1)}
           className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-amber-500 mb-6 transition-colors"
@@ -221,7 +234,6 @@ export default function RideShareDetail() {
           <ArrowLeftIcon className="w-5 h-5" /> Back
         </button>
 
-        {/* Trip Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -265,7 +277,6 @@ export default function RideShareDetail() {
           </div>
         </motion.div>
 
-        {/* Driver Info Card */}
         {!isDriver && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -309,7 +320,6 @@ export default function RideShareDetail() {
           </motion.div>
         )}
 
-        {/* ========== PASSENGER VIEW ========== */}
         {!isDriver && (
           <>
             {isPending && (
@@ -460,11 +470,54 @@ export default function RideShareDetail() {
                     <SparklesIcon className="w-5 h-5 text-amber-500" /> Request
                     a Seat
                   </h2>
+
+                  {/* OFFER PRICE SECTION */}
+                  <div className="mb-4">
+                    <button
+                      type="button"
+                      onClick={() => setShowOffer(!showOffer)}
+                      className="text-sm text-amber-500 hover:text-amber-600 underline"
+                    >
+                      {showOffer
+                        ? "✕ Cancel offer"
+                        : "💰 Offer a different price"}
+                    </button>
+                    {showOffer && (
+                      <div className="flex gap-2 mt-2">
+                        <div className="flex-1 relative">
+                          <span className="absolute left-3 top-2.5 text-gray-400">
+                            ₹
+                          </span>
+                          <input
+                            type="number"
+                            value={offerPrice}
+                            onChange={(e) => setOfferPrice(e.target.value)}
+                            placeholder={`Listed: ₹${trip.pricePerSeat}/seat`}
+                            className="w-full pl-7 pr-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-amber-500"
+                          />
+                        </div>
+                        {offerPrice && offerPrice < trip.pricePerSeat && (
+                          <span className="text-xs text-amber-600 self-center">
+                            Min: ₹{Math.round(trip.pricePerSeat * 0.6)}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                    {offerPrice && offerPrice < trip.pricePerSeat && (
+                      <p className="text-xs text-green-600 mt-2">
+                        Your offer: ₹{offerPrice}/seat (You save ₹
+                        {trip.pricePerSeat - offerPrice})
+                      </p>
+                    )}
+                  </div>
+
                   <button
                     onClick={handleRequestSeat}
                     className="w-full py-3 bg-gradient-to-r from-amber-500 to-amber-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all"
                   >
-                    Request Seat • ₹{trip.pricePerSeat}
+                    {offerPrice
+                      ? `Offer ₹${offerPrice}/seat`
+                      : `Request Seat • ₹${trip.pricePerSeat}`}
                   </button>
                   <div className="mt-4 p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
                     <p className="text-xs text-amber-700 dark:text-amber-400 flex items-start gap-2">
@@ -478,7 +531,6 @@ export default function RideShareDetail() {
           </>
         )}
 
-        {/* ========== DRIVER VIEW ========== */}
         {isDriver && (
           <>
             {pendingRequests.length > 0 && (
@@ -514,8 +566,7 @@ export default function RideShareDetail() {
                         </div>
                         <div className="mt-2">
                           <p className="text-sm text-gray-600 dark:text-gray-400">
-                            🎫 {req.seatsRequested} seat(s) requested • ₹
-                            {req.totalAmount}
+                            🎫 {req.seatsRequested} seat(s) • ₹{req.totalAmount}
                           </p>
                           {req.message && (
                             <p className="text-sm text-gray-500 italic mt-1">
@@ -611,7 +662,7 @@ export default function RideShareDetail() {
         )}
       </div>
 
-      {/* ========== DRIVER DETAIL MODAL ========== */}
+      {/* DRIVER DETAIL MODAL */}
       {showDriverModal && trip?.driver && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
           <motion.div
@@ -625,7 +676,6 @@ export default function RideShareDetail() {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             className="relative w-full max-w-lg bg-white dark:bg-gray-900 rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto"
           >
-            {/* Header */}
             <div className="bg-gradient-to-r from-amber-500 to-amber-600 p-6 text-center">
               <button
                 onClick={() => setShowDriverModal(false)}
@@ -643,10 +693,7 @@ export default function RideShareDetail() {
                 <ShieldCheckIcon className="w-4 h-4" /> Verified Driver
               </p>
             </div>
-
-            {/* Content */}
             <div className="p-6 space-y-4">
-              {/* Contact Info */}
               <div className="bg-amber-50 dark:bg-amber-900/20 rounded-xl p-4 border border-amber-200 dark:border-amber-800">
                 <h3 className="font-semibold text-amber-800 dark:text-amber-400 mb-3 flex items-center gap-2">
                   <PhoneIcon className="w-5 h-5" /> Contact Information
@@ -672,8 +719,6 @@ export default function RideShareDetail() {
                   </div>
                 </div>
               </div>
-
-              {/* Stats */}
               <div className="grid grid-cols-3 gap-3">
                 <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-3 text-center">
                   <p className="text-2xl font-bold text-amber-500">
@@ -699,8 +744,6 @@ export default function RideShareDetail() {
                   <p className="text-xs text-gray-500">Years on Wheelz</p>
                 </div>
               </div>
-
-              {/* Trip Info */}
               <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-4">
                 <h3 className="font-semibold text-gray-700 dark:text-gray-300 mb-3">
                   Trip Information
@@ -733,8 +776,6 @@ export default function RideShareDetail() {
                   </div>
                 </div>
               </div>
-
-              {/* Preferences */}
               <div className="flex flex-wrap gap-2">
                 {trip.womenOnly && (
                   <span className="text-xs bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-400 px-2 py-1 rounded-full">

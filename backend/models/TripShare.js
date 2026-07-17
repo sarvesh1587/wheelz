@@ -5,7 +5,7 @@
 
 const mongoose = require("mongoose");
 
-// ─── TripShare — a driver offering seats on their trip ──────────────────────
+// ─── TripShare — a driver offering seats on their trip ───────────────────────
 const TripShareSchema = new mongoose.Schema(
   {
     driver: {
@@ -16,13 +16,21 @@ const TripShareSchema = new mongoose.Schema(
     booking: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Booking",
-      default: null, // ✅ Fixed: removed required:true — booking is optional
+      default: null, // optional — not required for own-vehicle trips
     },
     vehicle: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Vehicle",
       default: null,
     },
+
+    // ─── ISSUE 3: Own Vehicle Support ────────────────────────────────────
+    tripType: {
+      type: String,
+      enum: ["rental_vehicle", "own_vehicle"],
+      default: "rental_vehicle",
+    },
+    // ─────────────────────────────────────────────────────────────────────
 
     // Route
     fromCity: { type: String, required: true, trim: true },
@@ -80,7 +88,6 @@ const TripShareSchema = new mongoose.Schema(
       { type: String, enum: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] },
     ],
 
-    // Insurance disclaimer accepted
     disclaimerAccepted: { type: Boolean, default: false },
 
     // Ratings summary
@@ -92,7 +99,6 @@ const TripShareSchema = new mongoose.Schema(
   { timestamps: true, toJSON: { virtuals: true } },
 );
 
-// Auto-generate trip reference
 TripShareSchema.pre("save", function (next) {
   if (!this.tripRef) {
     const date = new Date().toISOString().slice(0, 10).replace(/-/g, "");
@@ -106,7 +112,7 @@ TripShareSchema.index({ fromCity: 1, toCity: 1, departureDate: 1 });
 TripShareSchema.index({ driver: 1 });
 TripShareSchema.index({ status: 1 });
 
-// ─── TripRequest — a passenger requesting a seat ────────────────────────────
+// ─── TripRequest — a passenger requesting a seat ─────────────────────────────
 const TripRequestSchema = new mongoose.Schema(
   {
     trip: {
@@ -127,6 +133,21 @@ const TripRequestSchema = new mongoose.Schema(
       enum: ["pending", "approved", "rejected", "cancelled", "completed"],
       default: "pending",
     },
+
+    // ─── ISSUE 2: Price Negotiation Fields ───────────────────────────────
+    offerPrice: {
+      type: Number,
+      default: null, // null = passenger accepts original price
+    },
+    isNegotiated: {
+      type: Boolean,
+      default: false, // true = driver accepted a lower offered price
+    },
+    negotiatedPrice: {
+      type: Number,
+      default: null, // the final agreed price per seat (set on approval)
+    },
+    // ─────────────────────────────────────────────────────────────────────
 
     // Payment (escrow model)
     totalAmount: { type: Number, required: true },
@@ -152,7 +173,7 @@ const TripRequestSchema = new mongoose.Schema(
       },
     ],
 
-    // Post-trip
+    // Post-trip ratings
     driverRatedByPassenger: { type: Boolean, default: false },
     passengerRatedByDriver: { type: Boolean, default: false },
     driverRating: { type: Number, min: 1, max: 5 },
@@ -161,7 +182,10 @@ const TripRequestSchema = new mongoose.Schema(
     passengerReview: { type: String },
 
     // Cancellation
-    cancelledBy: { type: String, enum: ["driver", "passenger", "system"] },
+    cancelledBy: {
+      type: String,
+      enum: ["driver", "passenger", "system"],
+    },
     cancellationReason: { type: String },
     cancelledAt: { type: Date },
 
