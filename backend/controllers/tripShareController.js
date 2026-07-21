@@ -391,12 +391,10 @@ exports.requestSeat = async (req, res) => {
     }
 
     if (trip.driver.toString() === req.user._id.toString()) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "You cannot request a seat on your own trip",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "You cannot request a seat on your own trip",
+      });
     }
 
     if (trip.availableSeats < seatsRequested) {
@@ -422,12 +420,10 @@ exports.requestSeat = async (req, res) => {
     // ── Validate offer price if provided ────────────────────────────────────
     if (offerPrice !== undefined && offerPrice !== null) {
       if (offerPrice <= 0) {
-        return res
-          .status(400)
-          .json({
-            success: false,
-            message: "Offer price must be greater than 0",
-          });
+        return res.status(400).json({
+          success: false,
+          message: "Offer price must be greater than 0",
+        });
       }
       if (offerPrice >= trip.pricePerSeat) {
         return res.status(400).json({
@@ -467,75 +463,54 @@ exports.requestSeat = async (req, res) => {
 // ─── RESPOND TO REQUEST (approve / reject, with negotiation) ─────────────────
 exports.respondToRequest = async (req, res) => {
   try {
-    // action: "approve" | "reject"
-    // acceptOffer: true = accept the passenger's offered price
     const { action, acceptOffer = false } = req.body;
-
-    const request = await TripRequest.findById(req.params.requestId).populate(
-      "trip",
-    );
-    if (!request) {
+    const request = await TripRequest.findById(req.params.requestId)
+      .populate("trip")
+      .populate("passenger", "name email");
+    if (!request)
       return res
         .status(404)
         .json({ success: false, message: "Request not found" });
-    }
-
     const trip = request.trip;
-    if (trip.driver.toString() !== req.user._id.toString()) {
+    if (trip.driver.toString() !== req.user._id.toString())
       return res
         .status(403)
         .json({ success: false, message: "Not authorized" });
-    }
-
-    if (request.status !== "pending") {
+    if (request.status !== "pending")
       return res
         .status(400)
-        .json({ success: false, message: "Request already processed" });
-    }
+        .json({ success: false, message: "Already processed" });
 
     if (action === "approve") {
-      if (trip.availableSeats < request.seatsRequested) {
+      if (trip.availableSeats < request.seatsRequested)
         return res
           .status(400)
           .json({ success: false, message: "Not enough seats" });
-      }
-
       request.status = "approved";
-
-      // ── ISSUE 2: Apply negotiated price if driver accepts the offer ────────
       if (acceptOffer && request.offerPrice) {
         request.isNegotiated = true;
         request.negotiatedPrice = request.offerPrice;
         request.totalAmount = request.offerPrice * request.seatsRequested;
-        console.log(
-          `💰 Price negotiated: ₹${trip.pricePerSeat} → ₹${request.offerPrice} per seat`,
-        );
       }
-      // Seats deducted after payment, not here
       await trip.save();
+
+      // Ride approved email
+      const sendEmail = require("../services/emailService");
+      sendEmail({
+        to: request.passenger?.email,
+        subject: "✅ Ride Request Approved - Wheelz",
+        html: `<h1>Your ride request is approved!</h1><p>Route: ${trip.fromCity} → ${trip.toCity}</p><p>Date: ${new Date(trip.departureDate).toLocaleDateString()}</p><p>Amount: ₹${request.totalAmount}</p><p>Please complete payment to confirm.</p>`,
+      }).catch(() => {});
     } else if (action === "reject") {
       request.status = "rejected";
-    } else {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid action. Use approve or reject",
-      });
     }
-
     await request.save();
-
     res.json({
       success: true,
       request,
-      message:
-        action === "approve"
-          ? request.isNegotiated
-            ? `Request approved at negotiated price ₹${request.negotiatedPrice}/seat`
-            : "Request approved!"
-          : "Request rejected",
+      message: action === "approve" ? "Approved!" : "Rejected",
     });
   } catch (err) {
-    console.error("Respond error:", err);
     res.status(500).json({ success: false, message: err.message });
   }
 };
@@ -854,12 +829,10 @@ exports.rateUser = async (req, res) => {
       request.passenger.toString() === req.user._id.toString()
     ) {
       if (request.driverRatedByPassenger) {
-        return res
-          .status(400)
-          .json({
-            success: false,
-            message: "You have already rated the driver",
-          });
+        return res.status(400).json({
+          success: false,
+          message: "You have already rated the driver",
+        });
       }
       request.driverRating = rating;
       request.driverReview = review;
@@ -869,12 +842,10 @@ exports.rateUser = async (req, res) => {
       request.trip.driver.toString() === req.user._id.toString()
     ) {
       if (request.passengerRatedByDriver) {
-        return res
-          .status(400)
-          .json({
-            success: false,
-            message: "You have already rated this passenger",
-          });
+        return res.status(400).json({
+          success: false,
+          message: "You have already rated this passenger",
+        });
       }
       request.passengerRating = rating;
       request.passengerReview = review;

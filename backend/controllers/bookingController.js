@@ -1,14 +1,13 @@
-// backend/controllers/bookingController.js
 const { Booking } = require("../models/Booking");
 const Vehicle = require("../models/Vehicle");
 const User = require("../models/User");
 const sendEmail = require("../services/emailService");
 
-const calcDays = (start, end) => {
-  const ms = new Date(end) - new Date(start);
-  return Math.max(1, Math.ceil(ms / (1000 * 60 * 60 * 24)));
-};
-
+const calcDays = (start, end) =>
+  Math.max(
+    1,
+    Math.ceil((new Date(end) - new Date(start)) / (1000 * 60 * 60 * 24)),
+  );
 const calcExtrasCost = (extras = {}) => {
   let cost = 0;
   if (extras.insurance) cost += 200;
@@ -18,400 +17,171 @@ const calcExtrasCost = (extras = {}) => {
   return cost;
 };
 
-exports.createBooking = async (req, res, next) => {
+exports.createBooking = async (req, res) => {
   try {
-    console.log("📝 Booking request body:", req.body);
-
     const {
       vehicleId,
       startDate,
       endDate,
       pickupLocation,
-      dropoffLocation,
       extras,
-      notes,
+      rentalType = "daily",
+      hours,
     } = req.body;
-
-    if (!vehicleId) {
+    if (!vehicleId || !startDate || !pickupLocation)
       return res
         .status(400)
-        .json({ success: false, message: "Vehicle ID is required" });
-    }
-    if (!startDate) {
+        .json({ success: false, message: "Missing required fields" });
+    if (rentalType === "daily" && !endDate)
       return res
         .status(400)
-        .json({ success: false, message: "Start date is required" });
-    }
-    if (!endDate) {
-      return res
-        .status(400)
-        .json({ success: false, message: "End date is required" });
-    }
-    if (!pickupLocation) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Pickup location is required" });
-    }
+        .json({ success: false, message: "End date required" });
 
     const vehicle = await Vehicle.findById(vehicleId).populate(
       "vendor",
-      "name email phone vendorDetails businessDetails address",
+      "name email phone",
     );
-
-    if (!vehicle || !vehicle.isActive) {
+    if (!vehicle)
       return res
         .status(404)
         .json({ success: false, message: "Vehicle not found" });
-    }
 
-    if (!vehicle.isAvailableForDates(startDate, endDate)) {
-      return res.status(400).json({
-        success: false,
-        message: "Vehicle is not available for selected dates",
-      });
-    }
-
-    const totalDays = calcDays(startDate, endDate);
     const pricePerDay = vehicle.calculateDynamicPrice();
-    const extrasCostPerDay = calcExtrasCost(extras);
-    const totalAmount = (pricePerDay + extrasCostPerDay) * totalDays;
-    const finalAmount = totalAmount;
+    const hourlyRate = Math.ceil(pricePerDay / 4);
+    let totalDays, basePrice, extrasTotal, finalAmount;
 
-    const customer = await User.findById(req.user._id);
-    console.log("📧 Customer email from database:", customer.email);
-    console.log("👤 Customer name:", customer.name);
-
-    const vendorData = vehicle.vendor
-      ? {
-          name: vehicle.vendor.name,
-          businessName:
-            vehicle.vendor.vendorDetails?.businessName || vehicle.vendor.name,
-          phone: vehicle.vendor.phone,
-          email: vehicle.vendor.email,
-          address:
-            vehicle.vendor.vendorDetails?.businessAddress ||
-            vehicle.vendor.address?.street ||
-            "",
-          gstNumber: vehicle.vendor.vendorDetails?.gstNumber || "",
-          pickupInstructions: `Please contact vendor at ${vehicle.vendor.phone} for pickup at ${pickupLocation || vehicle.locationName}`,
-        }
-      : {
-          name: "Wheelz Admin",
-          businessName: "Wheelz Rentals",
-          phone: "9876543210",
-          email: "support@wheelz.com",
-          address: vehicle.locationName,
-          pickupInstructions: `Please pickup at ${pickupLocation || vehicle.locationName}`,
-        };
-
-    const customerData = {
-      name: customer.name,
-      phone: customer.phone,
-      email: customer.email,
-      address:
-        `${customer.address?.street || ""}, ${customer.address?.city || ""}, ${customer.address?.state || ""}`.replace(
-          /^, |, $/g,
-          "",
-        ) || "Not provided",
-    };
+    if (rentalType === "hourly") {
+      totalDays = 1;
+      basePrice = hourlyRate * parseInt(hours);
+      extrasTotal = calcExtrasCost(extras);
+    } else {
+      totalDays = calcDays(startDate, endDate);
+      basePrice = pricePerDay * totalDays;
+      extrasTotal = calcExtrasCost(extras) * totalDays;
+    }
+    finalAmount = basePrice + extrasTotal;
 
     const booking = await Booking.create({
       user: req.user._id,
       vehicle: vehicleId,
       startDate: new Date(startDate),
-      endDate: new Date(endDate),
-      pickupLocation: pickupLocation || vehicle.locationName,
-      dropoffLocation: dropoffLocation || vehicle.locationName,
+      endDate: new Date(endDate || startDate),
+      pickupLocation,
       totalDays,
       pricePerDay,
-      totalAmount,
-      discount: 0,
+      totalAmount: finalAmount,
       finalAmount,
       extras: extras || {},
-      notes: notes || "",
+      rentalType,
+      hours: rentalType === "hourly" ? parseInt(hours) : undefined,
       paymentStatus: "pending",
       status: "pending",
-      vendorDetails: vendorData,
-      customerDetails: customerData,
+      customerDetails: {
+        name: req.user.name,
+        phone: req.user.phone,
+        email: req.user.email,
+      },
+      vendorDetails: vehicle.vendor
+        ? {
+            name: vehicle.vendor.name,
+            phone: vehicle.vendor.phone,
+            email: vehicle.vendor.email,
+          }
+        : {},
     });
 
-    const flags = await booking.checkFraud();
-    await booking.save();
+    // Booking confirmation email
+    sendEmail({
+      to: req.user.email,
+      subject: `🚗 Booking Confirmed - ${booking.bookingRef}`,
+      html: `<h1>Booking Confirmed!</h1><p>Vehicle: ${vehicle.name}</p><p>Dates: ${new Date(startDate).toLocaleDateString()} - ${new Date(endDate || startDate).toLocaleDateString()}</p><p>Amount: ₹${finalAmount.toLocaleString()}</p><p>Ref: ${booking.bookingRef}</p>`,
+    }).catch((err) => console.log("Booking email failed:", err.message));
 
-    vehicle.bookedDates.push({
-      startDate: new Date(startDate),
-      endDate: new Date(endDate),
-      bookingId: booking._id,
-    });
-    vehicle.totalBookings += 1;
-    vehicle.popularityScore = Math.min(100, vehicle.popularityScore + 2);
-    await vehicle.save();
-
-    const populated = await Booking.findById(booking._id)
-      .populate("vehicle", "name brand images basePrice")
-      .populate("user", "name email phone");
-
-    // Send confirmation email
-    try {
-      await sendEmail({
-        to: req.user.email,
-        subject: `Booking Confirmed - ${booking.bookingRef}`,
-        html: `<h1>Booking Confirmed!</h1><p>Your booking ${booking.bookingRef} for ${vehicle.name} is confirmed.</p>`,
-      });
-      console.log(`✅ Booking confirmation email sent to ${req.user.email}`);
-    } catch (emailErr) {
-      console.warn("Booking email failed:", emailErr.message);
-    }
-
-    // Send vendor notification
-    if (vehicle.vendor && vehicle.vendor.email) {
-      try {
-        await sendEmail({
-          to: vehicle.vendor.email,
-          subject: `New Booking Received - ${booking.bookingRef}`,
-          html: `<h1>New Booking!</h1><p>Customer: ${customer.name}<br>Vehicle: ${vehicle.name}<br>Dates: ${startDate} to ${endDate}</p>`,
-        });
-        console.log(`✅ Vendor email sent to ${vehicle.vendor.email}`);
-      } catch (emailErr) {
-        console.warn("Vendor email failed:", emailErr.message);
-      }
-    }
-
-    res.status(201).json({
-      success: true,
-      booking: populated,
-      vendorDetails: vendorData,
-      customerDetails: customerData,
-      fraudFlags: flags.length > 0 ? flags : undefined,
-      message: "Booking created successfully. Proceed to payment.",
-    });
+    res
+      .status(201)
+      .json({ success: true, booking, message: "Booking created!" });
   } catch (err) {
-    console.error("Create booking error:", err);
     res.status(500).json({ success: false, message: err.message });
   }
 };
 
-exports.getBookings = async (req, res, next) => {
-  try {
-    const { status, page = 1, limit = 10 } = req.query;
-    const query = req.user.role === "admin" ? {} : { user: req.user._id };
-    if (status) query.status = status;
-
-    const skip = (Number(page) - 1) * Number(limit);
-    const [bookings, total] = await Promise.all([
-      Booking.find(query)
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(Number(limit))
-        .populate("vehicle", "name brand images category city")
-        .populate("user", "name email"),
-      Booking.countDocuments(query),
-    ]);
-
-    res.json({
-      success: true,
-      bookings,
-      total,
-      pages: Math.ceil(total / limit),
-    });
-  } catch (err) {
-    next(err);
-  }
+exports.getBookings = async (req, res) => {
+  const { page = 1, limit = 10 } = req.query;
+  const bookings = await Booking.find({ user: req.user._id })
+    .sort({ createdAt: -1 })
+    .skip((page - 1) * limit)
+    .limit(limit)
+    .populate("vehicle", "name brand images");
+  const total = await Booking.countDocuments({ user: req.user._id });
+  res.json({ success: true, bookings, total });
 };
 
-exports.getBooking = async (req, res, next) => {
-  try {
-    const booking = await Booking.findById(req.params.id)
-      .populate("vehicle")
-      .populate("user", "name email phone");
-
-    if (!booking) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Booking not found" });
-    }
-
-    if (
-      req.user.role !== "admin" &&
-      booking.user._id.toString() !== req.user._id.toString()
-    ) {
-      return res
-        .status(403)
-        .json({ success: false, message: "Not authorized" });
-    }
-
-    res.json({ success: true, booking });
-  } catch (err) {
-    next(err);
-  }
+exports.getBooking = async (req, res) => {
+  const booking = await Booking.findById(req.params.id)
+    .populate("vehicle")
+    .populate("user", "name email phone");
+  if (!booking)
+    return res.status(404).json({ success: false, message: "Not found" });
+  res.json({ success: true, booking });
 };
 
-exports.cancelBooking = async (req, res, next) => {
-  try {
-    const booking = await Booking.findById(req.params.id).populate("vehicle");
-    if (!booking) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Booking not found" });
-    }
-
-    if (
-      req.user.role !== "admin" &&
-      booking.user.toString() !== req.user._id.toString()
-    ) {
-      return res
-        .status(403)
-        .json({ success: false, message: "Not authorized" });
-    }
-
-    if (["completed", "cancelled"].includes(booking.status)) {
-      return res.status(400).json({
-        success: false,
-        message: `Cannot cancel a ${booking.status} booking`,
-      });
-    }
-
-    booking.status = "cancelled";
-    booking.cancellationReason = req.body.reason || "Cancelled by user";
-    booking.cancelledAt = new Date();
-    if (booking.paymentStatus === "paid") booking.paymentStatus = "refunded";
-    await booking.save();
-
-    const vehicle = booking.vehicle;
-    vehicle.bookedDates = vehicle.bookedDates.filter(
-      (d) => d.bookingId?.toString() !== booking._id.toString(),
-    );
-    await vehicle.save();
-
-    await User.findByIdAndUpdate(booking.user, {
-      $inc: { cancellationCount: 1 },
-    });
-
-    res.json({ success: true, message: "Booking cancelled", booking });
-  } catch (err) {
-    next(err);
-  }
+exports.cancelBooking = async (req, res) => {
+  const booking = await Booking.findById(req.params.id);
+  if (!booking)
+    return res.status(404).json({ success: false, message: "Not found" });
+  booking.status = "cancelled";
+  booking.cancelledAt = new Date();
+  await booking.save();
+  res.json({ success: true, message: "Booking cancelled" });
 };
 
-exports.processPayment = async (req, res, next) => {
-  try {
-    const booking = await Booking.findById(req.params.id).populate("vehicle");
-    if (!booking) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Booking not found" });
-    }
+exports.processPayment = async (req, res) => {
+  const booking = await Booking.findById(req.params.id);
+  if (!booking)
+    return res.status(404).json({ success: false, message: "Not found" });
+  booking.paymentStatus = "paid";
+  booking.status = "confirmed";
+  booking.paidAt = new Date();
+  await booking.save();
 
-    if (
-      req.user.role !== "admin" &&
-      booking.user.toString() !== req.user._id.toString()
-    ) {
-      return res
-        .status(403)
-        .json({ success: false, message: "Not authorized" });
-    }
+  sendEmail({
+    to: req.user.email,
+    subject: `💰 Payment Received - ${booking.bookingRef}`,
+    html: `<h1>Payment Confirmed!</h1><p>Amount: ₹${booking.finalAmount.toLocaleString()}</p><p>Ref: ${booking.bookingRef}</p>`,
+  }).catch(() => {});
 
-    const customer = await User.findById(booking.user);
-    const vendor = await User.findById(booking.vehicle.vendor);
-
-    booking.paymentStatus = "paid";
-    booking.paymentMethod = req.body.method || "razorpay";
-    booking.paidAt = new Date();
-    booking.status = "confirmed";
-    await booking.save();
-
-    try {
-      await sendEmail({
-        to: customer.email,
-        subject: `Payment Successful - ${booking.bookingRef}`,
-        html: `<h1>Payment Received!</h1><p>Your payment of ₹${booking.finalAmount} for booking ${booking.bookingRef} has been received.</p>`,
-      });
-      console.log(`✅ Payment email sent to ${customer.email}`);
-    } catch (emailErr) {
-      console.error("Payment email failed:", emailErr.message);
-    }
-
-    if (vendor && vendor.email) {
-      try {
-        await sendEmail({
-          to: vendor.email,
-          subject: `Booking Confirmed - ${booking.bookingRef}`,
-          html: `<h1>Booking Confirmed!</h1><p>Customer: ${customer.name}<br>Vehicle: ${booking.vehicle.name}<br>Amount: ₹${booking.finalAmount}</p>`,
-        });
-        console.log(`✅ Vendor email sent to ${vendor.email}`);
-      } catch (emailErr) {
-        console.error("Vendor email failed:", emailErr.message);
-      }
-    }
-
-    res.json({
-      success: true,
-      message: "Payment processed successfully",
-      booking,
-    });
-  } catch (err) {
-    console.error("Process payment error:", err);
-    next(err);
-  }
+  res.json({ success: true, message: "Payment processed", booking });
 };
 
-exports.getMyStats = async (req, res, next) => {
-  try {
-    const userId = req.user._id;
-    const [total, active, completed, spent] = await Promise.all([
-      Booking.countDocuments({ user: userId }),
-      Booking.countDocuments({
-        user: userId,
-        status: { $in: ["confirmed", "active"] },
-      }),
-      Booking.countDocuments({ user: userId, status: "completed" }),
-      Booking.aggregate([
-        { $match: { user: userId, paymentStatus: "paid" } },
-        { $group: { _id: null, total: { $sum: "$finalAmount" } } },
-      ]),
-    ]);
-
-    res.json({
-      success: true,
-      stats: {
-        totalBookings: total,
-        activeBookings: active,
-        completedBookings: completed,
-        totalSpent: spent[0]?.total || 0,
-      },
-    });
-  } catch (err) {
-    next(err);
-  }
+exports.getMyStats = async (req, res) => {
+  const [total, active] = await Promise.all([
+    Booking.countDocuments({ user: req.user._id }),
+    Booking.countDocuments({
+      user: req.user._id,
+      status: { $in: ["confirmed", "active"] },
+    }),
+  ]);
+  const spent = await Booking.aggregate([
+    { $match: { user: req.user._id, paymentStatus: "paid" } },
+    { $group: { _id: null, total: { $sum: "$finalAmount" } } },
+  ]);
+  res.json({
+    success: true,
+    stats: {
+      totalBookings: total,
+      activeBookings: active,
+      totalSpent: spent[0]?.total || 0,
+    },
+  });
 };
 
-exports.getVendorBookings = async (req, res, next) => {
-  try {
-    const vendorVehicles = await Vehicle.find({ vendor: req.user._id });
-    const vehicleIds = vendorVehicles.map((v) => v._id);
-
-    if (vehicleIds.length === 0) {
-      return res.json({
-        success: true,
-        count: 0,
-        bookings: [],
-      });
-    }
-
-    const bookings = await Booking.find({
-      vehicle: { $in: vehicleIds },
-    })
-      .populate("vehicle", "name brand images currentPrice category")
-      .populate("user", "name email phone")
-      .sort("-createdAt");
-
-    res.json({
-      success: true,
-      count: bookings.length,
-      bookings,
-    });
-  } catch (err) {
-    console.error("Error fetching vendor bookings:", err);
-    next(err);
-  }
+exports.getVendorBookings = async (req, res) => {
+  const vehicles = await Vehicle.find({ vendor: req.user._id });
+  const bookings = await Booking.find({
+    vehicle: { $in: vehicles.map((v) => v._id) },
+  })
+    .populate("vehicle", "name brand")
+    .populate("user", "name email")
+    .sort("-createdAt");
+  res.json({ success: true, bookings });
 };
