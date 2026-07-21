@@ -1,4 +1,10 @@
 // backend/services/emailService.js
+// At the TOP of emailService.js, add:
+console.log("📧 Email Config Check:");
+console.log("  HOST:", process.env.EMAIL_HOST || "NOT SET");
+console.log("  PORT:", process.env.EMAIL_PORT || "NOT SET");
+console.log("  USER:", process.env.EMAIL_USER || "NOT SET");
+console.log("  PASS:", process.env.EMAIL_PASS ? "SET" : "NOT SET");
 const nodemailer = require("nodemailer");
 
 const transporter = nodemailer.createTransport({
