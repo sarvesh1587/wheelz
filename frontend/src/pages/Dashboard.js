@@ -1,5 +1,5 @@
 /**
- * User Dashboard — Complete Working Version
+ * User Dashboard — Complete Working Version with Accurate City Coordinates
  * File: frontend/src/pages/Dashboard.js
  */
 
@@ -47,6 +47,32 @@ import PaymentReceipt from "../components/PaymentReceipt";
 import { useConfetti } from "../hooks/useConfetti";
 import { DashboardSkeleton } from "../components/common/Skeleton";
 import TrackingMap from "../components/TrackingMap";
+
+// ─── City Coordinates Map (22 Indian Cities) ────────────────────────────────
+const CITY_COORDS = {
+  "Mumbai": [19.0760, 72.8777],
+  "Delhi": [28.6139, 77.2090],
+  "Bangalore": [12.9716, 77.5946],
+  "Chennai": [13.0827, 80.2707],
+  "Hyderabad": [17.3850, 78.4867],
+  "Pune": [18.5204, 73.8567],
+  "Kolkata": [22.5726, 88.3639],
+  "Ahmedabad": [23.0225, 72.5714],
+  "Jaipur": [26.9124, 75.7873],
+  "Goa": [15.2993, 74.1240],
+  "Manali": [32.2396, 77.1887],
+  "Shimla": [31.1048, 77.1734],
+  "Ooty": [11.4102, 76.6950],
+  "Coorg": [12.4244, 75.7382],
+  "Mysore": [12.2958, 76.6394],
+  "Agra": [27.1767, 78.0081],
+  "Chandigarh": [30.7333, 76.7794],
+  "Pondicherry": [11.9416, 79.8083],
+  "Nashik": [19.9975, 73.7898],
+  "Aurangabad": [19.8762, 75.3433],
+  "Surat": [21.1702, 72.8311],
+  "Lucknow": [26.8467, 80.9462],
+};
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -101,7 +127,6 @@ export default function Dashboard() {
   const [dropCoords, setDropCoords] = useState(null);
   const [trackingInterval, setTrackingInterval] = useState(null);
   
-  // PER-TRIP sharing state (not global!)
   const [sharingTrips, setSharingTrips] = useState({});
   const [shareIntervals, setShareIntervals] = useState({});
 
@@ -177,14 +202,10 @@ export default function Dashboard() {
     finally { setProcessingRidePayment(null); }
   };
 
-  // ─── PER-TRIP LOCATION SHARING ──────────────────────────────────────────
-
   const startSharingLocation = async (trip) => {
     if (!navigator.geolocation) { toast.error("Geolocation not supported"); return; }
-    
     setSharingTrips(prev => ({ ...prev, [trip._id]: true }));
     toast.success("📍 Sharing your location live!");
-
     const shareLocation = () => {
       navigator.geolocation.getCurrentPosition(async (pos) => {
         try {
@@ -192,10 +213,7 @@ export default function Dashboard() {
           const API = process.env.REACT_APP_API_URL || "https://wheelz-ldq2.onrender.com/api";
           const res = await fetch(`${API}/rideshare/${trip._id}/requests`, { headers: { Authorization: `Bearer ${token}` } });
           const data = await res.json();
-          
-          // ONLY approved + paid passengers
           const activePassengers = (data.requests || []).filter(r => r.status === "approved" && r.paymentStatus === "paid");
-          
           for (const req of activePassengers) {
             await fetch(`${API}/tracking/update`, {
               method: "POST",
@@ -206,7 +224,6 @@ export default function Dashboard() {
         } catch (err) { console.log("Location update failed:", err.message); }
       }, (err) => console.log("GPS error:", err.message), { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
     };
-
     shareLocation();
     const interval = setInterval(shareLocation, 10000);
     setShareIntervals(prev => ({ ...prev, [trip._id]: interval }));
@@ -226,10 +243,18 @@ export default function Dashboard() {
     catch (error) { setMessages([]); }
   };
 
+  // ✅ FIXED: Use real city coordinates instead of hardcoded Mumbai
   const openTracking = async (ride) => {
+    const trip = ride.trip;
     setTrackingRide(ride);
-    setPickupCoords([19.076, 72.8777]);
-    setDropCoords([15.2993, 74.124]);
+    
+    // Use actual city coordinates from the lookup table
+    const fromCoords = CITY_COORDS[trip?.fromCity] || [19.0760, 72.8777];
+    const toCoords = CITY_COORDS[trip?.toCity] || [15.2993, 74.1240];
+    
+    setPickupCoords(fromCoords);
+    setDropCoords(toCoords);
+    
     try {
       const token = localStorage.getItem("wheelz_token");
       const API = process.env.REACT_APP_API_URL || "https://wheelz-ldq2.onrender.com/api";
