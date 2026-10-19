@@ -1,6 +1,10 @@
 import React, { useState } from "react";
-import { StarIcon } from "@heroicons/react/24/solid";
-import { StarIcon as StarOutline } from "@heroicons/react/24/outline";
+import {
+  Star as StarIcon,
+} from "lucide-react";
+import {
+  Star as StarOutline,
+} from "lucide-react";
 import { reviewAPI } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import toast from "react-hot-toast";
@@ -44,7 +48,7 @@ const SubmitReview = ({ vehicleId, bookingId, onSuccess }) => {
   if (!user) {
     return (
       <div className="text-center py-8">
-        <p className="text-gray-500">Please login to leave a review</p>
+        <p className="text-muted">Please login to leave a review</p>
       </div>
     );
   }
@@ -52,7 +56,7 @@ const SubmitReview = ({ vehicleId, bookingId, onSuccess }) => {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <label className="block text-sm font-medium text-ink/80 mb-2">
           Your Rating
         </label>
         <div className="flex gap-1">
@@ -66,9 +70,9 @@ const SubmitReview = ({ vehicleId, bookingId, onSuccess }) => {
               className="focus:outline-none"
             >
               {star <= (hoverRating || rating) ? (
-                <StarIcon className="w-8 h-8 text-amber-400" />
+                <StarIcon className="w-8 h-8 text-accent" />
               ) : (
-                <StarOutline className="w-8 h-8 text-gray-300" />
+                <StarOutline className="w-8 h-8 text-muted" />
               )}
             </button>
           ))}
@@ -76,7 +80,7 @@ const SubmitReview = ({ vehicleId, bookingId, onSuccess }) => {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <label className="block text-sm font-medium text-ink/80 mb-2">
           Review Title
         </label>
         <input
@@ -89,7 +93,7 @@ const SubmitReview = ({ vehicleId, bookingId, onSuccess }) => {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <label className="block text-sm font-medium text-ink/80 mb-2">
           Your Review
         </label>
         <textarea

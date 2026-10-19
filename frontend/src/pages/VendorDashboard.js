@@ -4,26 +4,28 @@ import { useAuth } from "../context/AuthContext";
 import { vehicleAPI, bookingAPI } from "../services/api";
 import toast from "react-hot-toast";
 import {
-  TruckIcon,
-  CalendarIcon,
-  CurrencyRupeeIcon,
-  ChartBarIcon,
-  PlusIcon,
-  EyeIcon,
-  PencilIcon,
-  TrashIcon,
-  CheckCircleIcon,
-  XCircleIcon,
-  ClockIcon,
-  UserIcon,
-  PhoneIcon,
-  EnvelopeIcon,
-  MapPinIcon,
-  DocumentTextIcon,
-  XMarkIcon,
-  DocumentArrowDownIcon,
-} from "@heroicons/react/24/outline";
+  Truck as TruckIcon,
+  Calendar as CalendarIcon,
+  IndianRupee as CurrencyRupeeIcon,
+  BarChart3 as ChartBarIcon,
+  Plus as PlusIcon,
+  Eye as EyeIcon,
+  Pencil as PencilIcon,
+  Trash2 as TrashIcon,
+  CheckCircle2 as CheckCircleIcon,
+  XCircle as XCircleIcon,
+  Clock as ClockIcon,
+  User as UserIcon,
+  Phone as PhoneIcon,
+  Mail as EnvelopeIcon,
+  MapPin as MapPinIcon,
+  FileText as DocumentTextIcon,
+  X as XMarkIcon,
+  FileDown as DocumentArrowDownIcon,
+} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Reveal } from "../components/motion";
+import { PageHeader, Panel, Stat, PageLoader } from "../components/ui";
 import {
   LineChart,
   Line,
@@ -145,10 +147,10 @@ export default function VendorDashboard() {
     pdfContent.innerHTML = `
       <div style="max-width: 800px; margin: 0 auto;">
         <!-- Header -->
-        <div style="text-align: center; margin-bottom: 30px; border-bottom: 2px solid #f59e0b; padding-bottom: 20px;">
+        <div style="text-align: center; margin-bottom: 30px; border-bottom: 2px solid #FF4D00; padding-bottom: 20px;">
           <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
-            <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #f59e0b, #d97706); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold; color: white;">W</div>
-            <h1 style="color: #f59e0b; margin: 0;">WHEELZ</h1>
+            <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #FF4D00, #E04300); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold; color: white;">W</div>
+            <h1 style="color: #FF4D00; margin: 0;">WHEELZ</h1>
           </div>
           <h2 style="margin: 10px 0 5px; color: #333;">Booking Confirmation</h2>
           <p style="color: #666; margin: 0;">Booking ID: ${selectedBooking.bookingRef}</p>
@@ -157,7 +159,7 @@ export default function VendorDashboard() {
 
         <!-- Customer Details -->
         <div style="margin-bottom: 20px;">
-          <h3 style="color: #f59e0b; margin-bottom: 10px; border-left: 3px solid #f59e0b; padding-left: 10px;">Customer Information</h3>
+          <h3 style="color: #FF4D00; margin-bottom: 10px; border-left: 3px solid #FF4D00; padding-left: 10px;">Customer Information</h3>
           <table style="width: 100%; border-collapse: collapse;">
             <tr style="border-bottom: 1px solid #eee;">
               <td style="padding: 8px; font-weight: bold; width: 120px;">Full Name</td>
@@ -180,7 +182,7 @@ export default function VendorDashboard() {
 
         <!-- Vehicle Details -->
         <div style="margin-bottom: 20px;">
-          <h3 style="color: #f59e0b; margin-bottom: 10px; border-left: 3px solid #f59e0b; padding-left: 10px;">Vehicle Information</h3>
+          <h3 style="color: #FF4D00; margin-bottom: 10px; border-left: 3px solid #FF4D00; padding-left: 10px;">Vehicle Information</h3>
           <table style="width: 100%; border-collapse: collapse;">
             <tr style="border-bottom: 1px solid #eee;">
               <td style="padding: 8px; font-weight: bold; width: 120px;">Vehicle Name</td>
@@ -203,7 +205,7 @@ export default function VendorDashboard() {
 
         <!-- Booking Details -->
         <div style="margin-bottom: 20px;">
-          <h3 style="color: #f59e0b; margin-bottom: 10px; border-left: 3px solid #f59e0b; padding-left: 10px;">Booking Information</h3>
+          <h3 style="color: #FF4D00; margin-bottom: 10px; border-left: 3px solid #FF4D00; padding-left: 10px;">Booking Information</h3>
           <table style="width: 100%; border-collapse: collapse;">
             <tr style="border-bottom: 1px solid #eee;">
               <td style="padding: 8px; font-weight: bold; width: 120px;">Pickup Date</td>
@@ -226,7 +228,7 @@ export default function VendorDashboard() {
 
         <!-- Price Breakdown -->
         <div style="margin-bottom: 20px;">
-          <h3 style="color: #f59e0b; margin-bottom: 10px; border-left: 3px solid #f59e0b; padding-left: 10px;">Price Breakdown</h3>
+          <h3 style="color: #FF4D00; margin-bottom: 10px; border-left: 3px solid #FF4D00; padding-left: 10px;">Price Breakdown</h3>
           <table style="width: 100%; border-collapse: collapse;">
             <tr style="border-bottom: 1px solid #eee;">
               <td style="padding: 8px; font-weight: bold;">Price per day</td>
@@ -263,16 +265,16 @@ export default function VendorDashboard() {
                     .join("")
                 : ""
             }
-            <tr style="border-top: 2px solid #f59e0b;">
+            <tr style="border-top: 2px solid #FF4D00;">
               <td style="padding: 12px 8px; font-weight: bold; font-size: 16px;">Total Amount</td>
-              <td style="padding: 12px 8px; font-size: 20px; font-weight: bold; color: #f59e0b;">₹${selectedBooking.finalAmount?.toLocaleString() || selectedBooking.totalAmount?.toLocaleString()}</td>
+              <td style="padding: 12px 8px; font-size: 20px; font-weight: bold; color: #FF4D00;">₹${selectedBooking.finalAmount?.toLocaleString() || selectedBooking.totalAmount?.toLocaleString()}</td>
             </tr>
           </table>
         </div>
 
         <!-- Status -->
         <div style="margin-bottom: 20px;">
-          <h3 style="color: #f59e0b; margin-bottom: 10px; border-left: 3px solid #f59e0b; padding-left: 10px;">Status</h3>
+          <h3 style="color: #FF4D00; margin-bottom: 10px; border-left: 3px solid #FF4D00; padding-left: 10px;">Status</h3>
           <table style="width: 100%; border-collapse: collapse;">
             <tr style="border-bottom: 1px solid #eee;">
               <td style="padding: 8px; font-weight: bold; width: 120px;">Booking Status</td>
@@ -313,37 +315,37 @@ export default function VendorDashboard() {
       label: "Total Vehicles",
       value: stats?.totalVehicles || 0,
       icon: TruckIcon,
-      color: "from-blue-500 to-blue-600",
+      color: "",
     },
     {
       label: "Available",
       value: stats?.availableVehicles || 0,
       icon: CheckCircleIcon,
-      color: "from-green-500 to-green-600",
+      color: "",
     },
     {
       label: "Total Bookings",
       value: stats?.totalBookings || 0,
       icon: CalendarIcon,
-      color: "from-amber-500 to-amber-600",
+      color: "",
     },
     {
       label: "Completed",
       value: stats?.completedBookings || 0,
       icon: ChartBarIcon,
-      color: "from-purple-500 to-purple-600",
+      color: "",
     },
     {
       label: "Total Revenue",
       value: `₹${(stats?.totalRevenue || 0).toLocaleString()}`,
       icon: CurrencyRupeeIcon,
-      color: "from-red-500 to-red-600",
+      color: "",
     },
     {
       label: "Pending Payout",
       value: `₹${(stats?.pendingAmount || 0).toLocaleString()}`,
       icon: ClockIcon,
-      color: "from-orange-500 to-orange-600",
+      color: "",
     },
   ];
 
@@ -358,135 +360,85 @@ export default function VendorDashboard() {
 
   const getStatusBadge = (status) => {
     const badges = {
-      confirmed: "bg-green-100 text-green-700",
-      pending: "bg-yellow-100 text-yellow-700",
-      cancelled: "bg-red-100 text-red-700",
-      completed: "bg-blue-100 text-blue-700",
+      confirmed: "bg-raised text-accent",
+      pending: "bg-accent/10 text-accent",
+      cancelled: "bg-accent/10 text-red-500",
+      completed: "bg-raised text-accent",
     };
     return badges[status] || badges.pending;
   };
 
   const getPaymentStatusBadge = (status) => {
     const badges = {
-      paid: "bg-green-100 text-green-700",
-      pending: "bg-yellow-100 text-yellow-700",
-      refunded: "bg-red-100 text-red-700",
-      failed: "bg-red-100 text-red-700",
+      paid: "bg-raised text-accent",
+      pending: "bg-accent/10 text-accent",
+      refunded: "bg-accent/10 text-red-500",
+      failed: "bg-accent/10 text-red-500",
     };
     return badges[status] || badges.pending;
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center pt-20">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-500">Loading vendor dashboard...</p>
-        </div>
-      </div>
-    );
-  }
+  if (loading) return <PageLoader label="Loading vendor dashboard" />;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-950 pt-24 pb-12">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex flex-wrap items-center justify-between gap-4 mb-8"
-        >
-          <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400 bg-clip-text text-transparent">
-              Vendor Dashboard
-            </h1>
-            <p className="text-gray-500 dark:text-gray-400 mt-1">
-              Manage your vehicles, track bookings, and monitor earnings
-            </p>
-          </div>
-          <button
-            onClick={() => navigate("/vendor/vehicles/add")}
-            className="btn-primary flex items-center gap-2"
-          >
-            <PlusIcon className="w-5 h-5" />
-            Add New Vehicle
-          </button>
-        </motion.div>
+    <div className="pb-24 pt-28 md:pt-32">
+      <div className="container-x">
+        <PageHeader
+          index="01"
+          eyebrow="Vendor"
+          title={["Your fleet."]}
+          lede="Manage your vehicles, track bookings, and monitor earnings."
+          actions={
+            <button onClick={() => navigate("/vendor/vehicles/add")} className="btn-primary">
+              <PlusIcon className="h-4 w-4" /> Add new vehicle
+            </button>
+          }
+        />
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-8">
+        <div className="mb-14 grid grid-cols-2 gap-x-6 gap-y-10 md:grid-cols-3 xl:grid-cols-6">
           {statsCards.map((stat, idx) => (
-            <motion.div
-              key={stat.label}
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: idx * 0.05 }}
-              className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-md hover:shadow-lg transition-all"
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs text-gray-500">{stat.label}</p>
-                  <p className="text-xl font-bold text-gray-900 dark:text-white mt-1">
-                    {stat.value}
-                  </p>
-                </div>
-                <div
-                  className={`w-10 h-10 bg-gradient-to-r ${stat.color} rounded-lg flex items-center justify-center`}
-                >
-                  <stat.icon className="w-5 h-5 text-white" />
-                </div>
-              </div>
-            </motion.div>
+            <Reveal key={stat.label} delay={idx * 0.05}>
+              <Stat label={stat.label} value={stat.value} />
+            </Reveal>
           ))}
         </div>
 
         {/* Revenue Chart */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg mb-8"
-        >
-          <h3 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-            <ChartBarIcon className="w-5 h-5 text-amber-500" />
-            Revenue Overview (Last 6 Months)
-          </h3>
+        <Panel index="02" title="Revenue · last 6 months" className="mb-14">
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={revenueData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="month" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Line
-                type="monotone"
-                dataKey="revenue"
-                stroke="#f59e0b"
-                strokeWidth={2}
+              <CartesianGrid stroke="rgb(var(--line) / 0.08)" vertical={false} />
+              <XAxis dataKey="month" stroke="rgb(var(--muted))" tickLine={false} axisLine={false} fontSize={12} />
+              <YAxis stroke="rgb(var(--muted))" tickLine={false} axisLine={false} fontSize={12} />
+              <Tooltip
+                contentStyle={{ background: "rgb(var(--surface))", border: "1px solid rgb(var(--line) / 0.1)", borderRadius: 16, color: "rgb(var(--ink))" }}
               />
+              <Line type="monotone" dataKey="revenue" stroke="rgb(var(--accent))" strokeWidth={2} dot={false} />
             </LineChart>
           </ResponsiveContainer>
-        </motion.div>
+        </Panel>
 
         {/* Tabs */}
-        <div className="flex gap-2 mb-6 border-b border-gray-200 dark:border-gray-700">
+        <nav className="mb-10 flex gap-8 border-b border-line/10" aria-label="Vendor sections">
           {[
-            { id: "vehicles", label: "My Vehicles", icon: TruckIcon },
-            { id: "bookings", label: "Bookings", icon: CalendarIcon },
+            { id: "vehicles", label: "My vehicles", count: vehicles.length },
+            { id: "bookings", label: "Bookings", count: bookings.length },
           ].map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-t-lg transition-all ${
-                activeTab === tab.id
-                  ? "bg-amber-500 text-white"
-                  : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+              aria-current={activeTab === tab.id ? "page" : undefined}
+              className={`relative flex items-center gap-2 py-4 text-sm font-medium transition-colors ${
+                activeTab === tab.id ? "text-ink" : "text-muted hover:text-ink"
               }`}
             >
-              <tab.icon className="w-4 h-4" />
               {tab.label}
+              <span className="font-mono text-[11px] text-muted">{String(tab.count).padStart(2, "0")}</span>
+              {activeTab === tab.id && <motion.span layoutId="vendor-tab" className="absolute inset-x-0 -bottom-px h-px bg-accent" />}
             </button>
           ))}
-        </div>
+        </nav>
 
         {/* Vehicles Tab */}
         {activeTab === "vehicles" && (
@@ -496,12 +448,12 @@ export default function VendorDashboard() {
             className="space-y-4"
           >
             {vehicles.length === 0 ? (
-              <div className="text-center py-16 bg-white dark:bg-gray-800 rounded-2xl">
-                <TruckIcon className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+              <div className="text-center py-16 bg-surface rounded-[24px] border border-line/10">
+                <TruckIcon className="w-16 h-16 text-muted mx-auto mb-4" />
+                <h3 className="display-tight text-lg text-ink mb-2">
                   No Vehicles Listed
                 </h3>
-                <p className="text-gray-500 mb-4">
+                <p className="text-muted mb-4">
                   Start earning by listing your first vehicle!
                 </p>
                 <button
@@ -518,7 +470,7 @@ export default function VendorDashboard() {
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: idx * 0.05 }}
-                  className="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-md hover:shadow-lg transition-all"
+                  className="bg-surface rounded-[24px] p-5 transition-all border border-line/10"
                 >
                   <div className="flex flex-col sm:flex-row gap-4">
                     <img
@@ -529,15 +481,15 @@ export default function VendorDashboard() {
                     <div className="flex-1">
                       <div className="flex flex-wrap items-start justify-between gap-2">
                         <div>
-                          <h3 className="font-bold text-gray-900 dark:text-white">
+                          <h3 className="font-bold text-ink">
                             {vehicle.name}
                           </h3>
-                          <p className="text-sm text-gray-500">
+                          <p className="text-sm text-muted">
                             {vehicle.brand} • {vehicle.year}
                           </p>
                           <div className="flex items-center gap-2 mt-1">
                             <span
-                              className={`text-xs px-2 py-0.5 rounded-full ${vehicle.isAvailable ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}
+                              className={`text-xs px-2 py-0.5 rounded-full ${vehicle.isAvailable ? "bg-raised text-accent" : "bg-accent/10 text-red-500"}`}
                             >
                               {vehicle.isAvailable
                                 ? "Available"
@@ -546,16 +498,16 @@ export default function VendorDashboard() {
                           </div>
                         </div>
                         <div className="text-right">
-                          <p className="text-xl font-bold text-amber-500">
+                          <p className="display text-xl">
                             ₹{vehicle.currentPrice?.toLocaleString()}
                           </p>
-                          <p className="text-xs text-gray-400">per day</p>
+                          <p className="text-xs text-muted">per day</p>
                         </div>
                       </div>
                       <div className="flex flex-wrap gap-3 mt-3">
                         <button
                           onClick={() => navigate(`/vehicles/${vehicle._id}`)}
-                          className="text-sm text-amber-500 hover:text-amber-600 flex items-center gap-1"
+                          className="text-sm text-accent hover:text-accent flex items-center gap-1"
                         >
                           <EyeIcon className="w-4 h-4" /> View
                         </button>
@@ -563,7 +515,7 @@ export default function VendorDashboard() {
                           onClick={() =>
                             navigate(`/vendor/vehicles/edit/${vehicle._id}`)
                           }
-                          className="text-sm text-blue-500 hover:text-blue-600 flex items-center gap-1"
+                          className="text-sm text-accent hover:text-blue-600 flex items-center gap-1"
                         >
                           <PencilIcon className="w-4 h-4" /> Edit
                         </button>
@@ -574,7 +526,7 @@ export default function VendorDashboard() {
                               vehicle.isAvailable,
                             )
                           }
-                          className={`text-sm flex items-center gap-1 ${vehicle.isAvailable ? "text-red-500" : "text-green-500"}`}
+                          className={`text-sm flex items-center gap-1 ${vehicle.isAvailable ? "text-red-500" : "text-accent"}`}
                         >
                           {vehicle.isAvailable ? (
                             <XCircleIcon className="w-4 h-4" />
@@ -606,12 +558,12 @@ export default function VendorDashboard() {
             className="space-y-4"
           >
             {bookings.length === 0 ? (
-              <div className="text-center py-16 bg-white dark:bg-gray-800 rounded-2xl">
-                <CalendarIcon className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+              <div className="text-center py-16 bg-surface rounded-[24px] border border-line/10">
+                <CalendarIcon className="w-16 h-16 text-muted mx-auto mb-4" />
+                <h3 className="display-tight text-lg text-ink mb-2">
                   No Bookings Yet
                 </h3>
-                <p className="text-gray-500">
+                <p className="text-muted">
                   When customers book your vehicles, they'll appear here.
                 </p>
               </div>
@@ -623,7 +575,7 @@ export default function VendorDashboard() {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: idx * 0.05 }}
                   onClick={() => viewBookingDetails(booking)}
-                  className="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-md hover:shadow-xl transition-all cursor-pointer group"
+                  className="bg-surface rounded-[24px] p-5 transition-all cursor-pointer group border border-line/10"
                 >
                   <div className="flex flex-wrap items-start justify-between gap-4">
                     <div className="flex gap-4">
@@ -633,10 +585,10 @@ export default function VendorDashboard() {
                         className="w-16 h-16 rounded-xl object-cover"
                       />
                       <div>
-                        <h3 className="font-bold text-gray-900 dark:text-white group-hover:text-amber-500 transition-colors">
+                        <h3 className="font-bold text-ink group-hover:text-amber-500 transition-colors">
                           {booking.vehicle?.name}
                         </h3>
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm text-muted">
                           {booking.vehicle?.brand} • {booking.vehicle?.year}
                         </p>
                         <div className="flex items-center gap-2 mt-1">
@@ -654,15 +606,15 @@ export default function VendorDashboard() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-xl font-bold text-amber-500">
+                      <p className="display text-xl">
                         ₹{booking.totalAmount?.toLocaleString()}
                       </p>
-                      <p className="text-xs text-gray-400 flex items-center gap-1">
+                      <p className="text-xs text-muted flex items-center gap-1">
                         <EyeIcon className="w-3 h-3" /> Click to view details
                       </p>
                     </div>
                   </div>
-                  <div className="flex flex-wrap gap-4 mt-3 text-sm text-gray-600 dark:text-gray-400">
+                  <div className="flex flex-wrap gap-4 mt-3 text-sm text-muted">
                     <div className="flex items-center gap-1">
                       <CalendarIcon className="w-4 h-4" />
                       {new Date(booking.startDate).toLocaleDateString()} -{" "}
@@ -702,15 +654,15 @@ export default function VendorDashboard() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="relative w-full max-w-4xl max-h-[85vh] overflow-y-auto bg-white dark:bg-gray-900 rounded-2xl shadow-2xl"
+              className="relative w-full max-w-4xl max-h-[85vh] overflow-y-auto bg-surface rounded-[24px] border border-line/10"
             >
               {/* Modal Header */}
-              <div className="sticky top-0 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 px-6 py-4 flex items-center justify-between rounded-t-2xl z-10">
+              <div className="sticky top-0 bg-surface border-b border-line/10 px-6 py-4 flex items-center justify-between rounded-t-2xl z-10">
                 <div>
-                  <h2 className="text-xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400 bg-clip-text text-transparent">
+                  <h2 className="display-tight text-xl text-ink">
                     Booking Details
                   </h2>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-muted">
                     Booking ID: {selectedBooking.bookingRef}
                   </p>
                 </div>
@@ -718,14 +670,14 @@ export default function VendorDashboard() {
                   {/* PDF Download Button */}
                   <button
                     onClick={downloadBookingPDF}
-                    className="p-2 rounded-full bg-green-500 hover:bg-green-600 text-white transition-colors flex items-center gap-1"
+                    className="p-2 rounded-full bg-ink text-canvas hover:bg-accent hover:text-accent-ink transition-colors flex items-center gap-1"
                     title="Download PDF"
                   >
                     <DocumentArrowDownIcon className="w-5 h-5" />
                   </button>
                   <button
                     onClick={() => setShowBookingModal(false)}
-                    className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                    className="p-2 rounded-full hover:bg-raised transition-colors"
                   >
                     <XMarkIcon className="w-5 h-5" />
                   </button>
@@ -735,50 +687,50 @@ export default function VendorDashboard() {
               <div className="p-6">
                 {/* Customer Details Section */}
                 <div className="mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                    <UserIcon className="w-5 h-5 text-amber-500" />
+                  <h3 className="display-tight text-lg text-ink mb-4 flex items-center gap-2">
+                    <UserIcon className="w-5 h-5 text-accent" />
                     Customer Information
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
-                      <div className="flex items-center gap-2 text-gray-500 mb-1">
+                    <div className="p-4 bg-raised/50 rounded-xl">
+                      <div className="flex items-center gap-2 text-muted mb-1">
                         <UserIcon className="w-4 h-4" />
                         <span className="text-xs">Full Name</span>
                       </div>
-                      <p className="font-medium text-gray-900 dark:text-white">
+                      <p className="font-medium text-ink">
                         {selectedBooking.user?.name ||
                           selectedBooking.customerDetails?.name ||
                           "N/A"}
                       </p>
                     </div>
-                    <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
-                      <div className="flex items-center gap-2 text-gray-500 mb-1">
+                    <div className="p-4 bg-raised/50 rounded-xl">
+                      <div className="flex items-center gap-2 text-muted mb-1">
                         <EnvelopeIcon className="w-4 h-4" />
                         <span className="text-xs">Email Address</span>
                       </div>
-                      <p className="font-medium text-gray-900 dark:text-white">
+                      <p className="font-medium text-ink">
                         {selectedBooking.user?.email ||
                           selectedBooking.customerDetails?.email ||
                           "N/A"}
                       </p>
                     </div>
-                    <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
-                      <div className="flex items-center gap-2 text-gray-500 mb-1">
+                    <div className="p-4 bg-raised/50 rounded-xl">
+                      <div className="flex items-center gap-2 text-muted mb-1">
                         <PhoneIcon className="w-4 h-4" />
                         <span className="text-xs">Phone Number</span>
                       </div>
-                      <p className="font-medium text-gray-900 dark:text-white">
+                      <p className="font-medium text-ink">
                         {selectedBooking.user?.phone ||
                           selectedBooking.customerDetails?.phone ||
                           "N/A"}
                       </p>
                     </div>
-                    <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
-                      <div className="flex items-center gap-2 text-gray-500 mb-1">
+                    <div className="p-4 bg-raised/50 rounded-xl">
+                      <div className="flex items-center gap-2 text-muted mb-1">
                         <MapPinIcon className="w-4 h-4" />
                         <span className="text-xs">Address</span>
                       </div>
-                      <p className="font-medium text-gray-900 dark:text-white">
+                      <p className="font-medium text-ink">
                         {selectedBooking.customerDetails?.address ||
                           "Not provided"}
                       </p>
@@ -788,28 +740,28 @@ export default function VendorDashboard() {
 
                 {/* Vehicle Details Section */}
                 <div className="mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                    <TruckIcon className="w-5 h-5 text-amber-500" />
+                  <h3 className="display-tight text-lg text-ink mb-4 flex items-center gap-2">
+                    <TruckIcon className="w-5 h-5 text-accent" />
                     Vehicle Information
                   </h3>
-                  <div className="flex gap-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                  <div className="flex gap-4 p-4 bg-raised/50 rounded-xl">
                     <img
                       src={selectedBooking.vehicle?.images?.[0]}
                       alt={selectedBooking.vehicle?.name}
                       className="w-24 h-24 rounded-xl object-cover"
                     />
                     <div className="flex-1">
-                      <h4 className="font-bold text-gray-900 dark:text-white">
+                      <h4 className="font-bold text-ink">
                         {selectedBooking.vehicle?.name}
                       </h4>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-muted">
                         {selectedBooking.vehicle?.brand} •{" "}
                         {selectedBooking.vehicle?.year}
                       </p>
                       <div className="flex flex-wrap gap-4 mt-2 text-sm">
                         <div className="flex items-center gap-1">
-                          <span className="text-gray-500">Price:</span>
-                          <span className="font-medium text-amber-500">
+                          <span className="text-muted">Price:</span>
+                          <span className="font-medium text-accent">
                             ₹{selectedBooking.pricePerDay?.toLocaleString()}/day
                           </span>
                         </div>
@@ -820,13 +772,13 @@ export default function VendorDashboard() {
 
                 {/* Booking Details Section */}
                 <div className="mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                    <CalendarIcon className="w-5 h-5 text-amber-500" />
+                  <h3 className="display-tight text-lg text-ink mb-4 flex items-center gap-2">
+                    <CalendarIcon className="w-5 h-5 text-accent" />
                     Booking Information
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
-                      <p className="text-xs text-gray-500 mb-1">Pickup Date</p>
+                    <div className="p-4 bg-raised/50 rounded-xl">
+                      <p className="text-xs text-muted mb-1">Pickup Date</p>
                       <p className="font-medium">
                         {new Date(selectedBooking.startDate).toLocaleDateString(
                           "en-IN",
@@ -839,8 +791,8 @@ export default function VendorDashboard() {
                         )}
                       </p>
                     </div>
-                    <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
-                      <p className="text-xs text-gray-500 mb-1">Return Date</p>
+                    <div className="p-4 bg-raised/50 rounded-xl">
+                      <p className="text-xs text-muted mb-1">Return Date</p>
                       <p className="font-medium">
                         {new Date(selectedBooking.endDate).toLocaleDateString(
                           "en-IN",
@@ -853,16 +805,16 @@ export default function VendorDashboard() {
                         )}
                       </p>
                     </div>
-                    <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
-                      <p className="text-xs text-gray-500 mb-1">
+                    <div className="p-4 bg-raised/50 rounded-xl">
+                      <p className="text-xs text-muted mb-1">
                         Pickup Location
                       </p>
                       <p className="font-medium">
                         {selectedBooking.pickupLocation}
                       </p>
                     </div>
-                    <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
-                      <p className="text-xs text-gray-500 mb-1">Total Days</p>
+                    <div className="p-4 bg-raised/50 rounded-xl">
+                      <p className="text-xs text-muted mb-1">Total Days</p>
                       <p className="font-medium">
                         {selectedBooking.totalDays} days
                       </p>
@@ -872,14 +824,14 @@ export default function VendorDashboard() {
 
                 {/* Price Breakdown Section */}
                 <div className="mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                    <CurrencyRupeeIcon className="w-5 h-5 text-amber-500" />
+                  <h3 className="display-tight text-lg text-ink mb-4 flex items-center gap-2">
+                    <CurrencyRupeeIcon className="w-5 h-5 text-accent" />
                     Price Breakdown
                   </h3>
-                  <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800/50 dark:to-gray-900/50 rounded-xl p-4">
+                  <div className="rounded-xl p-4">
                     <div className="space-y-2">
                       <div className="flex justify-between">
-                        <span className="text-gray-600 dark:text-gray-400">
+                        <span className="text-muted">
                           Price per day
                         </span>
                         <span className="font-medium">
@@ -887,7 +839,7 @@ export default function VendorDashboard() {
                         </span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-gray-600 dark:text-gray-400">
+                        <span className="text-muted">
                           Number of days
                         </span>
                         <span className="font-medium">
@@ -915,22 +867,22 @@ export default function VendorDashboard() {
                                 key={key}
                                 className="flex justify-between pl-4"
                               >
-                                <span className="text-gray-500 text-sm">
+                                <span className="text-muted text-sm">
                                   • {extraNames[key]}
                                 </span>
-                                <span className="text-gray-500 text-sm">
+                                <span className="text-muted text-sm">
                                   +₹{extraPrices[key]}/day
                                 </span>
                               </div>
                             );
                           },
                         )}
-                      <div className="border-t border-gray-200 dark:border-gray-700 pt-3 mt-3">
+                      <div className="border-t border-line/10 pt-3 mt-3">
                         <div className="flex justify-between items-center">
-                          <span className="font-bold text-gray-900 dark:text-white">
+                          <span className="font-bold text-ink">
                             Total Amount
                           </span>
-                          <span className="text-2xl font-bold text-amber-500">
+                          <span className="display text-2xl">
                             ₹
                             {selectedBooking.finalAmount?.toLocaleString() ||
                               selectedBooking.totalAmount?.toLocaleString()}
@@ -943,16 +895,16 @@ export default function VendorDashboard() {
 
                 {/* Status Section */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
-                    <p className="text-xs text-gray-500 mb-1">Booking Status</p>
+                  <div className="p-4 bg-raised/50 rounded-xl">
+                    <p className="text-xs text-muted mb-1">Booking Status</p>
                     <span
                       className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${getStatusBadge(selectedBooking.status)}`}
                     >
                       {selectedBooking.status?.toUpperCase()}
                     </span>
                   </div>
-                  <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
-                    <p className="text-xs text-gray-500 mb-1">Payment Status</p>
+                  <div className="p-4 bg-raised/50 rounded-xl">
+                    <p className="text-xs text-muted mb-1">Payment Status</p>
                     <span
                       className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${getPaymentStatusBadge(selectedBooking.paymentStatus)}`}
                     >
@@ -960,11 +912,11 @@ export default function VendorDashboard() {
                     </span>
                   </div>
                   {selectedBooking.notes && (
-                    <div className="col-span-full p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
-                      <p className="text-xs text-gray-500 mb-1">
+                    <div className="col-span-full p-4 bg-raised/50 rounded-xl">
+                      <p className="text-xs text-muted mb-1">
                         Customer Notes
                       </p>
-                      <p className="text-sm text-gray-700 dark:text-gray-300">
+                      <p className="text-sm text-ink/80">
                         {selectedBooking.notes}
                       </p>
                     </div>

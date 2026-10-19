@@ -2,22 +2,23 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import {
-  UserIcon,
-  EnvelopeIcon,
-  LockClosedIcon,
-  PhoneIcon,
-  BuildingStorefrontIcon,
-  DocumentTextIcon,
-  MapPinIcon,
-  BanknotesIcon,
-  CreditCardIcon,
-  EyeIcon,
-  EyeSlashIcon,
-  CheckBadgeIcon,
-  ArrowRightIcon,
-  ArrowLeftIcon,
-  IdentificationIcon,
-} from "@heroicons/react/24/outline";
+  User as UserIcon,
+  Mail as EnvelopeIcon,
+  Lock as LockClosedIcon,
+  Phone as PhoneIcon,
+  Store as BuildingStorefrontIcon,
+  FileText as DocumentTextIcon,
+  MapPin as MapPinIcon,
+  Banknote as BanknotesIcon,
+  CreditCard as CreditCardIcon,
+  Eye as EyeIcon,
+  EyeOff as EyeSlashIcon,
+  BadgeCheck as CheckBadgeIcon,
+  ArrowRight as ArrowRightIcon,
+  ArrowLeft as ArrowLeftIcon,
+  IdCard as IdentificationIcon,
+} from "lucide-react";
+import { PageHeader } from "../components/ui";
 
 export default function VendorRegister() {
   const navigate = useNavigate();
@@ -258,41 +259,36 @@ export default function VendorRegister() {
   // Vendor Type Selection Screen
   if (!vendorType) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-4 py-20 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-950 dark:to-gray-900">
-        <div className="max-w-4xl w-full bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8">
-          <div className="text-center mb-8">
-            <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <BuildingStorefrontIcon className="w-8 h-8 text-white" />
-            </div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-              Choose Vendor Type
-            </h1>
-            <p className="text-gray-500 dark:text-gray-400 mt-1">
-              Select how you want to register
-            </p>
-          </div>
+      <div className="container-x pb-24 pt-28 md:pt-32">
+        <div>
+          <PageHeader
+            index="01"
+            eyebrow="Become a vendor"
+            title={["List your", "vehicles."]}
+            lede="Select how you want to register."
+          />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Individual Vendor */}
             <div
               onClick={() => setVendorType("individual")}
-              className="cursor-pointer border-2 border-gray-200 dark:border-gray-700 rounded-2xl p-6 hover:border-green-500 hover:shadow-lg transition-all group"
+              className="group cursor-pointer rounded-[24px] border border-line/10 bg-surface p-8 transition-colors hover:border-accent"
             >
-              <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center mb-4">
-                <UserIcon className="w-6 h-6 text-blue-600" />
+              <div className="w-12 h-12 bg-raised rounded-xl flex items-center justify-center mb-4">
+                <UserIcon className="w-6 h-6 text-accent" />
               </div>
-              <h3 className="text-xl font-semibold mb-2">Individual Vendor</h3>
-              <p className="text-gray-500 text-sm mb-4">
+              <h3 className="display-tight mb-2 text-3xl">Individual Vendor</h3>
+              <p className="text-muted text-sm mb-4">
                 For individuals renting out personal vehicles
               </p>
-              <ul className="text-sm text-gray-600 space-y-2">
+              <ul className="text-sm text-muted space-y-2">
                 <li className="flex items-center gap-2">Up to 5 vehicles</li>
                 <li className="flex items-center gap-2">15% commission</li>
                 <li className="flex items-center gap-2">
                   Personal PAN required
                 </li>
                 <li className="flex items-center gap-2">
-                  🆔 Aadhar verification
+                  Aadhar verification
                 </li>
               </ul>
             </div>
@@ -300,16 +296,16 @@ export default function VendorRegister() {
             {/* Business Vendor */}
             <div
               onClick={() => setVendorType("business")}
-              className="cursor-pointer border-2 border-gray-200 dark:border-gray-700 rounded-2xl p-6 hover:border-green-500 hover:shadow-lg transition-all group"
+              className="group cursor-pointer rounded-[24px] border border-line/10 bg-surface p-8 transition-colors hover:border-accent"
             >
-              <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-xl flex items-center justify-center mb-4">
-                <BuildingStorefrontIcon className="w-6 h-6 text-purple-600" />
+              <div className="w-12 h-12 bg-raised rounded-xl flex items-center justify-center mb-4">
+                <BuildingStorefrontIcon className="w-6 h-6 text-accent" />
               </div>
-              <h3 className="text-xl font-semibold mb-2">Business Vendor</h3>
-              <p className="text-gray-500 text-sm mb-4">
+              <h3 className="display-tight mb-2 text-3xl">Business Vendor</h3>
+              <p className="text-muted text-sm mb-4">
                 For companies, rental agencies, businesses
               </p>
-              <ul className="text-sm text-gray-600 space-y-2">
+              <ul className="text-sm text-muted space-y-2">
                 <li className="flex items-center gap-2">
                   Unlimited vehicles
                 </li>
@@ -327,28 +323,20 @@ export default function VendorRegister() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-20 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-950 dark:to-gray-900">
-      <div className="max-w-3xl w-full bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8">
+    <div className="container-x pb-24 pt-28 md:pt-32">
+      <div className="mx-auto max-w-3xl">
         {/* Header */}
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            {vendorType === "individual" ? (
-              <UserIcon className="w-8 h-8 text-white" />
-            ) : (
-              <BuildingStorefrontIcon className="w-8 h-8 text-white" />
-            )}
-          </div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            {vendorType === "individual"
-              ? "Individual Vendor Registration"
-              : "Business Vendor Registration"}
-          </h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">
-            {vendorType === "individual"
+        <PageHeader
+          index="02"
+          eyebrow={vendorType === "individual" ? "Individual vendor" : "Business vendor"}
+          title={["Registration."]}
+          size="md"
+          lede={
+            vendorType === "individual"
               ? "Register as an individual vehicle owner"
-              : "Register your business as a vendor partner"}
-          </p>
-        </div>
+              : "Register your business as a vendor partner"
+          }
+        />
 
         {/* Step Indicator */}
         <div className="flex items-center justify-center mb-8">
@@ -356,16 +344,16 @@ export default function VendorRegister() {
             {[1, 2, 3, 4].map((s) => (
               <div key={s} className="flex items-center">
                 <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                  className={`grid h-9 w-9 place-items-center rounded-full font-mono text-sm ${
                     step >= s
-                      ? "bg-green-500 text-white"
-                      : "bg-gray-200 dark:bg-gray-700 text-gray-500"
+                      ? "bg-ink text-canvas"
+                      : "bg-line/10 text-muted"
                   }`}
                 >
                   {s}
                 </div>
                 {s < 4 && (
-                  <div className="w-12 h-0.5 bg-gray-200 dark:bg-gray-700 ml-4"></div>
+                  <div className="w-12 h-0.5 bg-line/10 ml-4"></div>
                 )}
               </div>
             ))}
@@ -377,17 +365,17 @@ export default function VendorRegister() {
           {step === 1 && (
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label className="block text-sm font-medium text-ink/80 mb-1">
                   Full Name *
                 </label>
                 <div className="relative">
-                  <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted" />
                   <input
                     type="text"
                     name="name"
                     value={commonInfo.name}
                     onChange={handleCommonChange}
-                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-line/10 bg-surface focus:ring-2 focus:ring-green-500 focus:border-transparent"
                     placeholder="John Doe"
                     required
                   />
@@ -398,13 +386,13 @@ export default function VendorRegister() {
                   Email Address *
                 </label>
                 <div className="relative">
-                  <EnvelopeIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <EnvelopeIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted" />
                   <input
                     type="email"
                     name="email"
                     value={commonInfo.email}
                     onChange={handleCommonChange}
-                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-green-500"
+                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-line/10 bg-surface focus:ring-2 focus:ring-green-500"
                     placeholder="vendor@example.com"
                     required
                   />
@@ -415,13 +403,13 @@ export default function VendorRegister() {
                   Phone Number *
                 </label>
                 <div className="relative">
-                  <PhoneIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <PhoneIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted" />
                   <input
                     type="tel"
                     name="phone"
                     value={commonInfo.phone}
                     onChange={handleCommonChange}
-                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-green-500"
+                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-line/10 bg-surface focus:ring-2 focus:ring-green-500"
                     placeholder="9876543210"
                     required
                   />
@@ -432,13 +420,13 @@ export default function VendorRegister() {
                   Password *
                 </label>
                 <div className="relative">
-                  <LockClosedIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <LockClosedIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted" />
                   <input
                     type={showPassword ? "text" : "password"}
                     name="password"
                     value={commonInfo.password}
                     onChange={handleCommonChange}
-                    className="w-full pl-10 pr-12 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-green-500"
+                    className="w-full pl-10 pr-12 py-3 rounded-xl border border-line/10 bg-surface focus:ring-2 focus:ring-green-500"
                     placeholder="••••••"
                     required
                   />
@@ -448,13 +436,13 @@ export default function VendorRegister() {
                     className="absolute right-3 top-1/2 -translate-y-1/2"
                   >
                     {showPassword ? (
-                      <EyeSlashIcon className="w-5 h-5 text-gray-400" />
+                      <EyeSlashIcon className="w-5 h-5 text-muted" />
                     ) : (
-                      <EyeIcon className="w-5 h-5 text-gray-400" />
+                      <EyeIcon className="w-5 h-5 text-muted" />
                     )}
                   </button>
                 </div>
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-muted mt-1">
                   Minimum 6 characters
                 </p>
               </div>
@@ -463,13 +451,13 @@ export default function VendorRegister() {
                   Confirm Password *
                 </label>
                 <div className="relative">
-                  <LockClosedIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <LockClosedIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted" />
                   <input
                     type={showPassword ? "text" : "password"}
                     name="confirmPassword"
                     value={commonInfo.confirmPassword}
                     onChange={handleCommonChange}
-                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-green-500"
+                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-line/10 bg-surface focus:ring-2 focus:ring-green-500"
                     placeholder="••••••"
                     required
                   />
@@ -486,18 +474,18 @@ export default function VendorRegister() {
                   Aadhar Number *
                 </label>
                 <div className="relative">
-                  <IdentificationIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <IdentificationIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted" />
                   <input
                     type="text"
                     name="aadharNumber"
                     value={individualDetails.aadharNumber}
                     onChange={handleIndividualChange}
-                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-green-500"
+                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-line/10 bg-surface focus:ring-2 focus:ring-green-500"
                     placeholder="123456789012"
                     required
                   />
                 </div>
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-muted mt-1">
                   12-digit Aadhar number
                 </p>
               </div>
@@ -506,13 +494,13 @@ export default function VendorRegister() {
                   PAN Number *
                 </label>
                 <div className="relative">
-                  <DocumentTextIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <DocumentTextIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted" />
                   <input
                     type="text"
                     name="panNumber"
                     value={individualDetails.panNumber}
                     onChange={handleIndividualChange}
-                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-green-500 uppercase"
+                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-line/10 bg-surface focus:ring-2 focus:ring-green-500 uppercase"
                     placeholder="ABCDE1234F"
                     required
                   />
@@ -523,13 +511,13 @@ export default function VendorRegister() {
                   Residential Address *
                 </label>
                 <div className="relative">
-                  <MapPinIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <MapPinIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted" />
                   <textarea
                     name="address"
                     value={individualDetails.address}
                     onChange={handleIndividualChange}
                     rows="3"
-                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-green-500"
+                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-line/10 bg-surface focus:ring-2 focus:ring-green-500"
                     placeholder="Full address"
                     required
                   />
@@ -545,13 +533,13 @@ export default function VendorRegister() {
                   Business Name *
                 </label>
                 <div className="relative">
-                  <BuildingStorefrontIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <BuildingStorefrontIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted" />
                   <input
                     type="text"
                     name="businessName"
                     value={businessDetails.businessName}
                     onChange={handleBusinessChange}
-                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-green-500"
+                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-line/10 bg-surface focus:ring-2 focus:ring-green-500"
                     placeholder="Your Business Name"
                     required
                   />
@@ -562,13 +550,13 @@ export default function VendorRegister() {
                   GST Number *
                 </label>
                 <div className="relative">
-                  <DocumentTextIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <DocumentTextIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted" />
                   <input
                     type="text"
                     name="gstNumber"
                     value={businessDetails.gstNumber}
                     onChange={handleBusinessChange}
-                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-green-500 uppercase"
+                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-line/10 bg-surface focus:ring-2 focus:ring-green-500 uppercase"
                     placeholder="22AAAAA0000A1Z"
                     required
                   />
@@ -579,13 +567,13 @@ export default function VendorRegister() {
                   Business PAN Number *
                 </label>
                 <div className="relative">
-                  <DocumentTextIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <DocumentTextIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted" />
                   <input
                     type="text"
                     name="panNumber"
                     value={businessDetails.panNumber}
                     onChange={handleBusinessChange}
-                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-green-500 uppercase"
+                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-line/10 bg-surface focus:ring-2 focus:ring-green-500 uppercase"
                     placeholder="ABCDE1234F"
                     required
                   />
@@ -596,13 +584,13 @@ export default function VendorRegister() {
                   Business Address *
                 </label>
                 <div className="relative">
-                  <MapPinIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <MapPinIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted" />
                   <textarea
                     name="businessAddress"
                     value={businessDetails.businessAddress}
                     onChange={handleBusinessChange}
                     rows="3"
-                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-green-500"
+                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-line/10 bg-surface focus:ring-2 focus:ring-green-500"
                     placeholder="Full business address"
                     required
                   />
@@ -613,13 +601,13 @@ export default function VendorRegister() {
                   Website (Optional)
                 </label>
                 <div className="relative">
-                  <GlobeAltIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <GlobeAltIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted" />
                   <input
                     type="url"
                     name="website"
                     value={businessDetails.website}
                     onChange={handleBusinessChange}
-                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-green-500"
+                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-line/10 bg-surface focus:ring-2 focus:ring-green-500"
                     placeholder="https://yourbusiness.com"
                   />
                 </div>
@@ -635,13 +623,13 @@ export default function VendorRegister() {
                   Account Holder Name *
                 </label>
                 <div className="relative">
-                  <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted" />
                   <input
                     type="text"
                     name="accountHolderName"
                     value={bankDetails.accountHolderName}
                     onChange={handleBankChange}
-                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-green-500"
+                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-line/10 bg-surface focus:ring-2 focus:ring-green-500"
                     placeholder="As per bank account"
                     required
                   />
@@ -652,13 +640,13 @@ export default function VendorRegister() {
                   Bank Account Number *
                 </label>
                 <div className="relative">
-                  <CreditCardIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <CreditCardIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted" />
                   <input
                     type="text"
                     name="accountNumber"
                     value={bankDetails.accountNumber}
                     onChange={handleBankChange}
-                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-green-500"
+                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-line/10 bg-surface focus:ring-2 focus:ring-green-500"
                     placeholder="Account number"
                     required
                   />
@@ -669,13 +657,13 @@ export default function VendorRegister() {
                   IFSC Code *
                 </label>
                 <div className="relative">
-                  <BanknotesIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <BanknotesIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted" />
                   <input
                     type="text"
                     name="ifscCode"
                     value={bankDetails.ifscCode}
                     onChange={handleBankChange}
-                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-green-500 uppercase"
+                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-line/10 bg-surface focus:ring-2 focus:ring-green-500 uppercase"
                     placeholder="SBIN0001234"
                     required
                   />
@@ -690,7 +678,7 @@ export default function VendorRegister() {
                   name="bankName"
                   value={bankDetails.bankName}
                   onChange={handleBankChange}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-green-500"
+                  className="w-full px-4 py-3 rounded-xl border border-line/10 bg-surface focus:ring-2 focus:ring-green-500"
                   placeholder="State Bank of India"
                   required
                 />
@@ -701,65 +689,65 @@ export default function VendorRegister() {
           {/* Step 4: Summary */}
           {step === 4 && (
             <div className="space-y-4">
-              <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-5">
+              <div className="bg-raised/50 rounded-xl p-5">
                 <h3 className="font-semibold text-lg mb-4">
                   Registration Summary
                 </h3>
                 <div className="space-y-2 text-sm">
-                  <div className="flex justify-between py-2 border-b border-gray-200 dark:border-gray-600">
-                    <span className="text-gray-600">Vendor Type:</span>
+                  <div className="flex justify-between py-2 border-b border-line/10">
+                    <span className="text-muted">Vendor Type:</span>
                     <span className="font-semibold">
                       {vendorType === "individual" ? "Individual" : "Business"}
                     </span>
                   </div>
-                  <div className="flex justify-between py-2 border-b border-gray-200 dark:border-gray-600">
-                    <span className="text-gray-600">Name:</span>
+                  <div className="flex justify-between py-2 border-b border-line/10">
+                    <span className="text-muted">Name:</span>
                     <span>{commonInfo.name}</span>
                   </div>
-                  <div className="flex justify-between py-2 border-b border-gray-200 dark:border-gray-600">
-                    <span className="text-gray-600">Email:</span>
+                  <div className="flex justify-between py-2 border-b border-line/10">
+                    <span className="text-muted">Email:</span>
                     <span>{commonInfo.email}</span>
                   </div>
-                  <div className="flex justify-between py-2 border-b border-gray-200 dark:border-gray-600">
-                    <span className="text-gray-600">Phone:</span>
+                  <div className="flex justify-between py-2 border-b border-line/10">
+                    <span className="text-muted">Phone:</span>
                     <span>{commonInfo.phone}</span>
                   </div>
                   {vendorType === "individual" ? (
                     <>
-                      <div className="flex justify-between py-2 border-b border-gray-200 dark:border-gray-600">
-                        <span className="text-gray-600">Aadhar:</span>
+                      <div className="flex justify-between py-2 border-b border-line/10">
+                        <span className="text-muted">Aadhar:</span>
                         <span>{individualDetails.aadharNumber}</span>
                       </div>
-                      <div className="flex justify-between py-2 border-b border-gray-200 dark:border-gray-600">
-                        <span className="text-gray-600">PAN:</span>
+                      <div className="flex justify-between py-2 border-b border-line/10">
+                        <span className="text-muted">PAN:</span>
                         <span>{individualDetails.panNumber}</span>
                       </div>
                     </>
                   ) : (
                     <>
-                      <div className="flex justify-between py-2 border-b border-gray-200 dark:border-gray-600">
-                        <span className="text-gray-600">Business Name:</span>
+                      <div className="flex justify-between py-2 border-b border-line/10">
+                        <span className="text-muted">Business Name:</span>
                         <span>{businessDetails.businessName}</span>
                       </div>
-                      <div className="flex justify-between py-2 border-b border-gray-200 dark:border-gray-600">
-                        <span className="text-gray-600">GST:</span>
+                      <div className="flex justify-between py-2 border-b border-line/10">
+                        <span className="text-muted">GST:</span>
                         <span>{businessDetails.gstNumber}</span>
                       </div>
-                      <div className="flex justify-between py-2 border-b border-gray-200 dark:border-gray-600">
-                        <span className="text-gray-600">Business PAN:</span>
+                      <div className="flex justify-between py-2 border-b border-line/10">
+                        <span className="text-muted">Business PAN:</span>
                         <span>{businessDetails.panNumber}</span>
                       </div>
                     </>
                   )}
-                  <div className="flex justify-between py-2 border-b border-gray-200 dark:border-gray-600">
-                    <span className="text-gray-600">Commission Rate:</span>
-                    <span className="font-semibold text-green-600">
+                  <div className="flex justify-between py-2 border-b border-line/10">
+                    <span className="text-muted">Commission Rate:</span>
+                    <span className="font-semibold text-accent">
                       {vendorType === "individual" ? "15%" : "10%"}
                     </span>
                   </div>
                   <div className="flex justify-between py-2">
-                    <span className="text-gray-600">Vehicle Limit:</span>
-                    <span className="font-semibold text-blue-600">
+                    <span className="text-muted">Vehicle Limit:</span>
+                    <span className="font-semibold text-accent">
                       {vendorType === "individual"
                         ? "Up to 5 vehicles"
                         : "Unlimited"}
@@ -767,8 +755,8 @@ export default function VendorRegister() {
                   </div>
                 </div>
               </div>
-              <div className="bg-amber-50 dark:bg-amber-900/20 rounded-xl p-4">
-                <p className="text-sm text-amber-700 dark:text-amber-400 flex items-center gap-2">
+              <div className="bg-accent/10 rounded-xl p-4">
+                <p className="text-sm text-accent flex items-center gap-2">
                   <CheckBadgeIcon className="w-5 h-5" />
                   Your registration will be reviewed by admin. Approval may take
                   24-48 hours.
@@ -783,7 +771,7 @@ export default function VendorRegister() {
               <button
                 type="button"
                 onClick={prevStep}
-                className="flex items-center gap-2 px-6 py-3 border border-gray-300 dark:border-gray-600 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition"
+                className="flex items-center gap-2 px-6 py-3 border border-line/15 rounded-xl hover:bg-raised transition"
               >
                 <ArrowLeftIcon className="w-4 h-4" /> Previous
               </button>
@@ -792,7 +780,7 @@ export default function VendorRegister() {
               <button
                 type="button"
                 onClick={nextStep}
-                className="flex items-center gap-2 px-6 py-3 bg-green-500 hover:bg-green-600 text-white rounded-xl transition ml-auto"
+                className="flex items-center gap-2 px-6 py-3 bg-ink text-canvas hover:bg-accent hover:text-accent-ink rounded-xl transition ml-auto"
               >
                 Next <ArrowRightIcon className="w-4 h-4" />
               </button>
@@ -800,7 +788,7 @@ export default function VendorRegister() {
               <button
                 type="submit"
                 disabled={loading}
-                className="flex items-center justify-center gap-2 w-full py-3 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold rounded-xl transition disabled:opacity-50"
+                className="flex items-center justify-center gap-2 w-full py-3 bg-raised hover:from-green-600 hover:to-emerald-700 text-white font-semibold rounded-xl transition disabled:opacity-50"
               >
                 {loading ? (
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -812,11 +800,11 @@ export default function VendorRegister() {
           </div>
         </form>
 
-        <p className="text-center text-gray-500 dark:text-gray-400 mt-6">
+        <p className="text-center text-muted mt-6">
           Already have an account?{" "}
           <Link
             to="/login"
-            className="text-green-600 font-semibold hover:underline"
+            className="text-accent font-semibold hover:underline"
           >
             Sign In
           </Link>
