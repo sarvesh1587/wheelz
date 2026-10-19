@@ -6,7 +6,8 @@ export const ThemeProvider = ({ children }) => {
   const [dark, setDark] = useState(() => {
     const stored = localStorage.getItem("wheelz_theme");
     if (stored) return stored === "dark";
-    return window.matchMedia("(prefers-color-scheme: dark)").matches;
+    // Dark is the brand default; users can still switch to light.
+    return true;
   });
 
   useEffect(() => {

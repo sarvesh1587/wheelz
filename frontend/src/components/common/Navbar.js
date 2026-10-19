@@ -1,27 +1,36 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Sun,
+  Moon,
+  ArrowUpRight,
+  LayoutDashboard,
+  Heart,
+  ShieldCheck,
+  Users,
+  Sparkles,
+  LogOut,
+  Repeat,
+} from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
-import {
-  SunIcon,
-  MoonIcon,
-  Bars3Icon,
-  XMarkIcon,
-  UserCircleIcon,
-  CalendarDaysIcon,
-  TruckIcon,
-  ArrowRightOnRectangleIcon,
-  HomeIcon,
-  UserGroupIcon,
-  SparklesIcon,
-  HeartIcon,
-  ShieldCheckIcon,
-  PlusCircleIcon,
-  BuildingStorefrontIcon,
-  ChartBarIcon,
-  UsersIcon,
-  ArrowLeftOnRectangleIcon,
-} from "@heroicons/react/24/outline";
+import { EASE, Magnetic } from "../motion";
+
+const ADMIN_NAV = [
+  { to: "/admin", label: "Dashboard" },
+  { to: "/admin/vehicles", label: "Vehicles" },
+  { to: "/admin/users", label: "Users" },
+  { to: "/admin/vendors", label: "Vendors" },
+  { to: "/admin/reports", label: "Reports" },
+];
+
+const USER_NAV = [
+  { to: "/vehicles", label: "Fleet" },
+  { to: "/find-trip", label: "Find a trip" },
+  { to: "/offer-trip", label: "Offer a trip" },
+  { to: "/trip-planner", label: "AI Planner" },
+];
 
 export default function Navbar() {
   const { user, logout, isAdmin, isAuthenticated } = useAuth();
@@ -29,14 +38,24 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [adminMode, setAdminMode] = useState(true);
+  const [hidden, setHidden] = useState(false);
+  const lastY = useRef(0);
   const location = useLocation();
   const navigate = useNavigate();
 
+  const adminMode = location.pathname.startsWith("/admin");
+  const navItems = isAdmin && adminMode ? ADMIN_NAV : USER_NAV;
+
+  // Solid bar once scrolled; tucks away while scrolling down, returns on scroll up.
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 20);
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+    const onScroll = () => {
+      const y = window.scrollY;
+      setScrolled(y > 24);
+      setHidden(y > 240 && y > lastY.current);
+      lastY.current = y;
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   useEffect(() => {
@@ -45,356 +64,253 @@ export default function Navbar() {
   }, [location]);
 
   useEffect(() => {
-    // Auto-detect admin mode based on URL
-    if (location.pathname.startsWith("/admin")) {
-      setAdminMode(true);
-    } else {
-      setAdminMode(false);
-    }
-  }, [location]);
+    document.body.style.overflow = menuOpen ? "hidden" : "";
+  }, [menuOpen]);
+
+  const go = (to) => {
+    navigate(to);
+    setProfileOpen(false);
+    setMenuOpen(false);
+  };
 
   const handleLogout = () => {
     logout();
-    navigate("/");
+    go("/");
   };
 
-  // Admin nav items - Clean & Minimal
-  const adminNavItems = [
-    { to: "/admin", label: "Dashboard", icon: HomeIcon },
-    { to: "/admin/vehicles", label: "Vehicles", icon: TruckIcon },
-    { to: "/admin/users", label: "Users", icon: UsersIcon },
-    { to: "/admin/vendors", label: "Vendors", icon: BuildingStorefrontIcon },
-    { to: "/admin/reports", label: "Reports", icon: ChartBarIcon },
-  ];
+  const isActive = (to) =>
+    location.pathname === to ||
+    (to !== "/" && to !== "/admin" && location.pathname.startsWith(to));
 
-  // User nav items - Full features
-  const userNavItems = [
-    { to: "/", label: "Home", icon: HomeIcon },
-    { to: "/vehicles", label: "Vehicles", icon: TruckIcon },
-    { to: "/find-trip", label: "Find Trip", icon: UserGroupIcon },
-    { to: "/offer-trip", label: "Offer Trip", icon: PlusCircleIcon },
-    {
-      to: "/vendor/register",
-      label: "List Vehicle",
-      icon: TruckIcon,
-      highlight: true,
-    },
+  const profileItems = [
+    ...(isAdmin
+      ? [
+          {
+            label: adminMode ? "Switch to user view" : "Switch to admin view",
+            icon: Repeat,
+            to: adminMode ? "/dashboard" : "/admin",
+          },
+        ]
+      : []),
+    ...(!isAdmin || !adminMode
+      ? [
+          { label: "Dashboard", icon: LayoutDashboard, to: "/dashboard" },
+          { label: "Wishlist", icon: Heart, to: "/wishlist" },
+          { label: "KYC", icon: ShieldCheck, to: "/kyc" },
+          { label: "Trip requests", icon: Users, to: "/trip-requests" },
+        ]
+      : []),
+    { label: "AI Trip Planner", icon: Sparkles, to: "/trip-planner" },
   ];
-
-  const navItems = isAdmin && adminMode ? adminNavItems : userNavItems;
 
   return (
-    <nav
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrolled
-          ? "bg-white/95 dark:bg-gray-900/95 backdrop-blur-md shadow-sm"
-          : "bg-transparent"
-      }`}
-    >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-14 md:h-16">
-          {/* Logo */}
-          <Link
-            to={isAdmin && adminMode ? "/admin" : "/"}
-            className="flex items-center gap-2 group"
-            onClick={() => window.scrollTo(0, 0)}
-          >
-            <div className="w-8 h-8 bg-gradient-to-r from-amber-500 to-amber-600 rounded-lg flex items-center justify-center font-bold text-white text-sm">
-              W
-            </div>
-            <span className="font-bold text-lg text-gray-900 dark:text-white">
-              Wheelz
-            </span>
-            {isAdmin && adminMode && (
-              <span className="text-[10px] bg-red-500 text-white px-1.5 py-0.5 rounded-full font-medium">
-                ADMIN
-              </span>
-            )}
-          </Link>
-
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-0.5">
-            {navItems.map((item) => (
-              <button
-                key={item.to}
-                onClick={() => navigate(item.to)}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-1.5 ${
-                  location.pathname === item.to ||
-                  (item.to !== "/" && location.pathname.startsWith(item.to))
-                    ? "bg-amber-500 text-white"
-                    : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
-                } ${item.highlight ? "border border-amber-500 text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20" : ""}`}
-              >
-                {item.icon && <item.icon className="w-3.5 h-3.5" />}
-                {item.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Right Icons */}
-          <div className="flex items-center gap-1">
-            {/* Dark Mode Toggle */}
-            <button
-              onClick={toggle}
-              className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
+    <>
+      <motion.header
+        initial={false}
+        animate={{ y: hidden && !menuOpen ? "-110%" : "0%" }}
+        transition={{ duration: 0.5, ease: EASE }}
+        className="fixed inset-x-0 top-0 z-50"
+      >
+        <div
+          className={`transition-colors duration-500 ${
+            scrolled || menuOpen
+              ? "border-b border-line/10 bg-canvas/80 backdrop-blur-xl"
+              : "border-b border-transparent"
+          }`}
+        >
+          <nav className="container-x flex h-16 items-center justify-between md:h-20">
+            <Link
+              to={isAdmin && adminMode ? "/admin" : "/"}
+              className="display-tight relative z-10 flex items-baseline gap-2 text-xl md:text-2xl"
+              aria-label="Wheelz home"
             >
-              {dark ? (
-                <SunIcon className="w-4 h-4 text-amber-400" />
-              ) : (
-                <MoonIcon className="w-4 h-4 text-gray-600" />
+              Wheelz<span className="text-accent">.</span>
+              {isAdmin && adminMode && (
+                <span className="eyebrow !text-accent">Admin</span>
               )}
-            </button>
+            </Link>
 
-            {isAuthenticated ? (
-              <div className="relative">
-                <button
-                  onClick={() => setProfileOpen(!profileOpen)}
-                  className="flex items-center gap-1.5 pl-1.5 pr-2 py-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-all"
-                >
-                  <div className="w-7 h-7 bg-gradient-to-r from-amber-500 to-amber-600 rounded-full flex items-center justify-center text-xs font-bold text-white">
-                    {user?.name?.[0]?.toUpperCase() || "U"}
-                  </div>
-                  {isAdmin && (
-                    <span className="hidden sm:inline text-[10px] bg-red-500 text-white px-1 py-0.5 rounded-full">
-                      ADMIN
-                    </span>
-                  )}
-                </button>
-
-                {profileOpen && (
-                  <div className="absolute right-0 top-full mt-2 w-56 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 py-1 z-50">
-                    {/* User Info */}
-                    <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-700">
-                      <p className="text-sm font-medium text-gray-900 dark:text-white">
-                        {user?.name}
-                      </p>
-                      <p className="text-xs text-gray-500">{user?.email}</p>
-                      {isAdmin && (
-                        <span className="text-[10px] bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400 px-1.5 py-0.5 rounded-full mt-1 inline-block">
-                          Admin Access
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Admin: Switch to User View */}
-                    {isAdmin && adminMode && (
-                      <button
-                        onClick={() => {
-                          navigate("/dashboard");
-                          setProfileOpen(false);
-                        }}
-                        className="flex items-center gap-3 w-full px-4 py-2 text-sm hover:bg-amber-50 dark:hover:bg-amber-900/20 text-amber-600 dark:text-amber-400 border-b border-gray-100 dark:border-gray-700"
-                      >
-                        <ArrowLeftOnRectangleIcon className="w-4 h-4" />
-                        Switch to User View
-                      </button>
-                    )}
-
-                    {/* User: Switch to Admin View (if admin) */}
-                    {isAdmin && !adminMode && (
-                      <button
-                        onClick={() => {
-                          navigate("/admin");
-                          setProfileOpen(false);
-                        }}
-                        className="flex items-center gap-3 w-full px-4 py-2 text-sm hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 border-b border-gray-100 dark:border-gray-700"
-                      >
-                        <ShieldCheckIcon className="w-4 h-4" />
-                        Switch to Admin View
-                      </button>
-                    )}
-
-                    {/* User Menu Items */}
-                    {(!isAdmin || !adminMode) && (
-                      <>
-                        <button
-                          onClick={() => {
-                            navigate("/dashboard");
-                            setProfileOpen(false);
-                          }}
-                          className="flex items-center gap-3 w-full px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700"
-                        >
-                          <CalendarDaysIcon className="w-4 h-4" /> Dashboard
-                        </button>
-                        <button
-                          onClick={() => {
-                            navigate("/wishlist");
-                            setProfileOpen(false);
-                          }}
-                          className="flex items-center gap-3 w-full px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700"
-                        >
-                          <HeartIcon className="w-4 h-4" /> Wishlist
-                        </button>
-                        <button
-                          onClick={() => {
-                            navigate("/kyc");
-                            setProfileOpen(false);
-                          }}
-                          className="flex items-center gap-3 w-full px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700"
-                        >
-                          <ShieldCheckIcon className="w-4 h-4" /> KYC
-                        </button>
-                        <button
-                          onClick={() => {
-                            navigate("/trip-requests");
-                            setProfileOpen(false);
-                          }}
-                          className="flex items-center gap-3 w-full px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700"
-                        >
-                          <UserGroupIcon className="w-4 h-4 text-amber-500" />{" "}
-                          Trip Requests
-                        </button>
-                      </>
-                    )}
-
-                    {/* AI Trip Planner */}
-                    <button
-                      onClick={() => {
-                        navigate("/trip-planner");
-                        setProfileOpen(false);
-                      }}
-                      className="flex items-center gap-3 w-full px-4 py-2 text-sm hover:bg-amber-50 dark:hover:bg-amber-900/20 text-amber-600 dark:text-amber-400"
-                    >
-                      <SparklesIcon className="w-4 h-4" /> AI Trip Planner
-                      <span className="text-[10px] bg-amber-500 text-white px-1.5 py-0.5 rounded-full ml-auto">
-                        AI
-                      </span>
-                    </button>
-
-                    {/* Logout */}
-                    <button
-                      onClick={handleLogout}
-                      className="flex items-center gap-3 w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 border-t border-gray-100 dark:border-gray-700 mt-1 pt-2"
-                    >
-                      <ArrowRightOnRectangleIcon className="w-4 h-4" /> Logout
-                    </button>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="hidden md:flex items-center gap-2">
-                <button
-                  onClick={() => navigate("/login")}
-                  className="px-3 py-1.5 text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-amber-500"
-                >
-                  Login
-                </button>
-                <button
-                  onClick={() => navigate("/register")}
-                  className="px-3 py-1.5 bg-amber-500 text-white text-sm font-medium rounded-lg hover:bg-amber-600"
-                >
-                  Sign Up
-                </button>
-              </div>
-            )}
-
-            {/* Mobile Menu Button */}
-            <button
-              onClick={() => setMenuOpen(!menuOpen)}
-              className="p-1.5 md:hidden rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
-            >
-              {menuOpen ? (
-                <XMarkIcon className="w-5 h-5" />
-              ) : (
-                <Bars3Icon className="w-5 h-5" />
-              )}
-            </button>
-          </div>
-        </div>
-
-        {/* Mobile Menu */}
-        {menuOpen && (
-          <div className="md:hidden fixed top-14 left-0 right-0 bg-white dark:bg-gray-900 shadow-xl border-t border-gray-200 dark:border-gray-700 z-50 max-h-[calc(100vh-3.5rem)] overflow-y-auto">
-            <div className="py-2 px-4 space-y-1">
+            <ul className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-9 md:flex">
               {navItems.map((item) => (
-                <button
-                  key={item.to}
-                  onClick={() => {
-                    navigate(item.to);
-                    setMenuOpen(false);
-                  }}
-                  className={`flex items-center gap-3 w-full px-4 py-3 rounded-lg text-left text-sm font-medium ${
-                    item.highlight
-                      ? "border border-amber-500 text-amber-600 dark:text-amber-400"
-                      : "text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
-                  }`}
-                >
-                  <item.icon
-                    className={`w-5 h-5 ${item.highlight ? "text-amber-500" : "text-gray-400"}`}
-                  />
-                  {item.label}
-                </button>
+                <li key={item.to}>
+                  <Link
+                    to={item.to}
+                    aria-current={isActive(item.to) ? "page" : undefined}
+                    className={`link-underline text-sm font-medium transition-colors ${
+                      isActive(item.to) ? "text-ink" : "text-muted hover:text-ink"
+                    }`}
+                  >
+                    {item.label}
+                  </Link>
+                </li>
               ))}
+            </ul>
 
-              {/* AI Trip Planner */}
+            <div className="relative z-10 flex items-center gap-2 md:gap-3">
               <button
-                onClick={() => {
-                  navigate("/trip-planner");
-                  setMenuOpen(false);
-                }}
-                className="flex items-center gap-3 w-full px-4 py-3 rounded-lg text-left text-sm font-medium bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 mt-1"
+                onClick={toggle}
+                aria-label={dark ? "Switch to light theme" : "Switch to dark theme"}
+                className="grid h-10 w-10 place-items-center rounded-full border border-line/10 text-ink/80 transition-colors hover:border-ink hover:text-ink"
               >
-                <SparklesIcon className="w-5 h-5 text-amber-500" />
-                AI Trip Planner
-                <span className="text-[10px] bg-amber-500 text-white px-1.5 py-0.5 rounded-full ml-auto">
-                  AI
+                <AnimatePresence mode="wait" initial={false}>
+                  <motion.span
+                    key={dark ? "sun" : "moon"}
+                    initial={{ rotate: -90, opacity: 0 }}
+                    animate={{ rotate: 0, opacity: 1 }}
+                    exit={{ rotate: 90, opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    {dark ? <Sun size={16} /> : <Moon size={16} />}
+                  </motion.span>
+                </AnimatePresence>
+              </button>
+
+              {isAuthenticated ? (
+                <div className="relative">
+                  <button
+                    onClick={() => setProfileOpen((o) => !o)}
+                    aria-expanded={profileOpen}
+                    aria-label="Account menu"
+                    className="grid h-10 w-10 place-items-center rounded-full bg-ink font-display text-sm font-bold text-canvas"
+                  >
+                    {user?.name?.[0]?.toUpperCase() || "U"}
+                  </button>
+
+                  <AnimatePresence>
+                    {profileOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -8, scale: 0.98 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -8, scale: 0.98 }}
+                        transition={{ duration: 0.25, ease: EASE }}
+                        className="absolute right-0 top-full mt-3 w-64 origin-top-right overflow-hidden rounded-2xl border border-line/10 bg-surface p-1.5 shadow-2xl shadow-black/30"
+                      >
+                        <div className="px-3.5 py-3">
+                          <p className="truncate text-sm font-semibold">{user?.name}</p>
+                          <p className="truncate text-xs text-muted">{user?.email}</p>
+                        </div>
+                        <div className="h-px bg-line/10" />
+                        {profileItems.map(({ label, icon: Icon, to }) => (
+                          <button
+                            key={label}
+                            onClick={() => go(to)}
+                            className="flex w-full items-center gap-3 rounded-xl px-3.5 py-2.5 text-left text-sm text-ink/80 transition-colors hover:bg-raised hover:text-ink"
+                          >
+                            <Icon size={16} strokeWidth={1.75} />
+                            {label}
+                          </button>
+                        ))}
+                        <div className="my-1 h-px bg-line/10" />
+                        <button
+                          onClick={handleLogout}
+                          className="flex w-full items-center gap-3 rounded-xl px-3.5 py-2.5 text-left text-sm text-red-500 transition-colors hover:bg-red-500/10"
+                        >
+                          <LogOut size={16} strokeWidth={1.75} />
+                          Log out
+                        </button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              ) : (
+                <div className="hidden items-center gap-5 md:flex">
+                  <Link to="/login" className="link-underline text-sm font-medium">
+                    Log in
+                  </Link>
+                  <Magnetic>
+                    <Link to="/register" className="btn-primary !py-2.5">
+                      Get started
+                      <ArrowUpRight size={16} />
+                    </Link>
+                  </Magnetic>
+                </div>
+              )}
+
+              {!adminMode && (
+                <Link
+                  to="/vendor/register"
+                  className="hidden text-sm font-medium text-muted transition-colors hover:text-ink lg:inline"
+                >
+                  List your vehicle
+                </Link>
+              )}
+
+              <button
+                onClick={() => setMenuOpen((o) => !o)}
+                aria-label={menuOpen ? "Close menu" : "Open menu"}
+                aria-expanded={menuOpen}
+                className="grid h-10 w-10 place-items-center rounded-full border border-line/10 md:hidden"
+              >
+                <span className="relative block h-2.5 w-4">
+                  <span
+                    className={`absolute left-0 h-px w-4 bg-ink transition-transform duration-500 ease-out-expo ${
+                      menuOpen ? "top-1/2 rotate-45" : "top-0"
+                    }`}
+                  />
+                  <span
+                    className={`absolute left-0 h-px w-4 bg-ink transition-transform duration-500 ease-out-expo ${
+                      menuOpen ? "top-1/2 -rotate-45" : "bottom-0"
+                    }`}
+                  />
                 </span>
               </button>
-
-              {/* Admin Switch */}
-              {isAdmin && (
-                <button
-                  onClick={() => {
-                    adminMode ? navigate("/dashboard") : navigate("/admin");
-                    setMenuOpen(false);
-                  }}
-                  className="flex items-center gap-3 w-full px-4 py-3 rounded-lg text-left text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 mt-1"
-                >
-                  <ArrowLeftOnRectangleIcon className="w-5 h-5" />
-                  {adminMode ? "Switch to User View" : "Switch to Admin View"}
-                </button>
-              )}
-
-              <div className="border-t border-gray-200 dark:border-gray-700 pt-2 mt-2">
-                {!isAuthenticated ? (
-                  <div className="flex gap-3 px-1">
-                    <button
-                      onClick={() => {
-                        navigate("/login");
-                        setMenuOpen(false);
-                      }}
-                      className="flex-1 py-2.5 text-sm font-medium border border-gray-300 dark:border-gray-600 rounded-lg"
-                    >
-                      Login
-                    </button>
-                    <button
-                      onClick={() => {
-                        navigate("/register");
-                        setMenuOpen(false);
-                      }}
-                      className="flex-1 py-2.5 text-sm font-medium bg-amber-500 text-white rounded-lg"
-                    >
-                      Sign Up
-                    </button>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                    <div className="w-10 h-10 bg-gradient-to-r from-amber-500 to-amber-600 rounded-full flex items-center justify-center text-white font-bold">
-                      {user?.name?.[0]?.toUpperCase() || "U"}
-                    </div>
-                    <div>
-                      <p className="font-medium text-gray-900 dark:text-white">
-                        {user?.name}
-                      </p>
-                      <p className="text-xs text-gray-500">{user?.email}</p>
-                    </div>
-                  </div>
-                )}
-              </div>
             </div>
-          </div>
+          </nav>
+        </div>
+      </motion.header>
+
+      <AnimatePresence>
+        {menuOpen && (
+          <motion.div
+            initial={{ clipPath: "inset(0 0 100% 0)" }}
+            animate={{ clipPath: "inset(0 0 0% 0)" }}
+            exit={{ clipPath: "inset(0 0 100% 0)" }}
+            transition={{ duration: 0.7, ease: EASE }}
+            className="fixed inset-0 z-40 flex flex-col justify-between bg-canvas px-5 pb-8 pt-24 md:hidden"
+          >
+            <ul className="space-y-1">
+              {[{ to: "/", label: "Home" }, ...navItems, { to: "/vendor/register", label: "List vehicle" }].map(
+                (item, i) => (
+                  <li key={item.to} className="overflow-hidden">
+                    <motion.button
+                      initial={{ y: "100%" }}
+                      animate={{ y: "0%" }}
+                      transition={{ duration: 0.8, ease: EASE, delay: 0.15 + i * 0.05 }}
+                      onClick={() => go(item.to)}
+                      className={`display block text-[13vw] leading-[1.05] ${
+                        isActive(item.to) ? "text-accent" : "text-ink"
+                      }`}
+                    >
+                      {item.label}
+                    </motion.button>
+                  </li>
+                ),
+              )}
+            </ul>
+
+            {!isAuthenticated ? (
+              <div className="grid grid-cols-2 gap-3">
+                <button onClick={() => go("/login")} className="btn-ghost">
+                  Log in
+                </button>
+                <button onClick={() => go("/register")} className="btn-primary">
+                  Get started
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center justify-between border-t border-line/10 pt-5">
+                <div>
+                  <p className="text-sm font-semibold">{user?.name}</p>
+                  <p className="text-xs text-muted">{user?.email}</p>
+                </div>
+                <button onClick={handleLogout} className="chip">
+                  Log out
+                </button>
+              </div>
+            )}
+          </motion.div>
         )}
-      </div>
-    </nav>
+      </AnimatePresence>
+    </>
   );
 }
