@@ -1,14 +1,14 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import {
-  PencilIcon,
-  TrashIcon,
-  ChartBarIcon,
-  EyeIcon,
-  CheckCircleIcon,
-  XCircleIcon,
-  TruckIcon,
-} from "@heroicons/react/24/outline";
+  Pencil as PencilIcon,
+  Trash2 as TrashIcon,
+  BarChart3 as ChartBarIcon,
+  Eye as EyeIcon,
+  CheckCircle2 as CheckCircleIcon,
+  XCircle as XCircleIcon,
+  Truck as TruckIcon,
+} from "lucide-react";
 import { vehicleAPI } from "../../services/api";
 import toast from "react-hot-toast";
 
@@ -71,7 +71,7 @@ export default function AdminVehicleCard({ vehicle, onVehicleUpdate }) {
   ];
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100 dark:border-gray-700">
+    <div className="bg-surface rounded-[24px] overflow-hidden transition-all duration-300 border border-line/10">
       {/* Image Section */}
       <div className="relative h-48 overflow-hidden">
         <img
@@ -86,9 +86,9 @@ export default function AdminVehicleCard({ vehicle, onVehicleUpdate }) {
         {/* Status Badge */}
         <div className="absolute top-3 left-3">
           <span
-            className={`px-2 py-1 rounded-lg text-xs font-semibold ${
+            className={`px-2 py-1 rounded-xl text-xs font-semibold ${
               vehicle.isAvailable
-                ? "bg-green-500 text-white"
+                ? "bg-ink text-canvas"
                 : "bg-red-500 text-white"
             }`}
           >
@@ -99,7 +99,7 @@ export default function AdminVehicleCard({ vehicle, onVehicleUpdate }) {
         {/* Quick Stats Toggle */}
         <button
           onClick={() => setShowStats(!showStats)}
-          className="absolute bottom-3 right-3 p-2 bg-black/50 backdrop-blur-sm rounded-lg text-white hover:bg-black/70 transition"
+          className="absolute bottom-3 right-3 p-2 bg-black/50 backdrop-blur-sm rounded-xl text-white hover:bg-black/70 transition"
         >
           <ChartBarIcon className="w-4 h-4" />
         </button>
@@ -109,22 +109,22 @@ export default function AdminVehicleCard({ vehicle, onVehicleUpdate }) {
       <div className="p-4">
         <div className="flex items-start justify-between mb-2">
           <div>
-            <h3 className="font-bold text-lg text-gray-900 dark:text-white">
+            <h3 className="display-tight text-lg text-ink">
               {vehicle.name}
             </h3>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-muted">
               {vehicle.brand} {vehicle.model} • {vehicle.year}
             </p>
           </div>
           <div className="text-right">
-            <p className="text-2xl font-bold text-orange-500">
+            <p className="display text-2xl">
               ₹{vehicle.basePrice.toLocaleString()}
             </p>
-            <p className="text-xs text-gray-500">/day</p>
+            <p className="text-xs text-muted">/day</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 text-sm text-gray-500 mb-3">
+        <div className="flex items-center gap-2 text-sm text-muted mb-3">
           <span>{vehicle.city}</span>
           <span>•</span>
           <span>
@@ -135,14 +135,14 @@ export default function AdminVehicleCard({ vehicle, onVehicleUpdate }) {
 
         {/* Stats Popup */}
         {showStats && (
-          <div className="mb-4 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
+          <div className="mb-4 p-3 bg-raised/50 rounded-xl">
             <h4 className="font-semibold text-sm mb-2">Quick Stats</h4>
             <div className="grid grid-cols-3 gap-2">
               {stats.map((stat, i) => (
                 <div key={i} className="text-center">
-                  <stat.icon className="w-4 h-4 mx-auto text-gray-500 mb-1" />
+                  <stat.icon className="w-4 h-4 mx-auto text-muted mb-1" />
                   <p className="text-xs font-semibold">{stat.value}</p>
-                  <p className="text-xs text-gray-500">{stat.label}</p>
+                  <p className="text-xs text-muted">{stat.label}</p>
                 </div>
               ))}
             </div>
@@ -153,7 +153,7 @@ export default function AdminVehicleCard({ vehicle, onVehicleUpdate }) {
         <div className="grid grid-cols-2 gap-2 mt-3">
           <Link
             to={`/admin/vehicles/edit/${vehicle._id}`}
-            className="flex items-center justify-center gap-2 px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition text-sm font-medium"
+            className="flex items-center justify-center gap-2 px-3 py-2 bg-ink text-canvas hover:bg-accent hover:text-accent-ink rounded-xl transition text-sm font-medium"
           >
             <PencilIcon className="w-4 h-4" />
             Edit
@@ -162,7 +162,7 @@ export default function AdminVehicleCard({ vehicle, onVehicleUpdate }) {
           <button
             onClick={handleDelete}
             disabled={loading}
-            className="flex items-center justify-center gap-2 px-3 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition text-sm font-medium disabled:opacity-50"
+            className="flex items-center justify-center gap-2 px-3 py-2 bg-red-500 hover:bg-red-600 text-white rounded-xl transition text-sm font-medium disabled:opacity-50"
           >
             <TrashIcon className="w-4 h-4" />
             Delete
@@ -171,7 +171,7 @@ export default function AdminVehicleCard({ vehicle, onVehicleUpdate }) {
           <button
             onClick={handleToggleAvailability}
             disabled={loading}
-            className="flex items-center justify-center gap-2 px-3 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg transition text-sm font-medium col-span-2"
+            className="flex items-center justify-center gap-2 px-3 py-2 bg-accent hover:bg-ink hover:text-canvas text-accent-ink rounded-xl transition text-sm font-medium col-span-2"
           >
             {vehicle.isAvailable ? (
               <>

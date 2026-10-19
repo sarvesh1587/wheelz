@@ -18,20 +18,20 @@ import {
   Legend,
 } from "recharts";
 import {
-  ArrowUpIcon,
-  ArrowDownIcon,
-  ArrowPathIcon,
-  ArrowDownTrayIcon,
-  FunnelIcon,
-  MagnifyingGlassIcon,
-  CalendarDaysIcon,
-  ChevronDownIcon,
-  BoltIcon,
-  TruckIcon,
-  UsersIcon,
-  BanknotesIcon,
-  ChartBarIcon,
-} from "@heroicons/react/24/outline";
+  ArrowUp as ArrowUpIcon,
+  ArrowDown as ArrowDownIcon,
+  RefreshCw as ArrowPathIcon,
+  Download as ArrowDownTrayIcon,
+  Filter as FunnelIcon,
+  Search as MagnifyingGlassIcon,
+  CalendarDays as CalendarDaysIcon,
+  ChevronDown as ChevronDownIcon,
+  Zap as BoltIcon,
+  Truck as TruckIcon,
+  Users as UsersIcon,
+  Banknote as BanknotesIcon,
+  BarChart3 as ChartBarIcon,
+} from "lucide-react";
 
 // ─── Mock Data ───────────────────────────────────────────────────────────────
 
@@ -61,11 +61,11 @@ const WEEKLY_BOOKINGS = [
 ];
 
 const VEHICLE_CATEGORIES = [
-  { name: "Hatchback", value: 31, color: "#f59e0b" },
-  { name: "SUV", value: 28, color: "#6366f1" },
+  { name: "Hatchback", value: 31, color: "rgb(var(--accent))" },
+  { name: "SUV", value: 28, color: "rgb(var(--ink))" },
   { name: "Sedan", value: 19, color: "#10b981" },
-  { name: "Bike", value: 14, color: "#f43f5e" },
-  { name: "Scooter", value: 8, color: "#8b5cf6" },
+  { name: "Bike", value: 14, color: "#ef4444" },
+  { name: "Scooter", value: 8, color: "rgb(var(--muted))" },
 ];
 
 const USER_GROWTH = [
@@ -245,7 +245,7 @@ const stagger = {
 
 // ─── Sparkline ───────────────────────────────────────────────────────────────
 
-function Sparkline({ data, color = "#f59e0b" }) {
+function Sparkline({ data, color = "rgb(var(--accent))" }) {
   const max = Math.max(...data);
   const min = Math.min(...data);
   const w = 80,
@@ -292,19 +292,19 @@ function GlassTooltip({ active, payload, label, prefix = "₹" }) {
   return (
     <div
       style={{
-        background: "rgba(15,23,42,0.92)",
-        border: "1px solid rgba(245,158,11,0.2)",
+        background: "rgb(var(--surface) / 0.95)",
+        border: "1px solid rgb(var(--accent) / 0.2)",
         borderRadius: 12,
         padding: "10px 14px",
         backdropFilter: "blur(12px)",
       }}
     >
-      <p style={{ color: "#94a3b8", fontSize: 11, marginBottom: 4 }}>{label}</p>
+      <p style={{ color: "rgb(var(--muted))", fontSize: 11, marginBottom: 4 }}>{label}</p>
       {payload.map((p, i) => (
         <p
           key={i}
           style={{
-            color: p.color || "#f59e0b",
+            color: p.color || "rgb(var(--accent))",
             fontSize: 13,
             fontWeight: 600,
             margin: "2px 0",
@@ -328,9 +328,9 @@ function StatusBadge({ status }) {
       label: "Completed",
     },
     pending: {
-      bg: "rgba(245,158,11,0.12)",
-      color: "#f59e0b",
-      dot: "#f59e0b",
+      bg: "rgb(var(--accent) / 0.12)",
+      color: "rgb(var(--accent))",
+      dot: "rgb(var(--accent))",
       label: "Pending",
     },
     failed: {
@@ -379,15 +379,15 @@ function KPICard({
   growth,
   sparkData,
   icon: Icon,
-  accent = "#f59e0b",
+  accent = "rgb(var(--accent))",
 }) {
   const up = growth >= 0;
   return (
     <motion.div
       variants={stagger.item}
       style={{
-        background: "rgba(255,255,255,0.03)",
-        border: "1px solid rgba(255,255,255,0.07)",
+        background: "rgb(var(--line) / 0.05)",
+        border: "1px solid rgb(var(--line) / 0.11)",
         borderRadius: 16,
         padding: "20px 22px",
         backdropFilter: "blur(8px)",
@@ -430,7 +430,7 @@ function KPICard({
       </div>
       <p
         style={{
-          color: "#94a3b8",
+          color: "rgb(var(--muted))",
           fontSize: 12,
           marginBottom: 4,
           fontWeight: 500,
@@ -442,7 +442,7 @@ function KPICard({
       </p>
       <p
         style={{
-          color: "#f1f5f9",
+          color: "rgb(var(--ink))",
           fontSize: 26,
           fontWeight: 700,
           letterSpacing: "-0.02em",
@@ -469,7 +469,7 @@ function KPICard({
           )}
           {Math.abs(growth)}%
         </span>
-        <span style={{ color: "#475569", fontSize: 11 }}>{sub}</span>
+        <span style={{ color: "rgb(var(--muted))", fontSize: 11 }}>{sub}</span>
       </div>
     </motion.div>
   );
@@ -481,12 +481,12 @@ function SectionHeader({ title, sub }) {
   return (
     <div style={{ marginBottom: 16 }}>
       <h3
-        style={{ color: "#f1f5f9", fontSize: 15, fontWeight: 600, margin: 0 }}
+        style={{ color: "rgb(var(--ink))", fontSize: 15, fontWeight: 600, margin: 0 }}
       >
         {title}
       </h3>
       {sub && (
-        <p style={{ color: "#475569", fontSize: 12, margin: "3px 0 0" }}>
+        <p style={{ color: "rgb(var(--muted))", fontSize: 12, margin: "3px 0 0" }}>
           {sub}
         </p>
       )}
@@ -500,8 +500,8 @@ function ChartCard({ children, style = {} }) {
   return (
     <div
       style={{
-        background: "rgba(255,255,255,0.02)",
-        border: "1px solid rgba(255,255,255,0.06)",
+        background: "rgb(var(--line) / 0.03)",
+        border: "1px solid rgb(var(--line) / 0.10)",
         borderRadius: 16,
         padding: "20px 18px",
         ...style,
@@ -585,7 +585,7 @@ export default function AdminReports() {
       <div
         style={{
           minHeight: "100vh",
-          background: "#0B1120",
+          background: "rgb(var(--canvas))",
           padding: "32px 24px",
         }}
       >
@@ -594,7 +594,7 @@ export default function AdminReports() {
             style={{
               height: 32,
               width: 200,
-              background: "rgba(255,255,255,0.06)",
+              background: "rgb(var(--line) / 0.10)",
               borderRadius: 8,
               marginBottom: 32,
               animation: "pulse 1.5s infinite",
@@ -613,7 +613,7 @@ export default function AdminReports() {
                 key={i}
                 style={{
                   height: 130,
-                  background: "rgba(255,255,255,0.04)",
+                  background: "rgb(var(--line) / 0.06)",
                   borderRadius: 16,
                   animation: "pulse 1.5s infinite",
                 }}
@@ -633,7 +633,7 @@ export default function AdminReports() {
                 key={i}
                 style={{
                   height: 240,
-                  background: "rgba(255,255,255,0.04)",
+                  background: "rgb(var(--line) / 0.06)",
                   borderRadius: 16,
                   animation: "pulse 1.5s infinite",
                 }}
@@ -650,16 +650,16 @@ export default function AdminReports() {
     <div
       style={{
         minHeight: "100vh",
-        background: "#0B1120",
-        padding: "32px 16px",
-        fontFamily: "'Inter', system-ui, sans-serif",
+        background: "rgb(var(--canvas))",
+        padding: "128px 20px 96px",
+        fontFamily: "'Inter Tight', system-ui, sans-serif",
       }}
     >
       <style>{`
         * { box-sizing: border-box; }
         ::-webkit-scrollbar { width: 4px; height: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: rgba(245,158,11,0.3); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: rgb(var(--accent) / 0.3); border-radius: 4px; }
         @keyframes spin { to { transform: rotate(360deg); } }
         @media (max-width: 900px) {
           .kpi-grid { grid-template-columns: repeat(2, 1fr) !important; }
@@ -715,22 +715,12 @@ export default function AdminReports() {
               >
                 Live
               </span>
-              <span style={{ color: "#334155", fontSize: 11 }}>
+              <span style={{ color: "rgb(var(--muted))", fontSize: 11, fontFamily: "'JetBrains Mono', monospace" }}>
                 Updated {lastRefresh.toLocaleTimeString()}
               </span>
             </div>
-            <h1
-              style={{
-                color: "#f1f5f9",
-                fontSize: 24,
-                fontWeight: 700,
-                margin: 0,
-                letterSpacing: "-0.02em",
-              }}
-            >
-              Platform Analytics
-            </h1>
-            <p style={{ color: "#475569", fontSize: 13, margin: "4px 0 0" }}>
+            <h1 className="display mt-4 text-5xl text-ink md:text-7xl">Analytics.</h1>
+            <p className="eyebrow mt-4" style={{ margin: "16px 0 0" }}>
               Wheelz · India Operations
             </p>
           </div>
@@ -751,17 +741,17 @@ export default function AdminReports() {
                   display: "flex",
                   alignItems: "center",
                   gap: 7,
-                  background: "rgba(255,255,255,0.04)",
-                  border: "1px solid rgba(255,255,255,0.08)",
+                  background: "rgb(var(--line) / 0.06)",
+                  border: "1px solid rgb(var(--line) / 0.13)",
                   borderRadius: 10,
                   padding: "8px 14px",
-                  color: "#cbd5e1",
+                  color: "rgb(var(--ink))",
                   fontSize: 13,
                   cursor: "pointer",
                 }}
               >
                 <CalendarDaysIcon
-                  style={{ width: 15, height: 15, color: "#f59e0b" }}
+                  style={{ width: 15, height: 15, color: "rgb(var(--accent))" }}
                 />
                 {dateRange}
                 <ChevronDownIcon
@@ -778,8 +768,8 @@ export default function AdminReports() {
                       position: "absolute",
                       top: "calc(100% + 6px)",
                       right: 0,
-                      background: "#0f172a",
-                      border: "1px solid rgba(255,255,255,0.08)",
+                      background: "rgb(var(--canvas))",
+                      border: "1px solid rgb(var(--line) / 0.13)",
                       borderRadius: 10,
                       padding: 6,
                       zIndex: 50,
@@ -803,9 +793,9 @@ export default function AdminReports() {
                           cursor: "pointer",
                           background:
                             dateRange === r
-                              ? "rgba(245,158,11,0.12)"
+                              ? "rgb(var(--accent) / 0.12)"
                               : "transparent",
-                          color: dateRange === r ? "#f59e0b" : "#94a3b8",
+                          color: dateRange === r ? "rgb(var(--accent))" : "rgb(var(--muted))",
                           border: "none",
                         }}
                       >
@@ -824,11 +814,11 @@ export default function AdminReports() {
                 display: "flex",
                 alignItems: "center",
                 gap: 6,
-                background: "rgba(255,255,255,0.04)",
-                border: "1px solid rgba(255,255,255,0.08)",
+                background: "rgb(var(--line) / 0.06)",
+                border: "1px solid rgb(var(--line) / 0.13)",
                 borderRadius: 10,
                 padding: "8px 12px",
-                color: "#94a3b8",
+                color: "rgb(var(--muted))",
                 fontSize: 13,
                 cursor: "pointer",
               }}
@@ -850,11 +840,11 @@ export default function AdminReports() {
                 display: "flex",
                 alignItems: "center",
                 gap: 6,
-                background: "rgba(245,158,11,0.1)",
-                border: "1px solid rgba(245,158,11,0.25)",
+                background: "rgb(var(--accent) / 0.1)",
+                border: "1px solid rgb(var(--accent) / 0.25)",
                 borderRadius: 10,
                 padding: "8px 14px",
-                color: "#f59e0b",
+                color: "rgb(var(--accent))",
                 fontSize: 13,
                 fontWeight: 600,
                 cursor: "pointer",
@@ -886,7 +876,7 @@ export default function AdminReports() {
             growth={28.4}
             sparkData={SPARKLINES.revenue}
             icon={BanknotesIcon}
-            accent="#f59e0b"
+            accent="rgb(var(--accent))"
           />
           <KPICard
             label="Total Bookings"
@@ -895,7 +885,7 @@ export default function AdminReports() {
             growth={19.2}
             sparkData={SPARKLINES.bookings}
             icon={ChartBarIcon}
-            accent="#6366f1"
+            accent="rgb(var(--ink))"
           />
           <KPICard
             label="Active Vehicles"
@@ -913,7 +903,7 @@ export default function AdminReports() {
             growth={-3.8}
             sparkData={SPARKLINES.users}
             icon={UsersIcon}
-            accent="#f43f5e"
+            accent="#ef4444"
           />
         </motion.div>
 
@@ -943,24 +933,24 @@ export default function AdminReports() {
               >
                 <defs>
                   <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.25} />
-                    <stop offset="95%" stopColor="#f59e0b" stopOpacity={0} />
+                    <stop offset="5%" stopColor="rgb(var(--accent))" stopOpacity={0.25} />
+                    <stop offset="95%" stopColor="rgb(var(--accent))" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid
                   strokeDasharray="3 3"
-                  stroke="rgba(255,255,255,0.04)"
+                  stroke="rgb(var(--line) / 0.06)"
                   vertical={false}
                 />
                 <XAxis
                   dataKey="month"
-                  tick={{ fill: "#475569", fontSize: 11 }}
+                  tick={{ fill: "rgb(var(--muted))", fontSize: 11 }}
                   axisLine={false}
                   tickLine={false}
                 />
                 <YAxis
                   tickFormatter={(v) => fmt(v)}
-                  tick={{ fill: "#475569", fontSize: 10 }}
+                  tick={{ fill: "rgb(var(--muted))", fontSize: 10 }}
                   axisLine={false}
                   tickLine={false}
                   width={48}
@@ -970,11 +960,11 @@ export default function AdminReports() {
                   type="monotone"
                   dataKey="revenue"
                   name="Revenue"
-                  stroke="#f59e0b"
+                  stroke="rgb(var(--accent))"
                   strokeWidth={2}
                   fill="url(#revGrad)"
                   dot={false}
-                  activeDot={{ r: 4, fill: "#f59e0b", strokeWidth: 0 }}
+                  activeDot={{ r: 4, fill: "rgb(var(--accent))", strokeWidth: 0 }}
                 />
               </AreaChart>
             </ResponsiveContainer>
@@ -995,17 +985,17 @@ export default function AdminReports() {
               >
                 <CartesianGrid
                   strokeDasharray="3 3"
-                  stroke="rgba(255,255,255,0.04)"
+                  stroke="rgb(var(--line) / 0.06)"
                   vertical={false}
                 />
                 <XAxis
                   dataKey="day"
-                  tick={{ fill: "#475569", fontSize: 11 }}
+                  tick={{ fill: "rgb(var(--muted))", fontSize: 11 }}
                   axisLine={false}
                   tickLine={false}
                 />
                 <YAxis
-                  tick={{ fill: "#475569", fontSize: 10 }}
+                  tick={{ fill: "rgb(var(--muted))", fontSize: 10 }}
                   axisLine={false}
                   tickLine={false}
                   width={28}
@@ -1014,13 +1004,13 @@ export default function AdminReports() {
                 <Bar
                   dataKey="cars"
                   name="Cars"
-                  fill="#f59e0b"
+                  fill="rgb(var(--accent))"
                   radius={[3, 3, 0, 0]}
                 />
                 <Bar
                   dataKey="bikes"
                   name="Bikes"
-                  fill="#6366f1"
+                  fill="rgb(var(--ink))"
                   radius={[3, 3, 0, 0]}
                 />
                 <Bar
@@ -1033,8 +1023,8 @@ export default function AdminReports() {
             </ResponsiveContainer>
             <div style={{ display: "flex", gap: 14, marginTop: 10 }}>
               {[
-                ["Cars", "#f59e0b"],
-                ["Bikes", "#6366f1"],
+                ["Cars", "rgb(var(--accent))"],
+                ["Bikes", "rgb(var(--ink))"],
                 ["Rideshare", "#10b981"],
               ].map(([l, c]) => (
                 <div
@@ -1049,7 +1039,7 @@ export default function AdminReports() {
                       background: c,
                     }}
                   />
-                  <span style={{ color: "#475569", fontSize: 11 }}>{l}</span>
+                  <span style={{ color: "rgb(var(--muted))", fontSize: 11 }}>{l}</span>
                 </div>
               ))}
             </div>
@@ -1117,12 +1107,12 @@ export default function AdminReports() {
                         flexShrink: 0,
                       }}
                     />
-                    <span style={{ color: "#94a3b8", fontSize: 12, flex: 1 }}>
+                    <span style={{ color: "rgb(var(--muted))", fontSize: 12, flex: 1 }}>
                       {cat.name}
                     </span>
                     <span
                       style={{
-                        color: "#f1f5f9",
+                        color: "rgb(var(--ink))",
                         fontSize: 12,
                         fontWeight: 600,
                       }}
@@ -1148,23 +1138,23 @@ export default function AdminReports() {
               >
                 <defs>
                   <linearGradient id="userGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#6366f1" stopOpacity={0.2} />
-                    <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
+                    <stop offset="5%" stopColor="rgb(var(--ink))" stopOpacity={0.2} />
+                    <stop offset="95%" stopColor="rgb(var(--ink))" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid
                   strokeDasharray="3 3"
-                  stroke="rgba(255,255,255,0.04)"
+                  stroke="rgb(var(--line) / 0.06)"
                   vertical={false}
                 />
                 <XAxis
                   dataKey="month"
-                  tick={{ fill: "#475569", fontSize: 11 }}
+                  tick={{ fill: "rgb(var(--muted))", fontSize: 11 }}
                   axisLine={false}
                   tickLine={false}
                 />
                 <YAxis
-                  tick={{ fill: "#475569", fontSize: 10 }}
+                  tick={{ fill: "rgb(var(--muted))", fontSize: 10 }}
                   axisLine={false}
                   tickLine={false}
                   width={36}
@@ -1174,10 +1164,10 @@ export default function AdminReports() {
                   type="monotone"
                   dataKey="users"
                   name="Users"
-                  stroke="#6366f1"
+                  stroke="rgb(var(--ink))"
                   strokeWidth={2}
                   dot={false}
-                  activeDot={{ r: 4, fill: "#6366f1", strokeWidth: 0 }}
+                  activeDot={{ r: 4, fill: "rgb(var(--ink))", strokeWidth: 0 }}
                 />
               </LineChart>
             </ResponsiveContainer>
@@ -1217,7 +1207,7 @@ export default function AdminReports() {
                       transform: "translateY(-50%)",
                       width: 14,
                       height: 14,
-                      color: "#475569",
+                      color: "rgb(var(--muted))",
                     }}
                   />
                   <input
@@ -1225,11 +1215,11 @@ export default function AdminReports() {
                     onChange={(e) => setSearch(e.target.value)}
                     placeholder="Search..."
                     style={{
-                      background: "rgba(255,255,255,0.04)",
-                      border: "1px solid rgba(255,255,255,0.08)",
+                      background: "rgb(var(--line) / 0.06)",
+                      border: "1px solid rgb(var(--line) / 0.13)",
                       borderRadius: 8,
                       padding: "7px 10px 7px 30px",
-                      color: "#cbd5e1",
+                      color: "rgb(var(--ink))",
                       fontSize: 12,
                       outline: "none",
                       width: 180,
@@ -1252,13 +1242,13 @@ export default function AdminReports() {
                         textTransform: "capitalize",
                         background:
                           statusFilter === s
-                            ? "rgba(245,158,11,0.12)"
+                            ? "rgb(var(--accent) / 0.12)"
                             : "transparent",
                         borderColor:
                           statusFilter === s
-                            ? "rgba(245,158,11,0.3)"
-                            : "rgba(255,255,255,0.07)",
-                        color: statusFilter === s ? "#f59e0b" : "#475569",
+                            ? "rgb(var(--accent) / 0.3)"
+                            : "rgb(var(--line) / 0.11)",
+                        color: statusFilter === s ? "rgb(var(--accent))" : "rgb(var(--muted))",
                       }}
                     >
                       {s}
@@ -1277,7 +1267,7 @@ export default function AdminReports() {
               >
                 <thead>
                   <tr
-                    style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}
+                    style={{ borderBottom: "1px solid rgb(var(--line) / 0.10)" }}
                   >
                     {[
                       "Transaction ID",
@@ -1293,7 +1283,7 @@ export default function AdminReports() {
                         style={{
                           textAlign: "left",
                           padding: "8px 12px",
-                          color: "#334155",
+                          color: "rgb(var(--muted))",
                           fontSize: 11,
                           fontWeight: 600,
                           textTransform: "uppercase",
@@ -1314,7 +1304,7 @@ export default function AdminReports() {
                         style={{
                           textAlign: "center",
                           padding: 40,
-                          color: "#334155",
+                          color: "rgb(var(--muted))",
                           fontSize: 13,
                         }}
                       >
@@ -1326,12 +1316,12 @@ export default function AdminReports() {
                       <tr
                         key={t.id}
                         style={{
-                          borderBottom: "1px solid rgba(255,255,255,0.04)",
+                          borderBottom: "1px solid rgb(var(--line) / 0.06)",
                           transition: "background 0.15s",
                         }}
                         onMouseEnter={(e) =>
                           (e.currentTarget.style.background =
-                            "rgba(255,255,255,0.025)")
+                            "rgb(var(--line) / 0.04)")
                         }
                         onMouseLeave={(e) =>
                           (e.currentTarget.style.background = "transparent")
@@ -1340,7 +1330,7 @@ export default function AdminReports() {
                         <td
                           style={{
                             padding: "11px 12px",
-                            color: "#64748b",
+                            color: "rgb(var(--muted))",
                             fontFamily: "monospace",
                             fontSize: 11,
                             whiteSpace: "nowrap",
@@ -1351,19 +1341,19 @@ export default function AdminReports() {
                         <td
                           style={{
                             padding: "11px 12px",
-                            color: "#e2e8f0",
+                            color: "rgb(var(--ink))",
                             fontWeight: 500,
                           }}
                         >
                           {t.customer}
                         </td>
-                        <td style={{ padding: "11px 12px", color: "#94a3b8" }}>
+                        <td style={{ padding: "11px 12px", color: "rgb(var(--muted))" }}>
                           {t.vehicle}
                         </td>
                         <td
                           style={{
                             padding: "11px 12px",
-                            color: "#f59e0b",
+                            color: "rgb(var(--accent))",
                             fontWeight: 600,
                           }}
                         >
@@ -1372,13 +1362,13 @@ export default function AdminReports() {
                         <td
                           style={{
                             padding: "11px 12px",
-                            color: "#64748b",
+                            color: "rgb(var(--muted))",
                             whiteSpace: "nowrap",
                           }}
                         >
                           {t.date}
                         </td>
-                        <td style={{ padding: "11px 12px", color: "#64748b" }}>
+                        <td style={{ padding: "11px 12px", color: "rgb(var(--muted))" }}>
                           {t.city}
                         </td>
                         <td style={{ padding: "11px 12px" }}>
@@ -1425,7 +1415,7 @@ export default function AdminReports() {
                     >
                       <span
                         style={{
-                          color: "#334155",
+                          color: "rgb(var(--muted))",
                           fontSize: 11,
                           fontWeight: 700,
                           width: 16,
@@ -1435,7 +1425,7 @@ export default function AdminReports() {
                       </span>
                       <span
                         style={{
-                          color: "#e2e8f0",
+                          color: "rgb(var(--ink))",
                           fontSize: 13,
                           fontWeight: 500,
                         }}
@@ -1446,7 +1436,7 @@ export default function AdminReports() {
                     <div style={{ textAlign: "right" }}>
                       <span
                         style={{
-                          color: "#f59e0b",
+                          color: "rgb(var(--accent))",
                           fontSize: 12,
                           fontWeight: 600,
                         }}
@@ -1455,7 +1445,7 @@ export default function AdminReports() {
                       </span>
                       <span
                         style={{
-                          color: "#334155",
+                          color: "rgb(var(--muted))",
                           fontSize: 11,
                           marginLeft: 6,
                         }}
@@ -1467,7 +1457,7 @@ export default function AdminReports() {
                   <div
                     style={{
                       height: 4,
-                      background: "rgba(255,255,255,0.06)",
+                      background: "rgb(var(--line) / 0.10)",
                       borderRadius: 4,
                       overflow: "hidden",
                     }}
@@ -1478,7 +1468,7 @@ export default function AdminReports() {
                       transition={{ delay: 0.7 + i * 0.08, duration: 0.5 }}
                       style={{
                         height: "100%",
-                        background: `linear-gradient(90deg, #f59e0b, #fbbf24)`,
+                        background: `linear-gradient(90deg, rgb(var(--accent)), rgb(var(--accent)))`,
                         borderRadius: 4,
                       }}
                     />
@@ -1510,13 +1500,13 @@ export default function AdminReports() {
                           width: 28,
                           height: 28,
                           borderRadius: "50%",
-                          background: `rgba(${[245, 99, 99, 16][i % 4]},158,11,0.15)`,
+                          background: `rgb(var(--accent) / 0.12)`,
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
                           fontSize: 11,
                           fontWeight: 700,
-                          color: "#f59e0b",
+                          color: "rgb(var(--accent))",
                         }}
                       >
                         {u.name[0]}
@@ -1524,7 +1514,7 @@ export default function AdminReports() {
                       <div>
                         <p
                           style={{
-                            color: "#e2e8f0",
+                            color: "rgb(var(--ink))",
                             fontSize: 12,
                             fontWeight: 500,
                             margin: 0,
@@ -1533,7 +1523,7 @@ export default function AdminReports() {
                           {u.name}
                         </p>
                         <p
-                          style={{ color: "#334155", fontSize: 10, margin: 0 }}
+                          style={{ color: "rgb(var(--muted))", fontSize: 10, margin: 0 }}
                         >
                           {u.city} · {u.trips} trips
                         </p>
@@ -1552,7 +1542,7 @@ export default function AdminReports() {
                   <div
                     style={{
                       height: 3,
-                      background: "rgba(255,255,255,0.05)",
+                      background: "rgb(var(--line) / 0.08)",
                       borderRadius: 4,
                       overflow: "hidden",
                     }}
@@ -1588,15 +1578,15 @@ export default function AdminReports() {
             flexWrap: "wrap",
             gap: 8,
             padding: "16px 0",
-            borderTop: "1px solid rgba(255,255,255,0.05)",
+            borderTop: "1px solid rgb(var(--line) / 0.08)",
           }}
         >
-          <span style={{ color: "#1e293b", fontSize: 12 }}>
+          <span style={{ color: "rgb(var(--surface))", fontSize: 12 }}>
             Wheelz Admin · India Operations Dashboard
           </span>
           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-            <BoltIcon style={{ width: 12, height: 12, color: "#f59e0b" }} />
-            <span style={{ color: "#1e293b", fontSize: 11 }}>
+            <BoltIcon style={{ width: 12, height: 12, color: "rgb(var(--accent))" }} />
+            <span style={{ color: "rgb(var(--surface))", fontSize: 11 }}>
               Auto-refreshes every 5 minutes
             </span>
           </div>

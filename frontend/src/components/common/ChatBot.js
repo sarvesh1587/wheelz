@@ -75,12 +75,12 @@ export default function ChatBot() {
     <>
       <button
         onClick={() => setOpen(!open)}
-        className="fixed bottom-6 right-6 z-50 w-14 h-14 bg-amber-500 rounded-full shadow-2xl shadow-amber-500/40 flex items-center justify-center hover:bg-amber-400 transition-all duration-300 hover:scale-110"
+        className="fixed bottom-6 right-6 z-50 w-14 h-14 bg-accent rounded-full flex items-center justify-center hover:bg-ink hover:text-canvas transition-all duration-300 hover:scale-110"
         aria-label="Open chat"
       >
         {open ? (
           <svg
-            className="w-6 h-6 text-gray-900"
+            className="w-6 h-6 text-ink"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -94,7 +94,7 @@ export default function ChatBot() {
           </svg>
         ) : (
           <svg
-            className="w-6 h-6 text-gray-900"
+            className="w-6 h-6 text-ink"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -111,11 +111,11 @@ export default function ChatBot() {
 
       {open && (
         <div
-          className="fixed bottom-24 right-6 z-50 w-80 sm:w-96 bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 flex flex-col animate-slide-up overflow-hidden"
+          className="fixed bottom-24 right-6 z-50 w-80 sm:w-96 bg-surface rounded-2xl border border-line/10 flex flex-col animate-slide-up overflow-hidden"
           style={{ height: "520px" }}
         >
-          <div className="bg-gradient-to-r from-gray-900 to-gray-800 px-4 py-3 flex items-center gap-3">
-            <div className="w-9 h-9 bg-amber-500 rounded-full flex items-center justify-center font-bold text-gray-900 text-sm">
+          <div className="px-4 py-3 flex items-center gap-3">
+            <div className="w-9 h-9 bg-accent rounded-full flex items-center justify-center font-bold text-accent-ink text-sm">
               Z
             </div>
             <div>
@@ -123,13 +123,13 @@ export default function ChatBot() {
                 Zara - AI Assistant
               </p>
               <div className="flex items-center gap-1">
-                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-                <span className="text-xs text-gray-400">Online</span>
+                <div className="w-2 h-2 bg-ink text-canvas rounded-full animate-pulse" />
+                <span className="text-xs text-muted">Online</span>
               </div>
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3 bg-gray-50 dark:bg-gray-950">
+          <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3 bg-raised/50">
             {messages.map((msg, i) => (
               <div
                 key={i}
@@ -138,8 +138,8 @@ export default function ChatBot() {
                 <div
                   className={`max-w-[80%] px-3 py-2 rounded-2xl text-sm leading-relaxed ${
                     msg.role === "user"
-                      ? "bg-amber-500 text-gray-900 rounded-br-sm"
-                      : "bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded-bl-sm shadow-sm border border-gray-100 dark:border-gray-700"
+                      ? "bg-accent text-accent-ink rounded-br-sm"
+                      : "bg-surface text-ink rounded-bl-sm border border-line/10"
                   }`}
                 >
                   <span
@@ -153,18 +153,18 @@ export default function ChatBot() {
 
             {loading && (
               <div className="flex justify-start">
-                <div className="bg-white dark:bg-gray-800 px-4 py-3 rounded-2xl rounded-bl-sm shadow-sm border border-gray-100 dark:border-gray-700">
+                <div className="bg-surface px-4 py-3 rounded-2xl rounded-bl-sm border border-line/10">
                   <div className="flex gap-1">
                     <div
-                      className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                      className="w-2 h-2 bg-line/20 rounded-full animate-bounce"
                       style={{ animationDelay: "0ms" }}
                     />
                     <div
-                      className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                      className="w-2 h-2 bg-line/20 rounded-full animate-bounce"
                       style={{ animationDelay: "150ms" }}
                     />
                     <div
-                      className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                      className="w-2 h-2 bg-line/20 rounded-full animate-bounce"
                       style={{ animationDelay: "300ms" }}
                     />
                   </div>
@@ -174,7 +174,7 @@ export default function ChatBot() {
 
             {suggestions.length > 0 && (
               <div className="space-y-2">
-                <p className="text-xs text-gray-500 font-medium">
+                <p className="text-xs text-muted font-medium">
                   Suggested vehicles:
                 </p>
                 {suggestions.map((v) => (
@@ -184,18 +184,18 @@ export default function ChatBot() {
                       navigate(`/vehicles/${v._id}`);
                       setOpen(false);
                     }}
-                    className="w-full flex items-center gap-2 p-2 bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 hover:border-amber-300 transition-colors text-left"
+                    className="w-full flex items-center gap-2 p-2 bg-surface rounded-xl border border-line/10 hover:border-ink transition-colors text-left"
                   >
                     <img
                       src={v.images?.[0]}
                       alt={v.name}
-                      className="w-10 h-10 rounded-lg object-cover"
+                      className="w-10 h-10 rounded-xl object-cover"
                     />
                     <div>
-                      <p className="text-xs font-semibold text-gray-900 dark:text-white">
+                      <p className="text-xs font-semibold text-ink">
                         {v.name}
                       </p>
-                      <p className="text-xs text-amber-500">
+                      <p className="text-xs text-accent">
                         ₹{v.basePrice}/day
                       </p>
                     </div>
@@ -208,12 +208,12 @@ export default function ChatBot() {
           </div>
 
           {messages.length <= 1 && (
-            <div className="px-3 py-2 bg-gray-50 dark:bg-gray-950 flex flex-wrap gap-1.5 border-t border-gray-100 dark:border-gray-800">
+            <div className="px-3 py-2 bg-raised/50 flex flex-wrap gap-1.5 border-t border-line/10">
               {quickReplies.map((q) => (
                 <button
                   key={q}
                   onClick={() => sendMessage(q)}
-                  className="text-xs px-2.5 py-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-full hover:border-amber-400 hover:text-amber-500 transition-colors"
+                  className="text-xs px-2.5 py-1 bg-surface border border-line/10 rounded-full hover:border-ink hover:text-accent transition-colors"
                 >
                   {q}
                 </button>
@@ -221,23 +221,23 @@ export default function ChatBot() {
             </div>
           )}
 
-          <div className="px-3 py-3 border-t border-gray-100 dark:border-gray-800 flex gap-2 bg-white dark:bg-gray-900">
+          <div className="px-3 py-3 border-t border-line/10 flex gap-2 bg-surface">
             <input
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && sendMessage()}
               placeholder="Ask Zara anything..."
-              className="flex-1 px-3 py-2 text-sm bg-gray-100 dark:bg-gray-800 rounded-xl outline-none text-gray-900 dark:text-gray-100 placeholder-gray-400"
+              className="flex-1 px-3 py-2 text-sm bg-raised rounded-xl outline-none text-ink placeholder:text-muted"
               disabled={loading}
             />
             <button
               onClick={() => sendMessage()}
               disabled={!input.trim() || loading}
-              className="p-2 bg-amber-500 rounded-xl hover:bg-amber-400 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              className="p-2 bg-accent rounded-xl hover:bg-ink hover:text-canvas disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             >
               <svg
-                className="w-4 h-4 text-gray-900"
+                className="w-4 h-4 text-ink"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"

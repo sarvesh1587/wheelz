@@ -3,18 +3,27 @@ import { useNavigate } from "react-router-dom";
 import { adminAPI, vehicleAPI, bookingAPI, kycAPI } from "../services/api";
 import toast from "react-hot-toast";
 import {
-  UsersIcon,
-  TruckIcon,
-  CalendarIcon,
-  CurrencyRupeeIcon,
-  ChartBarIcon,
-  BuildingStorefrontIcon,
-  CheckCircleIcon,
-  XCircleIcon,
-  EyeIcon,
-  XMarkIcon,
-  IdentificationIcon, // Add this
-} from "@heroicons/react/24/outline";
+  Users as UsersIcon,
+  Truck as TruckIcon,
+  Calendar as CalendarIcon,
+  IndianRupee as CurrencyRupeeIcon,
+  BarChart3 as ChartBarIcon,
+  Store as BuildingStorefrontIcon,
+  CheckCircle2 as CheckCircleIcon,
+  XCircle as XCircleIcon,
+  Eye as EyeIcon,
+  X as XMarkIcon,
+  IdCard as IdentificationIcon,
+} from "lucide-react";
+import { Reveal } from "../components/motion";
+import { PageHeader, Stat, PageLoader } from "../components/ui";
+
+const TOOLTIP = {
+  background: "rgb(var(--surface))",
+  border: "1px solid rgb(var(--line) / 0.1)",
+  borderRadius: 16,
+  color: "rgb(var(--ink))",
+};
 import {
   LineChart,
   Line,
@@ -123,37 +132,37 @@ export default function AdminDashboard() {
       label: "Total Users",
       value: users.length,
       icon: UsersIcon,
-      color: "from-blue-500 to-blue-600",
+      color: "",
     },
     {
       label: "Total Vendors",
       value: vendors.length,
       icon: BuildingStorefrontIcon,
-      color: "from-green-500 to-green-600",
+      color: "",
     },
     {
       label: "Total Vehicles",
       value: dashboardData?.totalVehicles || 0,
       icon: TruckIcon,
-      color: "from-amber-500 to-amber-600",
+      color: "",
     },
     {
       label: "Total Bookings",
       value: dashboardData?.totalBookings || 0,
       icon: CalendarIcon,
-      color: "from-purple-500 to-purple-600",
+      color: "",
     },
     {
       label: "Pending KYC",
       value: kycSubmissions.length,
       icon: IdentificationIcon,
-      color: "from-yellow-500 to-yellow-600",
+      color: "",
     }, // Added
     {
       label: "Active Bookings",
       value: dashboardData?.activeBookings || 0,
       icon: CheckCircleIcon,
-      color: "from-emerald-500 to-emerald-600",
+      color: "",
     },
   ];
 
@@ -167,62 +176,30 @@ export default function AdminDashboard() {
   ];
 
   const categoryData = [
-    { name: "Cars", value: 65, color: "#f59e0b" },
-    { name: "Bikes", value: 35, color: "#10b981" },
+    { name: "Cars", value: 65, color: "#FF4D00" },
+    { name: "Bikes", value: 35, color: "#9D9A93" },
   ];
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center pt-20">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-500">Loading admin dashboard...</p>
-        </div>
-      </div>
-    );
+    return <PageLoader label="Loading admin dashboard" />;
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-950 pt-24 pb-12">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
-        >
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400 bg-clip-text text-transparent">
-            Admin Dashboard
-          </h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">
-            Manage users, vehicles, KYC, and monitor platform performance
-          </p>
-        </motion.div>
+    <div className="pb-24 pt-28 md:pt-32">
+      <div className="container-x">
+        <PageHeader
+          index="01"
+          eyebrow="Admin"
+          title={["Control room."]}
+          lede="Manage users, vehicles, KYC, and monitor platform performance."
+        />
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-8">
+        <div className="mb-14 grid grid-cols-2 gap-x-6 gap-y-10 md:grid-cols-3 xl:grid-cols-6">
           {statsCards.map((stat, idx) => (
-            <motion.div
-              key={stat.label}
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: idx * 0.05 }}
-              className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-md hover:shadow-lg transition-all"
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs text-gray-500">{stat.label}</p>
-                  <p className="text-xl font-bold text-gray-900 dark:text-white mt-1">
-                    {stat.value}
-                  </p>
-                </div>
-                <div
-                  className={`w-10 h-10 bg-gradient-to-r ${stat.color} rounded-lg flex items-center justify-center`}
-                >
-                  <stat.icon className="w-5 h-5 text-white" />
-                </div>
-              </div>
-            </motion.div>
+            <Reveal key={stat.label} delay={idx * 0.05}>
+              <Stat label={stat.label} value={stat.value} />
+            </Reveal>
           ))}
         </div>
 
@@ -232,24 +209,25 @@ export default function AdminDashboard() {
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg"
+            className="bg-surface rounded-[24px] p-6 border border-line/10"
           >
-            <h3 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-              <ChartBarIcon className="w-5 h-5 text-amber-500" />
+            <h3 className="eyebrow mb-6 flex items-center gap-2">
+              <ChartBarIcon className="w-5 h-5 text-accent" />
               Revenue Overview
             </h3>
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={revenueData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis />
-                <Tooltip />
+<CartesianGrid stroke="rgb(var(--line) / 0.08)" vertical={false} />
+                <XAxis dataKey="month" stroke="rgb(var(--muted))" tickLine={false} axisLine={false} fontSize={12} />
+                <YAxis stroke="rgb(var(--muted))" tickLine={false} axisLine={false} fontSize={12} />
+                <Tooltip contentStyle={TOOLTIP} />
                 <Legend />
                 <Line
                   type="monotone"
                   dataKey="revenue"
-                  stroke="#f59e0b"
+                  stroke="rgb(var(--accent))"
                   strokeWidth={2}
+                  dot={false}
                 />
               </LineChart>
             </ResponsiveContainer>
@@ -259,10 +237,10 @@ export default function AdminDashboard() {
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg"
+            className="bg-surface rounded-[24px] p-6 border border-line/10"
           >
-            <h3 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-              <ChartBarIcon className="w-5 h-5 text-amber-500" />
+            <h3 className="eyebrow mb-6 flex items-center gap-2">
+              <ChartBarIcon className="w-5 h-5 text-accent" />
               Vehicle Distribution
             </h3>
             <ResponsiveContainer width="100%" height={300}>
@@ -283,34 +261,33 @@ export default function AdminDashboard() {
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
-                <Tooltip />
+                <Tooltip contentStyle={TOOLTIP} />
               </PieChart>
             </ResponsiveContainer>
           </motion.div>
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-2 mb-6 border-b border-gray-200 dark:border-gray-700 overflow-x-auto">
+        <nav className="mb-10 flex gap-8 overflow-x-auto border-b border-line/10 [scrollbar-width:none]" aria-label="Admin sections">
           {[
-            { id: "overview", label: "Overview", icon: ChartBarIcon },
-            { id: "kyc", label: "KYC Verification", icon: IdentificationIcon }, // Added KYC Tab
-            { id: "users", label: "Users", icon: UsersIcon },
-            { id: "vendors", label: "Vendors", icon: BuildingStorefrontIcon },
+            { id: "overview", label: "Overview" },
+            { id: "kyc", label: "KYC verification" },
+            { id: "users", label: "Users" },
+            { id: "vendors", label: "Vendors" },
           ].map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-t-lg transition-all whitespace-nowrap ${
-                activeTab === tab.id
-                  ? "bg-amber-500 text-white"
-                  : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+              aria-current={activeTab === tab.id ? "page" : undefined}
+              className={`relative whitespace-nowrap py-4 text-sm font-medium transition-colors ${
+                activeTab === tab.id ? "text-ink" : "text-muted hover:text-ink"
               }`}
             >
-              <tab.icon className="w-4 h-4" />
               {tab.label}
+              {activeTab === tab.id && <motion.span layoutId="admin-tab" className="absolute inset-x-0 bottom-0 h-px bg-accent" />}
             </button>
           ))}
-        </div>
+        </nav>
 
         {/* KYC Verification Tab */}
         {/* {activeTab === "kyc" && (
@@ -319,55 +296,55 @@ export default function AdminDashboard() {
             animate={{ opacity: 1 }}
             className="space-y-4"
           >
-            <div className="bg-white dark:bg-gray-800 rounded-2xl overflow-hidden shadow-lg">
-              <div className="p-4 bg-amber-50 dark:bg-amber-900/20 border-b">
-                <h2 className="font-semibold text-gray-900 dark:text-white">
+            <div className="bg-surface rounded-[24px] overflow-hidden border border-line/10">
+              <div className="p-4 bg-accent/10 border-b">
+                <h2 className="font-semibold text-ink">
                   Pending KYC Submissions
                 </h2>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-muted">
                   Review and verify user documents
                 </p>
               </div>
 
               {kycSubmissions.length === 0 ? (
                 <div className="text-center py-12">
-                  <IdentificationIcon className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  <IdentificationIcon className="w-16 h-16 text-muted mx-auto mb-4" />
+                  <h3 className="display-tight text-lg text-ink">
                     No Pending KYC
                   </h3>
-                  <p className="text-gray-500">
+                  <p className="text-muted">
                     All KYC submissions have been processed.
                   </p>
                 </div>
               ) : (
-                <div className="divide-y divide-gray-200 dark:divide-gray-700">
+                <div className="divide-y divide-line/10">
                   {kycSubmissions.map((kyc) => (
                     <div
                       key={kyc._id}
-                      className="p-5 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
+                      className="p-5 hover:bg-raised transition-colors"
                     >
                       <div className="flex flex-wrap justify-between items-start gap-4">
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-2">
-                            <div className="w-10 h-10 bg-amber-100 dark:bg-amber-900/30 rounded-full flex items-center justify-center font-bold text-amber-600">
+                            <div className="w-10 h-10 bg-accent/10 rounded-full flex items-center justify-center font-bold text-accent">
                               {kyc.user?.name?.[0]?.toUpperCase()}
                             </div>
                             <div>
-                              <p className="font-semibold text-gray-900 dark:text-white">
+                              <p className="font-semibold text-ink">
                                 {kyc.user?.name}
                               </p>
-                              <p className="text-sm text-gray-500">
+                              <p className="text-sm text-muted">
                                 {kyc.user?.email}
                               </p>
                             </div>
-                            <span className="ml-auto text-xs text-gray-400">
+                            <span className="ml-auto text-xs text-muted">
                               Submitted:{" "}
                               {new Date(kyc.createdAt).toLocaleDateString()}
                             </span>
                           </div>
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3 text-sm">
                             <div>
-                              <span className="text-gray-500">
+                              <span className="text-muted">
                                 License Number:
                               </span>
                               <span className="ml-2 font-medium">
@@ -375,7 +352,7 @@ export default function AdminDashboard() {
                               </span>
                             </div>
                             <div>
-                              <span className="text-gray-500">
+                              <span className="text-muted">
                                 Aadhaar Number:
                               </span>
                               <span className="ml-2 font-medium">
@@ -383,7 +360,7 @@ export default function AdminDashboard() {
                               </span>
                             </div>
                           </div>
-                          <div className="flex gap-4 mt-3 text-xs text-gray-400">
+                          <div className="flex gap-4 mt-3 text-xs text-muted">
                             <span>
                               DL Front:{" "}
                               {kyc.drivingLicenseFront?.split("/").pop()}
@@ -405,14 +382,14 @@ export default function AdminDashboard() {
                         <div className="flex gap-2">
                           <button
                             onClick={() => handleVerifyKYC(kyc.user._id)}
-                            className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors flex items-center gap-1"
+                            className="px-4 py-2 bg-ink text-canvas hover:bg-accent hover:text-accent-ink rounded-xl transition-colors flex items-center gap-1"
                           >
                             <CheckCircleIcon className="w-4 h-4" />
                             Verify
                           </button>
                           <button
                             onClick={() => handleRejectKYC(kyc.user._id)}
-                            className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors flex items-center gap-1"
+                            className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-xl transition-colors flex items-center gap-1"
                           >
                             <XCircleIcon className="w-4 h-4" />
                             Reject
@@ -433,48 +410,48 @@ export default function AdminDashboard() {
             animate={{ opacity: 1 }}
             className="space-y-4"
           >
-            <div className="bg-white dark:bg-gray-800 rounded-2xl overflow-hidden shadow-lg">
-              <div className="p-4 bg-amber-50 dark:bg-amber-900/20 border-b">
-                <h2 className="font-semibold text-gray-900 dark:text-white">
+            <div className="bg-surface rounded-[24px] overflow-hidden border border-line/10">
+              <div className="p-4 bg-accent/10 border-b">
+                <h2 className="font-semibold text-ink">
                   Pending KYC Submissions
                 </h2>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-muted">
                   Review and verify user documents
                 </p>
               </div>
 
               {kycSubmissions.length === 0 ? (
                 <div className="text-center py-12">
-                  <IdentificationIcon className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  <IdentificationIcon className="w-16 h-16 text-muted mx-auto mb-4" />
+                  <h3 className="display-tight text-lg text-ink">
                     No Pending KYC
                   </h3>
-                  <p className="text-gray-500">
+                  <p className="text-muted">
                     All KYC submissions have been processed.
                   </p>
                 </div>
               ) : (
-                <div className="divide-y divide-gray-200 dark:divide-gray-700">
+                <div className="divide-y divide-line/10">
                   {kycSubmissions.map((kyc) => (
                     <div
                       key={kyc._id}
-                      className="p-5 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
+                      className="p-5 hover:bg-raised transition-colors"
                     >
                       <div className="flex flex-wrap justify-between items-start gap-4">
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-2">
-                            <div className="w-10 h-10 bg-amber-100 dark:bg-amber-900/30 rounded-full flex items-center justify-center font-bold text-amber-600">
+                            <div className="w-10 h-10 bg-accent/10 rounded-full flex items-center justify-center font-bold text-accent">
                               {kyc.user?.name?.[0]?.toUpperCase()}
                             </div>
                             <div>
-                              <p className="font-semibold text-gray-900 dark:text-white">
+                              <p className="font-semibold text-ink">
                                 {kyc.user?.name}
                               </p>
-                              <p className="text-sm text-gray-500">
+                              <p className="text-sm text-muted">
                                 {kyc.user?.email}
                               </p>
                             </div>
-                            <span className="ml-auto text-xs text-gray-400">
+                            <span className="ml-auto text-xs text-muted">
                               Submitted:{" "}
                               {new Date(kyc.createdAt).toLocaleDateString()}
                             </span>
@@ -482,7 +459,7 @@ export default function AdminDashboard() {
 
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3 text-sm">
                             <div>
-                              <span className="text-gray-500">
+                              <span className="text-muted">
                                 License Number:
                               </span>
                               <span className="ml-2 font-medium">
@@ -490,7 +467,7 @@ export default function AdminDashboard() {
                               </span>
                             </div>
                             <div>
-                              <span className="text-gray-500">
+                              <span className="text-muted">
                                 Aadhaar Number:
                               </span>
                               <span className="ml-2 font-medium">
@@ -503,14 +480,14 @@ export default function AdminDashboard() {
                           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4">
                             {/* Driving License Front */}
                             <div className="relative group">
-                              <div className="text-xs text-gray-500 mb-1">
+                              <div className="text-xs text-muted mb-1">
                                 Driving License (Front)
                               </div>
                               {kyc.drivingLicenseFrontUrl ? (
                                 <img
                                   src={kyc.drivingLicenseFrontUrl}
                                   alt="DL Front"
-                                  className="w-full h-24 object-cover rounded-lg border cursor-pointer hover:opacity-90 transition-opacity"
+                                  className="w-full h-24 object-cover rounded-xl border cursor-pointer hover:opacity-90 transition-opacity"
                                   onClick={() =>
                                     window.open(
                                       kyc.drivingLicenseFrontUrl,
@@ -519,7 +496,7 @@ export default function AdminDashboard() {
                                   }
                                 />
                               ) : (
-                                <div className="w-full h-24 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center text-gray-400">
+                                <div className="w-full h-24 bg-raised rounded-xl flex items-center justify-center text-muted">
                                   No Image
                                 </div>
                               )}
@@ -527,14 +504,14 @@ export default function AdminDashboard() {
 
                             {/* Driving License Back */}
                             <div>
-                              <div className="text-xs text-gray-500 mb-1">
+                              <div className="text-xs text-muted mb-1">
                                 Driving License (Back)
                               </div>
                               {kyc.drivingLicenseBackUrl ? (
                                 <img
                                   src={kyc.drivingLicenseBackUrl}
                                   alt="DL Back"
-                                  className="w-full h-24 object-cover rounded-lg border cursor-pointer hover:opacity-90 transition-opacity"
+                                  className="w-full h-24 object-cover rounded-xl border cursor-pointer hover:opacity-90 transition-opacity"
                                   onClick={() =>
                                     window.open(
                                       kyc.drivingLicenseBackUrl,
@@ -543,7 +520,7 @@ export default function AdminDashboard() {
                                   }
                                 />
                               ) : (
-                                <div className="w-full h-24 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center text-gray-400">
+                                <div className="w-full h-24 bg-raised rounded-xl flex items-center justify-center text-muted">
                                   No Image
                                 </div>
                               )}
@@ -551,20 +528,20 @@ export default function AdminDashboard() {
 
                             {/* Aadhaar Front */}
                             <div>
-                              <div className="text-xs text-gray-500 mb-1">
+                              <div className="text-xs text-muted mb-1">
                                 Aadhaar (Front)
                               </div>
                               {kyc.aadhaarFrontUrl ? (
                                 <img
                                   src={kyc.aadhaarFrontUrl}
                                   alt="Aadhaar Front"
-                                  className="w-full h-24 object-cover rounded-lg border cursor-pointer hover:opacity-90 transition-opacity"
+                                  className="w-full h-24 object-cover rounded-xl border cursor-pointer hover:opacity-90 transition-opacity"
                                   onClick={() =>
                                     window.open(kyc.aadhaarFrontUrl, "_blank")
                                   }
                                 />
                               ) : (
-                                <div className="w-full h-24 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center text-gray-400">
+                                <div className="w-full h-24 bg-raised rounded-xl flex items-center justify-center text-muted">
                                   No Image
                                 </div>
                               )}
@@ -572,20 +549,20 @@ export default function AdminDashboard() {
 
                             {/* Aadhaar Back */}
                             <div>
-                              <div className="text-xs text-gray-500 mb-1">
+                              <div className="text-xs text-muted mb-1">
                                 Aadhaar (Back)
                               </div>
                               {kyc.aadhaarBackUrl ? (
                                 <img
                                   src={kyc.aadhaarBackUrl}
                                   alt="Aadhaar Back"
-                                  className="w-full h-24 object-cover rounded-lg border cursor-pointer hover:opacity-90 transition-opacity"
+                                  className="w-full h-24 object-cover rounded-xl border cursor-pointer hover:opacity-90 transition-opacity"
                                   onClick={() =>
                                     window.open(kyc.aadhaarBackUrl, "_blank")
                                   }
                                 />
                               ) : (
-                                <div className="w-full h-24 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center text-gray-400">
+                                <div className="w-full h-24 bg-raised rounded-xl flex items-center justify-center text-muted">
                                   No Image
                                 </div>
                               )}
@@ -596,14 +573,14 @@ export default function AdminDashboard() {
                         <div className="flex gap-2">
                           <button
                             onClick={() => handleVerifyKYC(kyc.user._id)}
-                            className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors flex items-center gap-1"
+                            className="px-4 py-2 bg-ink text-canvas hover:bg-accent hover:text-accent-ink rounded-xl transition-colors flex items-center gap-1"
                           >
                             <CheckCircleIcon className="w-4 h-4" />
                             Verify
                           </button>
                           <button
                             onClick={() => handleRejectKYC(kyc.user._id)}
-                            className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors flex items-center gap-1"
+                            className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-xl transition-colors flex items-center gap-1"
                           >
                             <XCircleIcon className="w-4 h-4" />
                             Reject
@@ -620,40 +597,40 @@ export default function AdminDashboard() {
         {/* Users List Tab */}
         {activeTab === "users" && (
           // ... your existing users table code ...
-          <div className="bg-white dark:bg-gray-800 rounded-2xl overflow-hidden shadow-lg">
+          <div className="bg-surface rounded-[24px] overflow-hidden border border-line/10">
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-gray-50 dark:bg-gray-700/50">
+                <thead className="bg-raised/50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase">
                       User
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase">
                       Email
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase">
                       Phone
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase">
                       Joined
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase">
                       Status
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase">
                       Actions
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                <tbody className="divide-y divide-line/10">
                   {users.map((user) => (
                     <tr
                       key={user._id}
-                      className="hover:bg-gray-50 dark:hover:bg-gray-700/30"
+                      className="hover:bg-raised"
                     >
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
-                          <div className="w-8 h-8 bg-amber-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                          <div className="w-8 h-8 bg-accent rounded-full flex items-center justify-center text-accent-ink text-sm font-bold">
                             {user.name?.[0]?.toUpperCase()}
                           </div>
                           <span className="font-medium">{user.name}</span>
@@ -666,7 +643,7 @@ export default function AdminDashboard() {
                       </td>
                       <td className="px-6 py-4">
                         <span
-                          className={`text-xs px-2 py-0.5 rounded-full ${user.isActive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}
+                          className={`text-xs px-2 py-0.5 rounded-full ${user.isActive ? "bg-raised text-accent" : "bg-accent/10 text-red-500"}`}
                         >
                           {user.isActive ? "Active" : "Inactive"}
                         </span>
@@ -676,7 +653,7 @@ export default function AdminDashboard() {
                           onClick={() =>
                             toggleVendorStatus(user._id, user.isActive)
                           }
-                          className={`text-sm ${user.isActive ? "text-red-500" : "text-green-500"}`}
+                          className={`text-sm ${user.isActive ? "text-red-500" : "text-accent"}`}
                         >
                           {user.isActive ? "Deactivate" : "Activate"}
                         </button>
@@ -692,40 +669,40 @@ export default function AdminDashboard() {
         {/* Vendors List Tab */}
         {activeTab === "vendors" && (
           // ... your existing vendors table code ...
-          <div className="bg-white dark:bg-gray-800 rounded-2xl overflow-hidden shadow-lg">
+          <div className="bg-surface rounded-[24px] overflow-hidden border border-line/10">
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-gray-50 dark:bg-gray-700/50">
+                <thead className="bg-raised/50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase">
                       Vendor
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase">
                       Business Name
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase">
                       Email
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase">
                       Phone
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase">
                       Status
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase">
                       Actions
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                <tbody className="divide-y divide-line/10">
                   {vendors.map((vendor) => (
                     <tr
                       key={vendor._id}
-                      className="hover:bg-gray-50 dark:hover:bg-gray-700/30"
+                      className="hover:bg-raised"
                     >
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
-                          <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                          <div className="w-8 h-8 bg-ink text-canvas rounded-full flex items-center justify-center text-sm font-bold">
                             {vendor.name?.[0]?.toUpperCase()}
                           </div>
                           <span className="font-medium">{vendor.name}</span>
@@ -740,7 +717,7 @@ export default function AdminDashboard() {
                       </td>
                       <td className="px-6 py-4">
                         <span
-                          className={`text-xs px-2 py-0.5 rounded-full ${vendor.isVendorApproved ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}
+                          className={`text-xs px-2 py-0.5 rounded-full ${vendor.isVendorApproved ? "bg-raised text-accent" : "bg-accent/10 text-accent"}`}
                         >
                           {vendor.isVendorApproved ? "Approved" : "Pending"}
                         </span>
@@ -749,7 +726,7 @@ export default function AdminDashboard() {
                         <div className="flex gap-2">
                           <button
                             onClick={() => viewVendorDetails(vendor)}
-                            className="text-amber-500 hover:text-amber-600 text-sm"
+                            className="text-accent hover:text-accent text-sm"
                           >
                             View
                           </button>
@@ -760,7 +737,7 @@ export default function AdminDashboard() {
                                 vendor.isVendorApproved,
                               )
                             }
-                            className={`text-sm ${vendor.isVendorApproved ? "text-red-500" : "text-green-500"}`}
+                            className={`text-sm ${vendor.isVendorApproved ? "text-red-500" : "text-accent"}`}
                           >
                             {vendor.isVendorApproved ? "Deactivate" : "Approve"}
                           </button>

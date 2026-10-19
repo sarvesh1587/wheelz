@@ -2,19 +2,20 @@ import React, { useState, useEffect } from "react";
 import { adminAPI } from "../services/api";
 import LoadingSpinner from "../components/common/LoadingSpinner";
 import {
-  BuildingStorefrontIcon,
-  CheckCircleIcon,
-  XCircleIcon,
-  EyeIcon,
-  MagnifyingGlassIcon,
-  EnvelopeIcon,
-  PhoneIcon,
-  MapPinIcon,
-  DocumentTextIcon,
-  UserIcon,
-  IdentificationIcon,
-  BanknotesIcon,
-} from "@heroicons/react/24/outline";
+  Store as BuildingStorefrontIcon,
+  CheckCircle2 as CheckCircleIcon,
+  XCircle as XCircleIcon,
+  Eye as EyeIcon,
+  Search as MagnifyingGlassIcon,
+  Mail as EnvelopeIcon,
+  Phone as PhoneIcon,
+  MapPin as MapPinIcon,
+  FileText as DocumentTextIcon,
+  User as UserIcon,
+  IdCard as IdentificationIcon,
+  Banknote as BanknotesIcon,
+} from "lucide-react";
+import { PageHeader } from "../components/ui";
 import toast from "react-hot-toast";
 
 export default function AdminVendors() {
@@ -83,19 +84,19 @@ export default function AdminVendors() {
   const getVendorTypeBadge = (vendor) => {
     if (vendor.vendorType === "individual") {
       return (
-        <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 flex items-center gap-1 w-fit">
+        <span className="px-2 py-1 rounded-full text-xs font-medium bg-raised text-accent flex items-center gap-1 w-fit">
           <UserIcon className="w-3 h-3" /> Individual
         </span>
       );
     } else if (vendor.vendorType === "business") {
       return (
-        <span className="px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700 flex items-center gap-1 w-fit">
+        <span className="px-2 py-1 rounded-full text-xs font-medium bg-raised text-accent flex items-center gap-1 w-fit">
           <BuildingStorefrontIcon className="w-3 h-3" /> Business
         </span>
       );
     }
     return (
-      <span className="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
+      <span className="px-2 py-1 rounded-full border font-mono text-[10px] uppercase tracking-[0.12em] border-line/15 text-ink/80">
         Unknown
       </span>
     );
@@ -120,33 +121,26 @@ export default function AdminVendors() {
   if (loading) return <LoadingSpinner />;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8 pt-24">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-          Manage Vendors
-        </h1>
-        <p className="text-gray-500 dark:text-gray-400 mt-1">
-          Approve, review, and manage vendor registrations
-        </p>
-      </div>
+    <div className="container-x pb-24 pt-28 md:pt-32">
+      <PageHeader index="01" eyebrow="Admin" title={["Vendors."]} lede="Approve, review, and manage vendor registrations." />
 
       {/* Search Bar */}
       <div className="mb-6">
         <div className="relative max-w-md">
-          <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+          <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted" />
           <input
             type="text"
             placeholder="Search vendors by name, email, type, GST, or Aadhar..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
+            className="w-full pl-10 pr-4 py-2 rounded-xl border border-line/10 bg-surface"
           />
         </div>
       </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl p-4 text-white">
+        <div className="bg-raised rounded-2xl p-4 text-white">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-2xl font-bold">{vendors.length}</p>
@@ -155,7 +149,7 @@ export default function AdminVendors() {
             <BuildingStorefrontIcon className="w-8 h-8 opacity-80" />
           </div>
         </div>
-        <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-2xl p-4 text-white">
+        <div className="bg-raised rounded-2xl p-4 text-white">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-2xl font-bold">
@@ -166,7 +160,7 @@ export default function AdminVendors() {
             <CheckCircleIcon className="w-8 h-8 opacity-80" />
           </div>
         </div>
-        <div className="bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-2xl p-4 text-white">
+        <div className="bg-accent rounded-2xl p-4 text-accent-ink">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-2xl font-bold">
@@ -177,7 +171,7 @@ export default function AdminVendors() {
             <XCircleIcon className="w-8 h-8 opacity-80" />
           </div>
         </div>
-        <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-2xl p-4 text-white">
+        <div className="bg-raised rounded-2xl p-4 text-white">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-2xl font-bold">
@@ -191,37 +185,37 @@ export default function AdminVendors() {
       </div>
 
       {/* Vendors Table */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm overflow-hidden">
+      <div className="bg-surface rounded-[24px] overflow-hidden border border-line/10">
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-gray-50 dark:bg-gray-700/50">
+            <thead className="bg-raised/50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase">
                   Vendor
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase">
                   Type
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase">
                   Business/Individual
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase">
                   Status
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase">
                   Registered
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase">
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+            <tbody className="divide-y divide-line/10">
               {filteredVendors.length === 0 ? (
                 <tr>
                   <td
                     colSpan="6"
-                    className="px-6 py-8 text-center text-gray-500"
+                    className="px-6 py-8 text-center text-muted"
                   >
                     No vendors found
                   </td>
@@ -230,15 +224,15 @@ export default function AdminVendors() {
                 filteredVendors.map((vendor) => (
                   <tr
                     key={vendor._id}
-                    className="hover:bg-gray-50 dark:hover:bg-gray-700/30"
+                    className="hover:bg-raised"
                   >
                     <td className="px-6 py-4">
                       <div>
-                        <p className="font-medium text-gray-900 dark:text-white">
+                        <p className="font-medium text-ink">
                           {vendor.name}
                         </p>
-                        <p className="text-sm text-gray-500">{vendor.email}</p>
-                        <p className="text-xs text-gray-400 flex items-center gap-1 mt-1">
+                        <p className="text-sm text-muted">{vendor.email}</p>
+                        <p className="text-xs text-muted flex items-center gap-1 mt-1">
                           <PhoneIcon className="w-3 h-3" />{" "}
                           {vendor.phone || "N/A"}
                         </p>
@@ -252,7 +246,7 @@ export default function AdminVendors() {
                             Aadhar:{" "}
                             {vendor.individualDetails?.aadharNumber || "N/A"}
                           </p>
-                          <p className="text-xs text-gray-500">
+                          <p className="text-xs text-muted">
                             PAN: {vendor.individualDetails?.panNumber || "N/A"}
                           </p>
                         </div>
@@ -261,7 +255,7 @@ export default function AdminVendors() {
                           <p className="text-sm font-medium">
                             {vendor.businessDetails?.businessName || "N/A"}
                           </p>
-                          <p className="text-xs text-gray-500">
+                          <p className="text-xs text-muted">
                             GST: {vendor.businessDetails?.gstNumber || "N/A"}
                           </p>
                         </div>
@@ -270,7 +264,7 @@ export default function AdminVendors() {
                           <p className="text-sm">
                             {vendor.vendorDetails?.businessName || "N/A"}
                           </p>
-                          <p className="text-xs text-gray-500">
+                          <p className="text-xs text-muted">
                             GST: {vendor.vendorDetails?.gstNumber || "N/A"}
                           </p>
                         </div>
@@ -278,23 +272,23 @@ export default function AdminVendors() {
                     </td>
                     <td className="px-6 py-4">
                       {vendor.isVendorApproved ? (
-                        <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                        <span className="px-2 py-1 rounded-full border font-mono text-[10px] uppercase tracking-[0.12em] border-line/15 text-ink/80">
                           Approved
                         </span>
                       ) : (
-                        <span className="px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700">
+                        <span className="px-2 py-1 rounded-full border font-mono text-[10px] uppercase tracking-[0.12em] border-line/15 text-ink/80">
                           Pending
                         </span>
                       )}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-500">
+                    <td className="px-6 py-4 text-sm text-muted">
                       {new Date(vendor.createdAt).toLocaleDateString()}
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex gap-2">
                         <button
                           onClick={() => viewVendorDetails(vendor)}
-                          className="p-1.5 rounded-lg text-blue-500 hover:bg-blue-50 transition"
+                          className="p-1.5 rounded-xl text-accent hover:bg-accent hover:text-accent-ink transition"
                           title="View Details"
                         >
                           <EyeIcon className="w-4 h-4" />
@@ -303,14 +297,14 @@ export default function AdminVendors() {
                           <>
                             <button
                               onClick={() => handleApproveVendor(vendor._id)}
-                              className="p-1.5 rounded-lg text-green-500 hover:bg-green-50 transition"
+                              className="p-1.5 rounded-xl text-accent hover:bg-accent hover:text-accent-ink transition"
                               title="Approve Vendor"
                             >
                               <CheckCircleIcon className="w-4 h-4" />
                             </button>
                             <button
                               onClick={() => handleRejectVendor(vendor._id)}
-                              className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 transition"
+                              className="p-1.5 rounded-xl text-red-500 hover:bg-red-50 transition"
                               title="Reject Vendor"
                             >
                               <XCircleIcon className="w-4 h-4" />
@@ -334,49 +328,49 @@ export default function AdminVendors() {
           onClick={() => setShowDetailsModal(false)}
         >
           <div
-            className="bg-white dark:bg-gray-800 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            className="bg-surface rounded-[24px] max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-line/10"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="p-6 border-b border-gray-200 dark:border-gray-700 sticky top-0 bg-white dark:bg-gray-800">
+            <div className="p-6 border-b border-line/10 sticky top-0 bg-surface">
               <h2 className="text-xl font-bold">Vendor Details</h2>
             </div>
             <div className="p-6 space-y-4">
               {/* Personal Info */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-xs text-gray-500">Full Name</label>
+                  <label className="text-xs text-muted">Full Name</label>
                   <p className="font-medium">{selectedVendor.name}</p>
                 </div>
                 <div>
-                  <label className="text-xs text-gray-500">Email</label>
+                  <label className="text-xs text-muted">Email</label>
                   <p className="font-medium flex items-center gap-1">
                     <EnvelopeIcon className="w-3 h-3" /> {selectedVendor.email}
                   </p>
                 </div>
                 <div>
-                  <label className="text-xs text-gray-500">Phone</label>
+                  <label className="text-xs text-muted">Phone</label>
                   <p className="font-medium flex items-center gap-1">
                     <PhoneIcon className="w-3 h-3" />{" "}
                     {selectedVendor.phone || "N/A"}
                   </p>
                 </div>
                 <div>
-                  <label className="text-xs text-gray-500">Vendor Type</label>
+                  <label className="text-xs text-muted">Vendor Type</label>
                   <p className="font-medium capitalize">
                     {selectedVendor.vendorType || "Individual"}
                   </p>
                 </div>
                 <div>
-                  <label className="text-xs text-gray-500">Registered On</label>
+                  <label className="text-xs text-muted">Registered On</label>
                   <p className="font-medium">
                     {new Date(selectedVendor.createdAt).toLocaleDateString()}
                   </p>
                 </div>
                 <div>
-                  <label className="text-xs text-gray-500">
+                  <label className="text-xs text-muted">
                     Commission Rate
                   </label>
-                  <p className="font-medium text-green-600">
+                  <p className="font-medium text-accent">
                     {selectedVendor.commissionRate ||
                       (selectedVendor.vendorType === "business"
                         ? "10%"
@@ -395,7 +389,7 @@ export default function AdminVendors() {
                     </h3>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="text-xs text-gray-500">
+                        <label className="text-xs text-muted">
                           Aadhar Number
                         </label>
                         <p className="font-mono text-sm">
@@ -404,7 +398,7 @@ export default function AdminVendors() {
                         </p>
                       </div>
                       <div>
-                        <label className="text-xs text-gray-500">
+                        <label className="text-xs text-muted">
                           PAN Number
                         </label>
                         <p className="font-mono text-sm">
@@ -412,7 +406,7 @@ export default function AdminVendors() {
                         </p>
                       </div>
                       <div className="col-span-2">
-                        <label className="text-xs text-gray-500">Address</label>
+                        <label className="text-xs text-muted">Address</label>
                         <p className="text-sm">
                           {selectedVendor.individualDetails.address || "N/A"}
                         </p>
@@ -431,7 +425,7 @@ export default function AdminVendors() {
                     </h3>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="text-xs text-gray-500">
+                        <label className="text-xs text-muted">
                           Business Name
                         </label>
                         <p className="font-medium">
@@ -439,7 +433,7 @@ export default function AdminVendors() {
                         </p>
                       </div>
                       <div>
-                        <label className="text-xs text-gray-500">
+                        <label className="text-xs text-muted">
                           GST Number
                         </label>
                         <p className="font-mono text-sm">
@@ -447,7 +441,7 @@ export default function AdminVendors() {
                         </p>
                       </div>
                       <div>
-                        <label className="text-xs text-gray-500">
+                        <label className="text-xs text-muted">
                           Business PAN
                         </label>
                         <p className="font-mono text-sm">
@@ -455,13 +449,13 @@ export default function AdminVendors() {
                         </p>
                       </div>
                       <div>
-                        <label className="text-xs text-gray-500">Website</label>
+                        <label className="text-xs text-muted">Website</label>
                         <p className="text-sm">
                           {selectedVendor.businessDetails.website || "N/A"}
                         </p>
                       </div>
                       <div className="col-span-2">
-                        <label className="text-xs text-gray-500">
+                        <label className="text-xs text-muted">
                           Business Address
                         </label>
                         <p className="text-sm">
@@ -481,7 +475,7 @@ export default function AdminVendors() {
                   </h3>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="text-xs text-gray-500">
+                      <label className="text-xs text-muted">
                         Account Holder
                       </label>
                       <p className="font-medium">
@@ -491,7 +485,7 @@ export default function AdminVendors() {
                       </p>
                     </div>
                     <div>
-                      <label className="text-xs text-gray-500">
+                      <label className="text-xs text-muted">
                         Account Number
                       </label>
                       <p className="font-mono text-sm">
@@ -501,7 +495,7 @@ export default function AdminVendors() {
                       </p>
                     </div>
                     <div>
-                      <label className="text-xs text-gray-500">IFSC Code</label>
+                      <label className="text-xs text-muted">IFSC Code</label>
                       <p className="font-mono text-sm uppercase">
                         {selectedVendor.bankDetails?.ifscCode ||
                           selectedVendor.vendorDetails?.ifscCode ||
@@ -509,7 +503,7 @@ export default function AdminVendors() {
                       </p>
                     </div>
                     <div>
-                      <label className="text-xs text-gray-500">Bank Name</label>
+                      <label className="text-xs text-muted">Bank Name</label>
                       <p className="font-medium">
                         {selectedVendor.bankDetails?.bankName || "N/A"}
                       </p>
@@ -520,21 +514,21 @@ export default function AdminVendors() {
 
               {/* Status */}
               <div className="border-t pt-4">
-                <label className="text-xs text-gray-500">Approval Status</label>
+                <label className="text-xs text-muted">Approval Status</label>
                 <div className="mt-1">
                   {selectedVendor.isVendorApproved ? (
-                    <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                    <span className="px-2 py-1 rounded-full border font-mono text-[10px] uppercase tracking-[0.12em] border-line/15 text-ink/80">
                       Approved
                     </span>
                   ) : (
-                    <span className="px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700">
+                    <span className="px-2 py-1 rounded-full border font-mono text-[10px] uppercase tracking-[0.12em] border-line/15 text-ink/80">
                       Pending Approval
                     </span>
                   )}
                 </div>
               </div>
             </div>
-            <div className="p-6 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">
+            <div className="p-6 border-t border-line/10 flex justify-end gap-3">
               <button
                 onClick={() => setShowDetailsModal(false)}
                 className="btn-secondary"

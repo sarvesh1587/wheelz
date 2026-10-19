@@ -5,17 +5,18 @@ import { vehicleAPI, adminAPI } from "../services/api";
 import LoadingSpinner from "../components/common/LoadingSpinner";
 import AdminVehicleCard from "../components/vehicle/AdminVehicleCard";
 import {
-  UsersIcon,
-  TruckIcon,
-  CalendarIcon,
-  CurrencyRupeeIcon,
-  BuildingStorefrontIcon,
-  PlusIcon,
-  ChartBarIcon,
-  ArrowTrendingUpIcon,
-  ClockIcon,
-  CheckBadgeIcon,
-} from "@heroicons/react/24/outline";
+  Users as UsersIcon,
+  Truck as TruckIcon,
+  Calendar as CalendarIcon,
+  IndianRupee as CurrencyRupeeIcon,
+  Store as BuildingStorefrontIcon,
+  Plus as PlusIcon,
+  BarChart3 as ChartBarIcon,
+  TrendingUp as ArrowTrendingUpIcon,
+  Clock as ClockIcon,
+  BadgeCheck as CheckBadgeIcon,
+} from "lucide-react";
+import { PageHeader, Stat } from "../components/ui";
 
 export default function AdminHomepage() {
   const { user } = useAuth();
@@ -71,28 +72,28 @@ export default function AdminHomepage() {
       to: "/admin/vehicles/add",
       label: "Add Vehicle",
       icon: PlusIcon,
-      color: "bg-amber-500",
+      color: "bg-accent",
       description: "Add new car or bike to inventory",
     },
     {
       to: "/admin/vehicles",
       label: "Manage Vehicles",
       icon: TruckIcon,
-      color: "bg-blue-500",
+      color: "bg-ink text-canvas",
       description: "Edit, delete or update vehicle status",
     },
     {
       to: "/admin/users",
       label: "Manage Users",
       icon: UsersIcon,
-      color: "bg-green-500",
+      color: "bg-ink text-canvas",
       description: "View and manage all users",
     },
     {
       to: "/admin/vendors",
       label: "Vendors",
       icon: BuildingStorefrontIcon,
-      color: "bg-purple-500",
+      color: "bg-ink text-canvas",
       description: `${stats.pendingVendors} pending approvals`,
     },
   ];
@@ -102,113 +103,86 @@ export default function AdminHomepage() {
       label: "Total Users",
       value: stats.totalUsers,
       icon: UsersIcon,
-      color: "from-blue-500 to-blue-600",
+      color: "",
     },
     {
       label: "Total Vehicles",
       value: stats.totalVehicles,
       icon: TruckIcon,
-      color: "from-purple-500 to-purple-600",
+      color: "",
     },
     {
       label: "Total Bookings",
       value: stats.totalBookings,
       icon: CalendarIcon,
-      color: "from-orange-500 to-orange-600",
+      color: "",
     },
     {
       label: "Total Revenue",
       value: `₹${(stats.totalRevenue / 1000).toFixed(0)}K`,
       icon: CurrencyRupeeIcon,
-      color: "from-green-500 to-green-600",
+      color: "",
     },
   ];
 
   if (loading) return <LoadingSpinner />;
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 pt-20">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Welcome Hero Section */}
-        <div className="bg-gradient-to-r from-amber-500 to-orange-600 rounded-3xl p-8 mb-8 text-white">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div>
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center text-2xl">
-
-                </div>
-                <h1 className="text-2xl md:text-3xl font-bold">
-                  Welcome back, {user?.name?.split(" ")[0]}!
-                </h1>
-              </div>
-              <p className="text-white/80 text-lg">
-                Here's what's happening with your platform today.
-              </p>
-            </div>
-            <Link
-              to="/admin/vehicles/add"
-              className="bg-white/20 hover:bg-white/30 backdrop-blur-sm px-5 py-2.5 rounded-xl transition flex items-center gap-2 font-semibold text-sm"
-            >
-              <PlusIcon className="w-5 h-5" />
-              Add New Vehicle
+    <div className="pb-24 pt-28 md:pt-32">
+      <div className="container-x">
+        <PageHeader
+          index="01"
+          eyebrow="Admin"
+          title={[`Welcome back, ${user?.name?.split(" ")[0] || "admin"}.`]}
+          size="md"
+          lede="Here's what's happening with your platform today."
+          actions={
+            <Link to="/admin/vehicles/add" className="btn-primary">
+              <PlusIcon className="h-4 w-4" /> Add new vehicle
             </Link>
-          </div>
-        </div>
+          }
+        />
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          {statsCards.map((stat, index) => (
-            <div
-              key={index}
-              className={`bg-gradient-to-r ${stat.color} rounded-2xl p-4 text-white shadow-lg`}
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-2xl font-bold">{stat.value}</p>
-                  <p className="text-xs opacity-90 mt-1">{stat.label}</p>
-                </div>
-                <stat.icon className="w-8 h-8 opacity-80" />
-              </div>
-            </div>
+        <div className="mb-16 grid grid-cols-2 gap-x-6 gap-y-10 md:grid-cols-4">
+          {statsCards.map((stat) => (
+            <Stat key={stat.label} label={stat.label} value={stat.value} />
           ))}
         </div>
 
         {/* Quick Actions Grid */}
-        <div className="mb-10">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-            <span></span> Quick Actions
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {quickActions.map((action, index) => (
-              <Link
-                key={index}
-                to={action.to}
-                className={`${action.color} rounded-2xl p-5 text-white hover:shadow-xl transition-all hover:scale-105 group`}
-              >
-                <action.icon className="w-8 h-8 mb-3 opacity-90" />
-                <h3 className="font-semibold text-lg">{action.label}</h3>
-                <p className="text-white/70 text-sm mt-1">
-                  {action.description}
-                </p>
-              </Link>
-            ))}
-          </div>
+        <p className="eyebrow mb-4 flex items-center gap-3"><span className="text-accent">(02)</span> Quick actions</p>
+        <div className="mb-16 border-t border-line/10">
+          {quickActions.map((action) => (
+            <Link
+              key={action.to + action.label}
+              to={action.to}
+              className="group grid gap-2 border-b border-line/10 py-6 md:grid-cols-12 md:items-center"
+            >
+              <span className="flex items-center gap-5 md:col-span-6">
+                <action.icon className="h-5 w-5 text-muted transition-colors group-hover:text-accent" />
+                <span className="display-tight text-2xl md:text-3xl">{action.label}</span>
+              </span>
+              <span className="text-sm text-muted md:col-span-5">{action.description}</span>
+              <ArrowTrendingUpIcon className="hidden h-5 w-5 justify-self-end text-muted transition-colors group-hover:text-accent md:block" />
+            </Link>
+          ))}
         </div>
 
         {/* Featured Vehicles Section with Admin Controls */}
         <div>
           <div className="flex justify-between items-center mb-4">
             <div>
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                <span></span> Featured Vehicles
+              <h2 className="display-tight text-xl text-ink flex items-center gap-2">
+                Featured vehicles
               </h2>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+              <p className="text-sm text-muted mt-1">
                 Most popular vehicles - manage them directly from here
               </p>
             </div>
             <Link
               to="/admin/vehicles"
-              className="text-amber-500 hover:text-amber-600 text-sm font-medium flex items-center gap-1"
+              className="text-accent hover:text-accent text-sm font-medium flex items-center gap-1"
             >
               View All Vehicles
               <ArrowTrendingUpIcon className="w-4 h-4" />
@@ -216,14 +190,14 @@ export default function AdminHomepage() {
           </div>
 
           {featuredVehicles.length === 0 ? (
-            <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 text-center">
-              <TruckIcon className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-              <p className="text-gray-500">
+            <div className="bg-surface rounded-[24px] p-8 text-center border border-line/10">
+              <TruckIcon className="w-12 h-12 text-muted mx-auto mb-3" />
+              <p className="text-muted">
                 No vehicles found. Add your first vehicle!
               </p>
               <Link
                 to="/admin/vehicles/add"
-                className="inline-block mt-3 text-amber-500 hover:underline"
+                className="inline-block mt-3 text-accent hover:underline"
               >
                 + Add Vehicle
               </Link>
@@ -243,51 +217,49 @@ export default function AdminHomepage() {
 
         {/* Recent Activity / Tips */}
         <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-sm">
-            <h3 className="font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-              <ClockIcon className="w-5 h-5 text-amber-500" />
+          <div className="bg-surface rounded-[24px] p-5 border border-line/10">
+            <h3 className="font-semibold text-ink mb-3 flex items-center gap-2">
+              <ClockIcon className="w-5 h-5 text-accent" />
               Admin Tips
             </h3>
-            <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
-              <li>
-                • • New vehicle listings appear on homepage within minutes
-              </li>
-              <li>• • Use "Mark Unavailable" for vehicles under maintenance</li>
-              <li>• • Vendor registrations require your approval</li>
-              <li>• • Check analytics dashboard for revenue insights</li>
+            <ul className="space-y-2 text-sm text-muted">
+              <li>New vehicle listings appear on homepage within minutes</li>
+              <li>Use "Mark Unavailable" for vehicles under maintenance</li>
+              <li>Vendor registrations require your approval</li>
+              <li>Check analytics dashboard for revenue insights</li>
             </ul>
           </div>
 
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-sm">
-            <h3 className="font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-              <CheckBadgeIcon className="w-5 h-5 text-green-500" />
+          <div className="bg-surface rounded-[24px] p-5 border border-line/10">
+            <h3 className="font-semibold text-ink mb-3 flex items-center gap-2">
+              <CheckBadgeIcon className="w-5 h-5 text-accent" />
               Quick Stats
             </h3>
             <div className="space-y-3">
               <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">
+                <span className="text-sm text-muted">
                   Pending Vendor Approvals
                 </span>
-                <span className="font-semibold text-amber-500">
+                <span className="font-mono text-ink">
                   {stats.pendingVendors}
                 </span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">
+                <span className="text-sm text-muted">
                   Total Bookings This Month
                 </span>
-                <span className="font-semibold text-amber-500">
+                <span className="font-mono text-ink">
                   {stats.totalBookings}
                 </span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Average Rating</span>
-                <span className="font-semibold text-amber-500">4.8 ★</span>
+                <span className="text-sm text-muted">Average Rating</span>
+                <span className="font-mono text-ink">4.8</span>
               </div>
             </div>
             <Link
               to="/admin"
-              className="mt-4 inline-block text-sm text-amber-500 hover:underline"
+              className="mt-4 inline-block text-sm text-accent hover:underline"
             >
               View Full Analytics →
             </Link>
