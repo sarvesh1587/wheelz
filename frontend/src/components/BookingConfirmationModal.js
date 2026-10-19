@@ -1,13 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import {
-  XMarkIcon,
-  CheckCircleIcon,
-  CalendarIcon,
-  CurrencyRupeeIcon,
-  MapPinIcon,
-  TruckIcon,
-} from "@heroicons/react/24/outline";
+import { ArrowUpRight, Phone } from "lucide-react";
+import { Modal, Row } from "./ui";
 
 export default function BookingConfirmationModal({ booking, onClose }) {
   if (!booking) return null;
@@ -16,169 +10,68 @@ export default function BookingConfirmationModal({ booking, onClose }) {
   const vehicle = booking.vehicle;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 animate-fade-in">
-      <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        {/* Header */}
-        <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <CheckCircleIcon className="w-6 h-6 text-green-500" />
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-              Booking Confirmed!
-            </h2>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
-          >
-            <XMarkIcon className="w-5 h-5 text-gray-500" />
-          </button>
+    <Modal open onClose={onClose} eyebrow="Booking confirmed" title="You're all set." size="lg">
+      <p className="-mt-2 mb-8 text-sm text-muted">
+        Your booking has been confirmed. A confirmation email has been sent to your inbox.
+      </p>
+
+      <div className="mb-8 flex items-end justify-between rounded-[20px] border border-line/10 p-5">
+        <div>
+          <p className="eyebrow">Reference</p>
+          <p className="mt-2 font-mono text-lg">{booking.bookingRef}</p>
         </div>
+        <span className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.14em] text-muted">
+          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" /> Paid
+        </span>
+      </div>
 
-        <div className="p-6 space-y-6">
-          {/* Success Message */}
-          <div className="bg-green-50 dark:bg-green-900/20 rounded-xl p-4 text-center">
-            <p className="text-green-700 dark:text-green-400 font-medium">
-              Your booking has been confirmed successfully!
-            </p>
-            <p className="text-sm text-green-600 dark:text-green-500 mt-1">
-              A confirmation email has been sent to your inbox.
-            </p>
-          </div>
-
-          {/* Booking Reference */}
-          <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4 text-center">
-            <p className="text-xs text-gray-500 uppercase tracking-wide">
-              Booking Reference
-            </p>
-            <p className="text-xl font-mono font-bold text-amber-500">
-              {booking.bookingRef}
-            </p>
-          </div>
-
-          {/* Vehicle Details */}
-          <div className="border-b border-gray-200 dark:border-gray-700 pb-4">
-            <h3 className="font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-              <TruckIcon className="w-5 h-5 text-amber-500" />
-              Vehicle Details
-            </h3>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <p className="text-xs text-gray-500">Vehicle Name</p>
-                <p className="font-medium">{vehicle?.name}</p>
-              </div>
-              <div>
-                <p className="text-xs text-gray-500">Brand</p>
-                <p className="font-medium">{vehicle?.brand}</p>
-              </div>
-              <div>
-                <p className="text-xs text-gray-500">Year</p>
-                <p>{vehicle?.year}</p>
-              </div>
-              <div>
-                <p className="text-xs text-gray-500">Fuel Type</p>
-                <p className="capitalize">{vehicle?.fuelType}</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Rental Period */}
-          <div className="border-b border-gray-200 dark:border-gray-700 pb-4">
-            <h3 className="font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-              <CalendarIcon className="w-5 h-5 text-amber-500" />
-              Rental Period
-            </h3>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <p className="text-xs text-gray-500">Pickup Date</p>
-                <p className="font-medium">
-                  {new Date(booking.startDate).toLocaleDateString()}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs text-gray-500">Return Date</p>
-                <p className="font-medium">
-                  {new Date(booking.endDate).toLocaleDateString()}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs text-gray-500">Duration</p>
-                <p>{booking.totalDays} days</p>
-              </div>
-              <div>
-                <p className="text-xs text-gray-500">Pickup Location</p>
-                <p className="text-sm">{booking.pickupLocation}</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Vendor Contact (If available) */}
-          {vendorDetails && (
-            <div className="border-b border-gray-200 dark:border-gray-700 pb-4">
-              <h3 className="font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-                <MapPinIcon className="w-5 h-5 text-amber-500" />
-                Vendor Contact
-              </h3>
-              <div className="space-y-2">
-                <p>
-                  <span className="text-xs text-gray-500">Vendor:</span>{" "}
-                  {vendorDetails.businessName || vendorDetails.name}
-                </p>
-                <p>
-                  <span className="text-xs text-gray-500">Phone:</span>{" "}
-                  <a
-                    href={`tel:${vendorDetails.phone}`}
-                    className="text-blue-500"
-                  >
-                    {vendorDetails.phone}
-                  </a>
-                </p>
-                <p>
-                  <span className="text-xs text-gray-500">Address:</span>{" "}
-                  {vendorDetails.address}
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* Price Summary */}
-          <div>
-            <h3 className="font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-              <CurrencyRupeeIcon className="w-5 h-5 text-amber-500" />
-              Payment Summary
-            </h3>
-            <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4">
-              <div className="flex justify-between mb-2">
-                <span>Total Amount</span>
-                <span className="font-bold text-amber-500">
-                  ₹{booking.finalAmount?.toLocaleString()}
-                </span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-500">Payment Status</span>
-                <span className="text-green-600">Paid ✓</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex gap-3 pt-4">
-            <Link
-              to="/dashboard"
-              onClick={onClose}
-              className="flex-1 btn-primary text-center"
-            >
-              View My Bookings
-            </Link>
-            <button onClick={onClose} className="flex-1 btn-secondary">
-              Close
-            </button>
-          </div>
-
-          <p className="text-xs text-gray-500 text-center">
-            Need help? Contact support at support@wheelz.com
-          </p>
+      <div className="grid gap-x-10 md:grid-cols-2">
+        <div>
+          <p className="eyebrow mb-2">Vehicle</p>
+          <Row label="Name">{vehicle?.name}</Row>
+          <Row label="Brand">{vehicle?.brand}</Row>
+          <Row label="Year">{vehicle?.year}</Row>
+          <Row label="Fuel"><span className="capitalize">{vehicle?.fuelType}</span></Row>
+        </div>
+        <div className="mt-6 md:mt-0">
+          <p className="eyebrow mb-2">Rental period</p>
+          <Row label="Pickup">{new Date(booking.startDate).toLocaleDateString()}</Row>
+          <Row label="Return">{new Date(booking.endDate).toLocaleDateString()}</Row>
+          <Row label="Duration">{booking.totalDays} days</Row>
+          <Row label="Location">{booking.pickupLocation}</Row>
         </div>
       </div>
-    </div>
+
+      {vendorDetails && (
+        <div className="mt-8">
+          <p className="eyebrow mb-2">Vendor contact</p>
+          <Row label="Vendor">{vendorDetails.businessName || vendorDetails.name}</Row>
+          <Row label="Phone">
+            <a href={`tel:${vendorDetails.phone}`} className="link-underline inline-flex items-center gap-1.5">
+              <Phone size={12} /> {vendorDetails.phone}
+            </a>
+          </Row>
+          <Row label="Address">{vendorDetails.address}</Row>
+        </div>
+      )}
+
+      <div className="mt-8 flex items-end justify-between border-t border-line/10 pt-6">
+        <span className="eyebrow">Total paid</span>
+        <span className="display text-5xl">₹{booking.finalAmount?.toLocaleString()}</span>
+      </div>
+
+      <div className="mt-8 flex gap-3">
+        <Link to="/dashboard" onClick={onClose} className="btn-primary flex-1">
+          View my bookings <ArrowUpRight size={16} />
+        </Link>
+        <button onClick={onClose} className="btn-ghost flex-1">
+          Close
+        </button>
+      </div>
+
+      <p className="mt-6 text-center text-xs text-muted">
+        Need help? Contact support at support@wheelz.com
+      </p>
+    </Modal>
   );
 }

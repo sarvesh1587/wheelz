@@ -154,7 +154,7 @@ export default function TrackingMap({
           {pickup && (
             <Polyline
               positions={[driverLocation, pickup]}
-              color="#f59e0b"
+              color="#FF4D00"
               weight={4}
               dashArray="10, 10"
               opacity={0.7}

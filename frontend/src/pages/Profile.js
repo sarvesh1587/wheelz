@@ -2,13 +2,7 @@ import React, { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { authAPI } from "../services/api";
 import toast from "react-hot-toast";
-import {
-  UserIcon,
-  PhoneIcon,
-  MapPinIcon,
-  EnvelopeIcon,
-  KeyIcon,
-} from "@heroicons/react/24/outline";
+import { PageHeader, Segmented } from "../components/ui";
 
 export default function Profile() {
   const { user, updateUser } = useAuth();
@@ -74,96 +68,69 @@ export default function Profile() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8 sm:px-6 lg:px-8 pt-24">
-      <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">
-        My Profile
-      </h1>
+    <div className="container-x pb-24 pt-28 md:pt-32">
+      <PageHeader
+        index="01"
+        eyebrow="Account"
+        title={["Your profile."]}
+        actions={
+          <Segmented
+            value={activeTab}
+            onChange={setActiveTab}
+            options={[
+              { value: "profile", label: "Profile info" },
+              { value: "password", label: "Password" },
+            ]}
+          />
+        }
+      />
 
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
-        <div className="border-b border-gray-100 dark:border-gray-700 px-6 py-4">
-          <div className="flex gap-4">
-            <button
-              onClick={() => setActiveTab("profile")}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                activeTab === "profile"
-                  ? "bg-amber-500 text-gray-900"
-                  : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
-              }`}
-            >
-              Profile Info
-            </button>
-            <button
-              onClick={() => setActiveTab("password")}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                activeTab === "password"
-                  ? "bg-amber-500 text-gray-900"
-                  : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
-              }`}
-            >
-              Change Password
-            </button>
+      <div className="grid gap-12 lg:grid-cols-12">
+        <aside className="lg:col-span-4">
+          <div className="flex items-center gap-5 lg:flex-col lg:items-start">
+            <span className="display grid h-24 w-24 shrink-0 place-items-center rounded-full bg-accent text-4xl text-accent-ink">
+              {user?.name?.[0]?.toUpperCase()}
+            </span>
+            <div className="min-w-0">
+              <h2 className="display-tight text-3xl">{user?.name}</h2>
+              <p className="mt-1 truncate text-muted">{user?.email}</p>
+              <p className="eyebrow mt-3">Role · {user?.role}</p>
+            </div>
           </div>
-        </div>
+        </aside>
 
-        <div className="p-6">
+        <div className="lg:col-span-8">
           {activeTab === "profile" && (
-            <form onSubmit={handleProfileUpdate} className="space-y-6">
-              <div className="flex items-center gap-4 mb-6">
-                <div className="w-20 h-20 bg-amber-500 rounded-full flex items-center justify-center text-3xl font-bold text-gray-900">
-                  {user?.name?.[0]?.toUpperCase()}
-                </div>
-                <div>
-                  <h3 className="font-semibold text-gray-900 dark:text-white">
-                    {user?.name}
-                  </h3>
-                  <p className="text-sm text-gray-500">{user?.email}</p>
-                  <p className="text-xs text-gray-400 mt-1">
-                    Role: {user?.role}
-                  </p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Full Name
-                  </label>
-                  <div className="relative">
-                    <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <form onSubmit={handleProfileUpdate} className="space-y-12">
+              <section>
+                <p className="eyebrow mb-6 flex items-center gap-3"><span className="text-accent">(01)</span> Details</p>
+                <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+                  <div>
+                    <label className="field-label">Full name</label>
                     <input
                       type="text"
                       value={formData.name}
                       onChange={(e) =>
                         setFormData({ ...formData, name: e.target.value })
                       }
-                      className="input-field pl-10"
+                      className="field"
                     />
                   </div>
-                </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Phone Number
-                  </label>
-                  <div className="relative">
-                    <PhoneIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <div>
+                    <label className="field-label">Phone number</label>
                     <input
                       type="tel"
                       value={formData.phone}
                       onChange={(e) =>
                         setFormData({ ...formData, phone: e.target.value })
                       }
-                      className="input-field pl-10"
+                      className="field"
                     />
                   </div>
-                </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    City
-                  </label>
-                  <div className="relative">
-                    <MapPinIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <div>
+                    <label className="field-label">City</label>
                     <input
                       type="text"
                       value={formData.address?.city || ""}
@@ -176,40 +143,34 @@ export default function Profile() {
                           },
                         })
                       }
-                      className="input-field pl-10"
+                      className="field"
                       placeholder="Your city"
                     />
                   </div>
-                </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    State
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.address?.state || ""}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        address: { ...formData.address, state: e.target.value },
-                      })
-                    }
-                    className="input-field"
-                    placeholder="Your state"
-                  />
-                </div>
-              </div>
-
-              <div className="border-t border-gray-100 dark:border-gray-700 pt-6">
-                <h3 className="font-semibold text-gray-900 dark:text-white mb-4">
-                  Preferences
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Vehicle Type
-                    </label>
+                    <label className="field-label">State</label>
+                    <input
+                      type="text"
+                      value={formData.address?.state || ""}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          address: { ...formData.address, state: e.target.value },
+                        })
+                      }
+                      className="field"
+                      placeholder="Your state"
+                    />
+                  </div>
+                </div>
+              </section>
+
+              <section>
+                <p className="eyebrow mb-6 flex items-center gap-3"><span className="text-accent">(02)</span> Preferences</p>
+                <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
+                  <div>
+                    <label className="field-label">Vehicle type</label>
                     <select
                       value={formData.preferences?.vehicleType || "any"}
                       onChange={(e) =>
@@ -221,7 +182,7 @@ export default function Profile() {
                           },
                         })
                       }
-                      className="input-field"
+                      className="field [&>option]:bg-surface"
                     >
                       <option value="any">Any</option>
                       <option value="car">Car</option>
@@ -230,9 +191,7 @@ export default function Profile() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Fuel Type
-                    </label>
+                    <label className="field-label">Fuel type</label>
                     <select
                       value={formData.preferences?.fuelType || "any"}
                       onChange={(e) =>
@@ -244,7 +203,7 @@ export default function Profile() {
                           },
                         })
                       }
-                      className="input-field"
+                      className="field [&>option]:bg-surface"
                     >
                       <option value="any">Any</option>
                       <option value="petrol">Petrol</option>
@@ -254,9 +213,7 @@ export default function Profile() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Max Budget (₹/day)
-                    </label>
+                    <label className="field-label">Max budget (₹/day)</label>
                     <input
                       type="number"
                       value={formData.preferences?.maxBudget || 5000}
@@ -269,48 +226,39 @@ export default function Profile() {
                           },
                         })
                       }
-                      className="input-field"
+                      className="field"
                     />
                   </div>
                 </div>
-              </div>
+              </section>
 
               <button type="submit" disabled={loading} className="btn-primary">
-                {loading ? "Saving..." : "Save Changes"}
+                {loading ? "Saving…" : "Save changes"}
               </button>
             </form>
           )}
 
           {activeTab === "password" && (
-            <form
-              onSubmit={handlePasswordChange}
-              className="space-y-4 max-w-md"
-            >
+            <form onSubmit={handlePasswordChange} className="max-w-md space-y-8">
+              <p className="eyebrow flex items-center gap-3"><span className="text-accent">(01)</span> Change password</p>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Current Password
-                </label>
-                <div className="relative">
-                  <KeyIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <input
-                    type="password"
-                    value={passwordData.currentPassword}
-                    onChange={(e) =>
-                      setPasswordData({
-                        ...passwordData,
-                        currentPassword: e.target.value,
-                      })
-                    }
-                    className="input-field pl-10"
-                    required
-                  />
-                </div>
+                <label className="field-label">Current password</label>
+                <input
+                  type="password"
+                  value={passwordData.currentPassword}
+                  onChange={(e) =>
+                    setPasswordData({
+                      ...passwordData,
+                      currentPassword: e.target.value,
+                    })
+                  }
+                  className="field"
+                  required
+                />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  New Password
-                </label>
+                <label className="field-label">New password</label>
                 <input
                   type="password"
                   value={passwordData.newPassword}
@@ -320,15 +268,13 @@ export default function Profile() {
                       newPassword: e.target.value,
                     })
                   }
-                  className="input-field"
+                  className="field"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Confirm New Password
-                </label>
+                <label className="field-label">Confirm new password</label>
                 <input
                   type="password"
                   value={passwordData.confirmPassword}
@@ -338,13 +284,13 @@ export default function Profile() {
                       confirmPassword: e.target.value,
                     })
                   }
-                  className="input-field"
+                  className="field"
                   required
                 />
               </div>
 
               <button type="submit" disabled={loading} className="btn-primary">
-                {loading ? "Changing..." : "Change Password"}
+                {loading ? "Changing…" : "Change password"}
               </button>
             </form>
           )}

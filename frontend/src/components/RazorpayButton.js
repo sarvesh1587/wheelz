@@ -68,7 +68,7 @@ export default function RazorpayButton({ bookingId, amount, onSuccess }) {
           contact: localStorage.getItem("user_phone") || "",
         },
         theme: {
-          color: "#f59e0b",
+          color: "#FF4D00",
         },
         modal: {
           ondismiss: () => {
@@ -94,13 +94,13 @@ export default function RazorpayButton({ bookingId, amount, onSuccess }) {
     <button
       onClick={handlePayment}
       disabled={loading}
-      className="w-full py-3 bg-gradient-to-r from-amber-500 to-amber-600 text-white font-semibold rounded-lg hover:shadow-lg transition-all disabled:opacity-50"
+      className="btn-primary w-full !py-4"
     >
       {loading ? (
-        <div className="flex items-center justify-center gap-2">
-          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-          Loading...
-        </div>
+        <>
+          <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+          Loading…
+        </>
       ) : (
         `Pay ₹${amount.toLocaleString()}`
       )}

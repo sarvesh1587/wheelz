@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { XMarkIcon, StarIcon } from "@heroicons/react/24/outline";
-import { StarIcon as StarSolid } from "@heroicons/react/24/solid";
+import { Star } from "lucide-react";
+import { Modal, Spinner } from "./ui";
 import { reviewAPI } from "../services/api";
 import toast from "react-hot-toast";
 
@@ -62,92 +62,62 @@ export default function ReviewModal({
     }
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-        onClick={onClose}
-      />
-
-      <div className="relative w-full max-w-md bg-white dark:bg-gray-900 rounded-2xl shadow-2xl overflow-hidden">
-        <div className="bg-gradient-to-r from-amber-500 to-amber-600 px-6 py-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold text-white">Write a Review</h2>
+    <Modal open={isOpen} onClose={onClose} eyebrow={`Reviewing · ${vehicle?.name || ""}`} title="Write a review" size="md">
+      <form onSubmit={handleSubmit}>
+        <p className="field-label mb-3">Your rating</p>
+        <div className="mb-8 flex gap-2" onMouseLeave={() => setHoverRating(0)}>
+          {[1, 2, 3, 4, 5].map((star) => (
             <button
-              onClick={onClose}
-              className="p-1 rounded-full hover:bg-white/20"
+              key={star}
+              type="button"
+              onClick={() => setRating(star)}
+              onMouseEnter={() => setHoverRating(star)}
+              aria-label={`${star} star${star > 1 ? "s" : ""}`}
+              className="transition-transform hover:scale-110"
             >
-              <XMarkIcon className="w-5 h-5 text-white" />
+              <Star
+                size={32}
+                strokeWidth={1.5}
+                className={(hoverRating || rating) >= star ? "fill-accent text-accent" : "text-line/25"}
+              />
             </button>
-          </div>
-          <p className="text-white/80 text-sm mt-1">
-            Reviewing: {vehicle?.name}
-          </p>
+          ))}
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6">
-          <div className="text-center mb-5">
-            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-              Your Rating
-            </label>
-            <div className="flex items-center justify-center gap-2">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <button
-                  key={star}
-                  type="button"
-                  onClick={() => setRating(star)}
-                  onMouseEnter={() => setHoverRating(star)}
-                  onMouseLeave={() => setHoverRating(0)}
-                  className="focus:outline-none"
-                >
-                  {(hoverRating || rating) >= star ? (
-                    <StarSolid className="w-8 h-8 text-amber-500" />
-                  ) : (
-                    <StarIcon className="w-8 h-8 text-gray-300 dark:text-gray-600" />
-                  )}
-                </button>
-              ))}
-            </div>
-          </div>
+        <div className="mb-8">
+          <label className="field-label">Review title (optional)</label>
+          <input
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="e.g., Amazing experience!"
+            className="field"
+          />
+        </div>
 
-          <div className="mb-4">
-            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-              Review Title (Optional)
-            </label>
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="e.g., Amazing experience!"
-              className="w-full px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
-            />
-          </div>
+        <div className="mb-8">
+          <label className="field-label">Your review</label>
+          <textarea
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+            rows={4}
+            placeholder="Share your experience…"
+            className="field resize-none"
+            required
+          />
+        </div>
 
-          <div className="mb-4">
-            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-              Your Review *
-            </label>
-            <textarea
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              rows={4}
-              placeholder="Share your experience..."
-              className="w-full px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 resize-none"
-              required
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={submitting}
-            className="w-full py-3 bg-gradient-to-r from-amber-500 to-amber-600 text-white font-semibold rounded-lg disabled:opacity-50"
-          >
-            {submitting ? "Submitting..." : "Submit Review"}
-          </button>
-        </form>
-      </div>
-    </div>
+        <button type="submit" disabled={submitting} className="btn-primary w-full !py-4">
+          {submitting ? (
+            <>
+              <Spinner /> Submitting…
+            </>
+          ) : (
+            "Submit review"
+          )}
+        </button>
+      </form>
+    </Modal>
   );
 }

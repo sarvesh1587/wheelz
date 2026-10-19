@@ -159,7 +159,7 @@ export default function RideShareDetail() {
               email: user?.email,
               contact: user?.phone,
             },
-            theme: { color: "#f59e0b" },
+            theme: { color: "#FF4D00" },
             modal: {
               ondismiss: () => {
                 toast.error("Cancelled");

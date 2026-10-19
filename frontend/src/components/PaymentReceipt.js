@@ -1,5 +1,16 @@
 import React from "react";
 import html2pdf from "html2pdf.js";
+import { Download } from "lucide-react";
+import { Modal } from "./ui";
+
+// The receipt body is rendered to PDF, so it stays a light paper sheet
+// with fixed colours regardless of the site theme.
+const ReceiptRow = ({ label, children }) => (
+  <div className="flex justify-between gap-4 border-b border-black/10 py-2.5 text-sm last:border-0">
+    <span className="text-[#6F6D68]">{label}</span>
+    <span className="text-right text-[#111112]">{children}</span>
+  </div>
+);
 
 const PaymentReceipt = ({ booking, onClose }) => {
   const downloadPDF = () => {
@@ -17,108 +28,60 @@ const PaymentReceipt = ({ booking, onClose }) => {
   if (!booking) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="p-6 border-b flex justify-between items-center sticky top-0 bg-white dark:bg-gray-800">
-          <h2 className="text-xl font-bold">Payment Receipt</h2>
-          <button
-            onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 text-2xl"
-          >
-            ✕
-          </button>
+    <Modal open onClose={onClose} eyebrow="Receipt" title="Payment receipt" size="lg">
+      <div id="receipt-content" className="rounded-[20px] bg-white p-6 text-[#111112] md:p-8">
+        <div className="mb-8 flex items-end justify-between border-b border-black/10 pb-6">
+          <div>
+            <p className="display text-3xl">Wheelz</p>
+            <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.18em] text-[#6F6D68]">
+              Premium Vehicle Rentals
+            </p>
+          </div>
+          <span className="rounded-full bg-[#111112] px-3 py-1 font-mono text-[10px] uppercase tracking-[0.18em] text-white">
+            Paid
+          </span>
         </div>
 
-        <div id="receipt-content" className="p-6">
-          <div className="text-center mb-6">
-            <div className="w-16 h-16 bg-amber-500 rounded-2xl flex items-center justify-center mx-auto mb-3">
-              <span className="text-2xl font-bold text-gray-900">W</span>
-            </div>
-            <h2 className="text-2xl font-bold">Wheelz</h2>
-            <p className="text-gray-500">Premium Vehicle Rentals</p>
-          </div>
+        <ReceiptRow label="Booking ID">
+          <span className="font-mono font-semibold">{booking.bookingRef}</span>
+        </ReceiptRow>
+        <ReceiptRow label="Payment date">{new Date().toLocaleString()}</ReceiptRow>
 
-          <div className="border-t border-b py-4 my-4">
-            <div className="flex justify-between mb-2">
-              <span className="text-gray-600">Booking ID:</span>
-              <span className="font-mono font-bold">{booking.bookingRef}</span>
-            </div>
-            <div className="flex justify-between mb-2">
-              <span className="text-gray-600">Payment Date:</span>
-              <span>{new Date().toLocaleString()}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">Payment Status:</span>
-              <span className="text-green-600 font-semibold">✓ Paid</span>
-            </div>
-          </div>
+        <p className="mb-1 mt-6 font-mono text-[10px] uppercase tracking-[0.18em] text-[#6F6D68]">Customer</p>
+        <ReceiptRow label="Name">{booking.user?.name}</ReceiptRow>
+        <ReceiptRow label="Email">{booking.user?.email}</ReceiptRow>
 
-          <div className="mb-4">
-            <h3 className="font-semibold mb-2">Customer Details</h3>
-            <p>
-              <strong>Name:</strong> {booking.user?.name}
-            </p>
-            <p>
-              <strong>Email:</strong> {booking.user?.email}
-            </p>
-          </div>
+        <p className="mb-1 mt-6 font-mono text-[10px] uppercase tracking-[0.18em] text-[#6F6D68]">Vehicle</p>
+        <ReceiptRow label="Vehicle">{booking.vehicle?.name}</ReceiptRow>
+        <ReceiptRow label="Brand">{booking.vehicle?.brand}</ReceiptRow>
+        <ReceiptRow label="Year">{booking.vehicle?.year}</ReceiptRow>
 
-          <div className="mb-4">
-            <h3 className="font-semibold mb-2">Vehicle Details</h3>
-            <p>
-              <strong>Vehicle:</strong> {booking.vehicle?.name}
-            </p>
-            <p>
-              <strong>Brand:</strong> {booking.vehicle?.brand}
-            </p>
-            <p>
-              <strong>Year:</strong> {booking.vehicle?.year}
-            </p>
-          </div>
+        <p className="mb-1 mt-6 font-mono text-[10px] uppercase tracking-[0.18em] text-[#6F6D68]">Rental</p>
+        <ReceiptRow label="Pickup date">{new Date(booking.startDate).toLocaleDateString()}</ReceiptRow>
+        <ReceiptRow label="Return date">{new Date(booking.endDate).toLocaleDateString()}</ReceiptRow>
+        <ReceiptRow label="Duration">{booking.totalDays} days</ReceiptRow>
+        <ReceiptRow label="Pickup location">{booking.pickupLocation}</ReceiptRow>
 
-          <div className="mb-4">
-            <h3 className="font-semibold mb-2">Rental Details</h3>
-            <p>
-              <strong>Pickup Date:</strong>{" "}
-              {new Date(booking.startDate).toLocaleDateString()}
-            </p>
-            <p>
-              <strong>Return Date:</strong>{" "}
-              {new Date(booking.endDate).toLocaleDateString()}
-            </p>
-            <p>
-              <strong>Duration:</strong> {booking.totalDays} days
-            </p>
-            <p>
-              <strong>Pickup Location:</strong> {booking.pickupLocation}
-            </p>
-          </div>
-
-          <div className="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg mt-4">
-            <div className="flex justify-between font-bold">
-              <span>Total Amount:</span>
-              <span className="text-amber-500">
-                ₹{booking.finalAmount.toLocaleString()}
-              </span>
-            </div>
-          </div>
-
-          <div className="text-center text-gray-400 text-xs mt-6">
-            <p>Thank you for choosing Wheelz!</p>
-            <p>support@wheelz.com | +91 98765 43210</p>
-          </div>
+        <div className="mt-8 flex items-end justify-between border-t-2 border-[#111112] pt-5">
+          <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#6F6D68]">Total amount</span>
+          <span className="display text-4xl">₹{booking.finalAmount.toLocaleString()}</span>
         </div>
 
-        <div className="p-6 border-t flex gap-3 sticky bottom-0 bg-white dark:bg-gray-800">
-          <button onClick={downloadPDF} className="flex-1 btn-primary">
-            Download PDF
-          </button>
-          <button onClick={onClose} className="flex-1 btn-secondary">
-            Close
-          </button>
+        <div className="mt-10 text-xs text-[#6F6D68]">
+          <p>Thank you for choosing Wheelz.</p>
+          <p>support@wheelz.com | +91 98765 43210</p>
         </div>
       </div>
-    </div>
+
+      <div className="mt-6 flex gap-3">
+        <button onClick={downloadPDF} className="btn-primary flex-1">
+          <Download size={16} /> Download PDF
+        </button>
+        <button onClick={onClose} className="btn-ghost flex-1">
+          Close
+        </button>
+      </div>
+    </Modal>
   );
 };
 

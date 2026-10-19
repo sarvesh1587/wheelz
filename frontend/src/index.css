@@ -108,6 +108,15 @@
     @apply eyebrow mb-1 block;
   }
 
+  /* Legacy aliases kept so older forms pick up the design system */
+  .btn-secondary {
+    @apply btn-ghost;
+  }
+
+  .input-field {
+    @apply w-full rounded-2xl border border-line/15 bg-transparent px-4 py-3 text-sm text-ink outline-none transition-colors placeholder:text-muted/70 focus:border-ink [&>option]:bg-surface;
+  }
+
   .chip {
     @apply inline-flex items-center gap-1.5 rounded-full border border-line/15 px-3.5 py-1.5 text-xs font-medium text-ink/80 transition-colors duration-300 hover:border-ink hover:text-ink;
   }
@@ -209,4 +218,61 @@ html.lenis body {
   .grain::before {
     display: none;
   }
+}
+
+/* ---------- react-datepicker, restyled to the tokens ---------- */
+.react-datepicker-wrapper {
+  display: block;
+  width: 100%;
+}
+.react-datepicker {
+  font-family: "Inter Tight", sans-serif !important;
+  background: rgb(var(--surface)) !important;
+  color: rgb(var(--ink)) !important;
+  border: 1px solid rgb(var(--line) / 0.12) !important;
+  border-radius: 20px !important;
+  overflow: hidden;
+  box-shadow: 0 30px 60px -20px rgb(0 0 0 / 0.45);
+}
+.react-datepicker__header {
+  background: rgb(var(--surface)) !important;
+  border-bottom: 1px solid rgb(var(--line) / 0.1) !important;
+}
+.react-datepicker__current-month,
+.react-datepicker__day-name,
+.react-datepicker__day,
+.react-datepicker-time__header {
+  color: rgb(var(--ink)) !important;
+}
+.react-datepicker__day-name {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  color: rgb(var(--muted)) !important;
+}
+.react-datepicker__day {
+  border-radius: 999px !important;
+}
+.react-datepicker__day:hover {
+  background: rgb(var(--raised)) !important;
+}
+.react-datepicker__day--disabled {
+  color: rgb(var(--muted) / 0.5) !important;
+}
+.react-datepicker__day--selected,
+.react-datepicker__day--in-range,
+.react-datepicker__day--keyboard-selected,
+.react-datepicker__day--in-selecting-range {
+  background: rgb(var(--accent)) !important;
+  color: rgb(var(--accent-ink)) !important;
+}
+.react-datepicker__day--in-range:not(.react-datepicker__day--range-start):not(.react-datepicker__day--range-end) {
+  background: rgb(var(--accent) / 0.18) !important;
+  color: rgb(var(--ink)) !important;
+}
+.react-datepicker__triangle {
+  display: none;
+}
+.react-datepicker__navigation-icon::before {
+  border-color: rgb(var(--muted)) !important;
 }

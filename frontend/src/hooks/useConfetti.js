@@ -7,9 +7,9 @@
 import { useCallback, useRef, useEffect } from "react";
 
 const COLORS = {
-  amber: ["#f59e0b", "#fbbf24", "#fcd34d"],
+  amber: ["#FF4D00", "#FF6E33", "#F2EFE8"],
   green: ["#10b981", "#34d399", "#6ee7b7"],
-  all: ["#f59e0b", "#fbbf24", "#10b981", "#ffffff", "#6366f1", "#f43f5e"],
+  all: ["#FF4D00", "#FF6E33", "#F2EFE8", "#ffffff", "#9D9A93"],
 };
 
 export function useConfetti() {
