@@ -83,19 +83,19 @@ export default function OfferTrip() {
     try {
       await rideShareAPI.create({
         bookingId: formData.bookingId,
-        fromCity: formData.from, // ✅ renamed
-        toCity: formData.to, // ✅ renamed
-        departureDate: formData.departureDate, // ✅ separate field
-        departureTime: formData.departureTime || "10:00", // ✅ separate field
+        fromCity: formData.from, // renamed
+        toCity: formData.to, // renamed
+        departureDate: formData.departureDate, // separate field
+        departureTime: formData.departureTime || "10:00", // separate field
         totalSeats: formData.totalSeats,
         pricePerSeat: formData.pricePerSeat || null,
         useAutoPrice: !formData.pricePerSeat,
         womenOnly: formData.womenOnly,
-        petsAllowed: formData.allowPets, // ✅ renamed
-        luggageAllowed: formData.luggageSpace, // ✅ renamed
-        disclaimerAccepted: true, // ✅ added
+        petsAllowed: formData.allowPets, // renamed
+        luggageAllowed: formData.luggageSpace, // renamed
+        disclaimerAccepted: true, // added
       });
-      toast.success("Trip offered successfully! 🎉");
+      toast.success("Trip offered successfully!");
       navigate("/dashboard");
     } catch (error) {
       console.error("Offer trip error:", error);
@@ -138,7 +138,7 @@ export default function OfferTrip() {
             animate={{ opacity: 1, y: 0 }}
             className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl shadow-xl border border-white/20 dark:border-gray-700/30 p-8 text-center"
           >
-            <div className="text-6xl mb-4">🚗</div>
+            <div className="text-6xl mb-4"></div>
             <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
               No Confirmed Bookings
             </h2>
@@ -175,7 +175,7 @@ export default function OfferTrip() {
                   <option value="">Select a confirmed booking</option>
                   {confirmedBookings.map((booking) => (
                     <option key={booking._id} value={booking._id}>
-                      🚗 {booking.vehicle?.name} - {booking.pickupLocation} (
+                      {booking.vehicle?.name} - {booking.pickupLocation} (
                       {new Date(booking.startDate).toLocaleDateString()})
                     </option>
                   ))}
@@ -333,7 +333,7 @@ export default function OfferTrip() {
                       }
                       className="rounded text-amber-500"
                     />
-                    <span className="text-sm">👩 Women only</span>
+                    <span className="text-sm">Women only</span>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
@@ -347,7 +347,7 @@ export default function OfferTrip() {
                       }
                       className="rounded text-amber-500"
                     />
-                    <span className="text-sm">🐾 Pets allowed</span>
+                    <span className="text-sm">Pets allowed</span>
                   </label>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
@@ -361,9 +361,9 @@ export default function OfferTrip() {
                     }
                     className="px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm"
                   >
-                    <option value="silence">🔇 Silence preferred</option>
-                    <option value="conversation">💬 Conversation</option>
-                    <option value="music">🎵 Music</option>
+                    <option value="silence">Silence preferred</option>
+                    <option value="conversation">Conversation</option>
+                    <option value="music">Music</option>
                   </select>
                   <select
                     value={formData.luggageSpace}
@@ -373,9 +373,9 @@ export default function OfferTrip() {
                     className="px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm"
                   >
                     <option value="none">No luggage space</option>
-                    <option value="small">👜 Small (backpack)</option>
-                    <option value="medium">💼 Medium (1 suitcase)</option>
-                    <option value="large">🧳 Large (2+ suitcases)</option>
+                    <option value="small">Small (backpack)</option>
+                    <option value="medium">Medium (1 suitcase)</option>
+                    <option value="large">Large (2+ suitcases)</option>
                   </select>
                 </div>
               </div>

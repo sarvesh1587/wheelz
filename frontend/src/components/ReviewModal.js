@@ -41,7 +41,7 @@ export default function ReviewModal({
       console.log("Review response:", response.data);
 
       if (response.data.success) {
-        toast.success("Review submitted successfully! 🎉");
+        toast.success("Review submitted successfully!");
 
         // Callback to refresh reviews
         if (onReviewSubmitted) {

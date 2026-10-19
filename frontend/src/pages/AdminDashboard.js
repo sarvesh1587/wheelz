@@ -13,7 +13,7 @@ import {
   XCircleIcon,
   EyeIcon,
   XMarkIcon,
-  IdentificationIcon, // ✅ Add this
+  IdentificationIcon, // Add this
 } from "@heroicons/react/24/outline";
 import {
   LineChart,
@@ -35,7 +35,7 @@ export default function AdminDashboard() {
   const [dashboardData, setDashboardData] = useState(null);
   const [users, setUsers] = useState([]);
   const [vendors, setVendors] = useState([]);
-  const [kycSubmissions, setKycSubmissions] = useState([]); // ✅ Add this
+  const [kycSubmissions, setKycSubmissions] = useState([]); // Add this
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("overview");
   const [selectedVendor, setSelectedVendor] = useState(null);
@@ -53,7 +53,7 @@ export default function AdminDashboard() {
           adminAPI.getAllUsers(),
           vehicleAPI.getAll({ limit: 100 }),
           bookingAPI.getAll({ limit: 100 }),
-          kycAPI.getAll({ status: "pending" }), // ✅ Get pending KYC
+          kycAPI.getAll({ status: "pending" }), // Get pending KYC
         ]);
 
       const allUsers = allUsersRes.data?.users || [];
@@ -63,7 +63,7 @@ export default function AdminDashboard() {
       setDashboardData(dashboardRes.data);
       setUsers(customers);
       setVendors(vendorsList);
-      setKycSubmissions(kycRes.data.kycs || []); // ✅ Set KYC submissions
+      setKycSubmissions(kycRes.data.kycs || []); // Set KYC submissions
       setDashboardData((prev) => ({
         ...prev,
         totalVehicles: vehiclesRes.data.vehicles?.length || 0,
@@ -77,7 +77,7 @@ export default function AdminDashboard() {
     }
   };
 
-  // ✅ KYC Action Handlers
+  // KYC Action Handlers
   const handleVerifyKYC = async (userId) => {
     try {
       await kycAPI.verify(userId);
@@ -148,7 +148,7 @@ export default function AdminDashboard() {
       value: kycSubmissions.length,
       icon: IdentificationIcon,
       color: "from-yellow-500 to-yellow-600",
-    }, // ✅ Added
+    }, // Added
     {
       label: "Active Bookings",
       value: dashboardData?.activeBookings || 0,
@@ -293,7 +293,7 @@ export default function AdminDashboard() {
         <div className="flex gap-2 mb-6 border-b border-gray-200 dark:border-gray-700 overflow-x-auto">
           {[
             { id: "overview", label: "Overview", icon: ChartBarIcon },
-            { id: "kyc", label: "KYC Verification", icon: IdentificationIcon }, // ✅ Added KYC Tab
+            { id: "kyc", label: "KYC Verification", icon: IdentificationIcon }, // Added KYC Tab
             { id: "users", label: "Users", icon: UsersIcon },
             { id: "vendors", label: "Vendors", icon: BuildingStorefrontIcon },
           ].map((tab) => (
@@ -312,7 +312,7 @@ export default function AdminDashboard() {
           ))}
         </div>
 
-        {/* ✅ KYC Verification Tab */}
+        {/* KYC Verification Tab */}
         {/* {activeTab === "kyc" && (
           <motion.div
             initial={{ opacity: 0 }}
@@ -385,19 +385,19 @@ export default function AdminDashboard() {
                           </div>
                           <div className="flex gap-4 mt-3 text-xs text-gray-400">
                             <span>
-                              📄 DL Front:{" "}
+                              DL Front:{" "}
                               {kyc.drivingLicenseFront?.split("/").pop()}
                             </span>
                             <span>
-                              📄 DL Back:{" "}
+                              DL Back:{" "}
                               {kyc.drivingLicenseBack?.split("/").pop()}
                             </span>
                             <span>
-                              📄 Aadhaar Front:{" "}
+                              Aadhaar Front:{" "}
                               {kyc.aadhaarFront?.split("/").pop()}
                             </span>
                             <span>
-                              📄 Aadhaar Back:{" "}
+                              Aadhaar Back:{" "}
                               {kyc.aadhaarBack?.split("/").pop()}
                             </span>
                           </div>
@@ -426,7 +426,7 @@ export default function AdminDashboard() {
             </div>
           </motion.div>
         )} */}
-        {/* ✅ KYC Verification Tab with Image Previews */}
+        {/* KYC Verification Tab with Image Previews */}
         {activeTab === "kyc" && (
           <motion.div
             initial={{ opacity: 0 }}
@@ -499,7 +499,7 @@ export default function AdminDashboard() {
                             </div>
                           </div>
 
-                          {/* ✅ Image Previews */}
+                          {/* Image Previews */}
                           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4">
                             {/* Driving License Front */}
                             <div className="relative group">

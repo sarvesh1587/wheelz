@@ -36,7 +36,7 @@ export default function BookingSuccess() {
         </div>
 
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-          Booking Confirmed! 🎉
+          Booking Confirmed!
         </h1>
         <p className="text-gray-500 dark:text-gray-400 mb-6">
           Your booking has been confirmed. A confirmation email has been sent to
@@ -97,7 +97,7 @@ export default function BookingSuccess() {
             onClick={() => setShowReceipt(true)}
             className="btn-secondary flex-1 text-center"
           >
-            📄 Download Receipt
+            Download Receipt
           </button>
         </div>
 

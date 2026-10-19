@@ -148,7 +148,7 @@ export default function RideShareDetail() {
                   razorpayPaymentId: r.razorpay_payment_id,
                   razorpaySignature: r.razorpay_signature,
                 });
-                toast.success("Paid! 🎉");
+                toast.success("Paid!");
                 fetchTripDetails();
               } catch (e) {
                 toast.error("Verification failed");
@@ -291,7 +291,7 @@ export default function RideShareDetail() {
                 <h3 className="font-semibold text-lg">{trip.driver?.name}</h3>
                 <div className="flex items-center gap-2 mt-1">
                   <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
-                    ✅ Verified
+                    Verified
                   </span>
                   <span className="text-xs text-gray-400">
                     {trip.driver?.ridesCompleted || 0} rides
@@ -312,7 +312,7 @@ export default function RideShareDetail() {
               >
                 <div className="flex items-center gap-3 mb-3">
                   <div className="w-12 h-12 bg-yellow-500 rounded-full flex items-center justify-center text-white text-xl">
-                    ⏳
+
                   </div>
                   <div>
                     <h2 className="text-lg font-semibold text-yellow-800">
@@ -342,7 +342,7 @@ export default function RideShareDetail() {
               >
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center text-white text-xl">
-                    ✅
+
                   </div>
                   <div>
                     <h2 className="text-lg font-semibold text-green-800">
@@ -362,7 +362,7 @@ export default function RideShareDetail() {
                   </div>
                   {myRequest?.isNegotiated && (
                     <p className="text-xs text-green-600 mt-1">
-                      💰 Negotiated (Original: ₹{trip.pricePerSeat})
+                      Negotiated (Original: ₹{trip.pricePerSeat})
                     </p>
                   )}
                   <div className="flex justify-between items-center mt-2">
@@ -394,7 +394,7 @@ export default function RideShareDetail() {
               >
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center text-white text-xl">
-                    🎉
+
                   </div>
                   <div>
                     <h2 className="text-lg font-semibold text-green-800">
@@ -439,7 +439,7 @@ export default function RideShareDetail() {
                       onClick={() => setShowOffer(!showOffer)}
                       className="text-sm text-amber-500 underline"
                     >
-                      {showOffer ? "✕ Cancel" : "💰 Offer different price"}
+                      {showOffer ? "✕ Cancel" : "Offer different price"}
                     </button>
                     {showOffer && (
                       <div className="flex gap-2 mt-2">
@@ -477,7 +477,7 @@ export default function RideShareDetail() {
                       : `Request • ₹${trip.pricePerSeat}`}
                   </button>
                   <p className="text-xs text-amber-700 mt-4">
-                    <ShieldCheckIcon className="w-4 h-4 inline" /> ⚠️ Verify
+                    <ShieldCheckIcon className="w-4 h-4 inline" /> Verify
                     driver before boarding.
                   </p>
                 </motion.div>
@@ -516,15 +516,15 @@ export default function RideShareDetail() {
                         </div>
                         <div className="mt-2">
                           <p className="text-sm">
-                            🎫 {req.seatsRequested} seat(s) • ₹{req.totalAmount}
+                            {req.seatsRequested} seat(s) • ₹{req.totalAmount}
                           </p>
                           {req.offerPrice && (
                             <p className="text-sm text-amber-600 font-medium">
-                              💰 Offered: ₹{req.offerPrice}/seat
+                              Offered: ₹{req.offerPrice}/seat
                             </p>
                           )}
                           {req.message && (
-                            <p className="text-sm italic">💬 "{req.message}"</p>
+                            <p className="text-sm italic">"{req.message}"</p>
                           )}
                         </div>
                       </div>
@@ -581,8 +581,8 @@ export default function RideShareDetail() {
                           className={`text-xs px-2 py-0.5 rounded-full ${req.paymentStatus === "paid" ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}
                         >
                           {req.paymentStatus === "paid"
-                            ? "Paid ✅"
-                            : "Pending ⏳"}
+                            ? "Paid"
+                            : "Pending"}
                         </span>
                         <p className="text-xs mt-1">
                           {req.seatsRequested} seat(s) • ₹{req.totalAmount}
@@ -724,21 +724,21 @@ export default function RideShareDetail() {
               <div className="flex flex-wrap gap-2">
                 {trip.womenOnly && (
                   <span className="text-xs bg-pink-100 text-pink-700 px-2 py-1 rounded-full">
-                    👩 Women Only
+                    Women Only
                   </span>
                 )}
                 {trip.petsAllowed && (
                   <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full">
-                    🐾 Pets
+                    Pets
                   </span>
                 )}
                 {trip.acAvailable && (
                   <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
-                    ❄️ AC
+                    AC
                   </span>
                 )}
                 <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-full">
-                  🧳 {trip.luggageAllowed}
+                  {trip.luggageAllowed}
                 </span>
               </div>
             </div>

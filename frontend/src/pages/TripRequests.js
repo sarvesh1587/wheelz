@@ -98,7 +98,7 @@ export default function TripRequests() {
 
         {requests.length === 0 ? (
           <div className="text-center py-16 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700">
-            <div className="text-5xl mb-4">🚗</div>
+            <div className="text-5xl mb-4"></div>
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
               No pending requests
             </h3>

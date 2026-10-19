@@ -13,7 +13,7 @@ export default function NotFound() {
           Oops! The page you're looking for doesn't exist.
         </p>
         <Link to="/" className="btn-primary inline-flex items-center gap-2">
-          🏠 Back to Home
+          Back to Home
         </Link>
       </div>
     </div>

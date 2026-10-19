@@ -111,7 +111,7 @@ const PaymentReceipt = ({ booking, onClose }) => {
 
         <div className="p-6 border-t flex gap-3 sticky bottom-0 bg-white dark:bg-gray-800">
           <button onClick={downloadPDF} className="flex-1 btn-primary">
-            📄 Download PDF
+            Download PDF
           </button>
           <button onClick={onClose} className="flex-1 btn-secondary">
             Close

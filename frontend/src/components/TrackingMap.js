@@ -30,21 +30,21 @@ L.Icon.Default.mergeOptions({
 
 // Custom icons
 const carIcon = new L.DivIcon({
-  html: '<div style="font-size: 36px;">🚗</div>',
+  html: '<div style="width:22px;height:22px;border-radius:9999px;background:#FF4D00;border:3px solid #fff;box-shadow:0 2px 10px rgba(0,0,0,.35)"></div>',
   className: "",
   iconSize: [36, 36],
   iconAnchor: [18, 18],
 });
 
 const pickupIcon = new L.DivIcon({
-  html: '<div style="font-size: 30px;">🟢</div>',
+  html: '<div style="width:18px;height:18px;border-radius:9999px;background:#10B981;border:3px solid #fff;box-shadow:0 2px 10px rgba(0,0,0,.35)"></div>',
   className: "",
   iconSize: [30, 30],
   iconAnchor: [15, 15],
 });
 
 const dropIcon = new L.DivIcon({
-  html: '<div style="font-size: 30px;">🔴</div>',
+  html: '<div style="width:18px;height:18px;border-radius:9999px;background:#111112;border:3px solid #fff;box-shadow:0 2px 10px rgba(0,0,0,.35)"></div>',
   className: "",
   iconSize: [30, 30],
   iconAnchor: [15, 15],
@@ -96,7 +96,7 @@ export default function TrackingMap({
   if (!driverLocation) {
     return (
       <div className="bg-gray-100 dark:bg-gray-800 rounded-2xl p-8 text-center">
-        <p className="text-gray-500">📍 Waiting for driver location...</p>
+        <p className="text-gray-500">Waiting for driver location...</p>
         <p className="text-xs text-gray-400 mt-2">
           Driver will share location before trip starts
         </p>
@@ -125,12 +125,12 @@ export default function TrackingMap({
           <Marker position={driverLocation} icon={carIcon}>
             <Popup>
               <div className="text-center">
-                <p className="font-bold text-sm">🚗 Driver is here</p>
+                <p className="font-bold text-sm">Driver is here</p>
                 <button
                   onClick={onCallDriver}
                   className="mt-2 px-4 py-1.5 bg-green-500 text-white text-xs rounded-lg"
                 >
-                  📞 Call Driver
+                  Call Driver
                 </button>
               </div>
             </Popup>
@@ -139,14 +139,14 @@ export default function TrackingMap({
           {/* Pickup Marker */}
           {pickup && (
             <Marker position={pickup} icon={pickupIcon}>
-              <Popup>📍 Pickup Point</Popup>
+              <Popup>Pickup Point</Popup>
             </Marker>
           )}
 
           {/* Drop Marker */}
           {drop && (
             <Marker position={drop} icon={dropIcon}>
-              <Popup>🏁 Drop Point</Popup>
+              <Popup>Drop Point</Popup>
             </Marker>
           )}
 

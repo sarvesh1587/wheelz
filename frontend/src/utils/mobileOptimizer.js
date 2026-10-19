@@ -11,12 +11,12 @@ const handleCreateBooking = async () => {
 
   setCreatingBooking(true);
 
-  // ✅ Show loading with timeout warning
+  // Show loading with timeout warning
   const loadingToast = toast.loading("Creating booking...", {
     duration: 10000,
   });
 
-  // ✅ Set timeout for booking request
+  // Set timeout for booking request
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 25000);
 
@@ -35,7 +35,7 @@ const handleCreateBooking = async () => {
 
     clearTimeout(timeoutId);
     toast.dismiss(loadingToast);
-    toast.success("Booking confirmed! 🎉");
+    toast.success("Booking confirmed!");
 
     setTimeout(() => {
       navigate("/dashboard");

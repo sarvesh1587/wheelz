@@ -38,7 +38,7 @@ export default function BookingConfirmationModal({ booking, onClose }) {
           {/* Success Message */}
           <div className="bg-green-50 dark:bg-green-900/20 rounded-xl p-4 text-center">
             <p className="text-green-700 dark:text-green-400 font-medium">
-              🎉 Your booking has been confirmed successfully!
+              Your booking has been confirmed successfully!
             </p>
             <p className="text-sm text-green-600 dark:text-green-500 mt-1">
               A confirmation email has been sent to your inbox.

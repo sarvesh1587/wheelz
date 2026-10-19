@@ -157,7 +157,7 @@ export default function VendorDashboard() {
 
         <!-- Customer Details -->
         <div style="margin-bottom: 20px;">
-          <h3 style="color: #f59e0b; margin-bottom: 10px; border-left: 3px solid #f59e0b; padding-left: 10px;">👤 Customer Information</h3>
+          <h3 style="color: #f59e0b; margin-bottom: 10px; border-left: 3px solid #f59e0b; padding-left: 10px;">Customer Information</h3>
           <table style="width: 100%; border-collapse: collapse;">
             <tr style="border-bottom: 1px solid #eee;">
               <td style="padding: 8px; font-weight: bold; width: 120px;">Full Name</td>
@@ -180,7 +180,7 @@ export default function VendorDashboard() {
 
         <!-- Vehicle Details -->
         <div style="margin-bottom: 20px;">
-          <h3 style="color: #f59e0b; margin-bottom: 10px; border-left: 3px solid #f59e0b; padding-left: 10px;">🚗 Vehicle Information</h3>
+          <h3 style="color: #f59e0b; margin-bottom: 10px; border-left: 3px solid #f59e0b; padding-left: 10px;">Vehicle Information</h3>
           <table style="width: 100%; border-collapse: collapse;">
             <tr style="border-bottom: 1px solid #eee;">
               <td style="padding: 8px; font-weight: bold; width: 120px;">Vehicle Name</td>
@@ -203,7 +203,7 @@ export default function VendorDashboard() {
 
         <!-- Booking Details -->
         <div style="margin-bottom: 20px;">
-          <h3 style="color: #f59e0b; margin-bottom: 10px; border-left: 3px solid #f59e0b; padding-left: 10px;">📅 Booking Information</h3>
+          <h3 style="color: #f59e0b; margin-bottom: 10px; border-left: 3px solid #f59e0b; padding-left: 10px;">Booking Information</h3>
           <table style="width: 100%; border-collapse: collapse;">
             <tr style="border-bottom: 1px solid #eee;">
               <td style="padding: 8px; font-weight: bold; width: 120px;">Pickup Date</td>
@@ -226,7 +226,7 @@ export default function VendorDashboard() {
 
         <!-- Price Breakdown -->
         <div style="margin-bottom: 20px;">
-          <h3 style="color: #f59e0b; margin-bottom: 10px; border-left: 3px solid #f59e0b; padding-left: 10px;">💰 Price Breakdown</h3>
+          <h3 style="color: #f59e0b; margin-bottom: 10px; border-left: 3px solid #f59e0b; padding-left: 10px;">Price Breakdown</h3>
           <table style="width: 100%; border-collapse: collapse;">
             <tr style="border-bottom: 1px solid #eee;">
               <td style="padding: 8px; font-weight: bold;">Price per day</td>
@@ -272,7 +272,7 @@ export default function VendorDashboard() {
 
         <!-- Status -->
         <div style="margin-bottom: 20px;">
-          <h3 style="color: #f59e0b; margin-bottom: 10px; border-left: 3px solid #f59e0b; padding-left: 10px;">📊 Status</h3>
+          <h3 style="color: #f59e0b; margin-bottom: 10px; border-left: 3px solid #f59e0b; padding-left: 10px;">Status</h3>
           <table style="width: 100%; border-collapse: collapse;">
             <tr style="border-bottom: 1px solid #eee;">
               <td style="padding: 8px; font-weight: bold; width: 120px;">Booking Status</td>

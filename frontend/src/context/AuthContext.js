@@ -16,8 +16,6 @@ export const AuthProvider = ({ children }) => {
     const token = localStorage.getItem("wheelz_token");
     const savedUser = localStorage.getItem("wheelz_user");
 
-    console.log("🔍 Checking auth - Token:", !!token);
-    console.log("🔍 Checking auth - Saved user:", !!savedUser);
 
     if (token && savedUser) {
       try {
@@ -27,7 +25,6 @@ export const AuthProvider = ({ children }) => {
         try {
           const response = await authAPI.getMe();
           if (response.data?.user) {
-            console.log("✅ Token verified with backend");
             setUser(response.data.user);
             localStorage.setItem(
               "wheelz_user",
@@ -37,7 +34,6 @@ export const AuthProvider = ({ children }) => {
             setUser(userData);
           }
         } catch (err) {
-          console.log("⚠️ Token verification failed, but using saved user");
           setUser(userData);
         }
       } catch (error) {
@@ -49,15 +45,12 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   };
   const login = (token, userData) => {
-    console.log("🔐 Login called with:", { token: !!token, userData });
     localStorage.setItem("wheelz_token", token);
     localStorage.setItem("wheelz_user", JSON.stringify(userData));
     setUser(userData);
-    console.log("✅ User logged in:", userData.email);
   };
 
   const logout = () => {
-    console.log("🚪 Logout called");
     localStorage.removeItem("wheelz_token");
     localStorage.removeItem("wheelz_user");
     setUser(null);

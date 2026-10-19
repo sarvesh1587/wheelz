@@ -59,7 +59,7 @@ export default function ReferralDashboard() {
 
   const shareOnWhatsApp = () => {
     const link = `https://wheelz-sand.vercel.app/register?ref=${referralCode}`;
-    const text = `🚗 Join Wheelz - India's smartest vehicle rental & ridesharing platform!\n\nUse my referral code *${referralCode}* and get ₹100 FREE!\n\n👉 ${link}`;
+    const text = `Join Wheelz - India's smartest vehicle rental & ridesharing platform!\n\nUse my referral code *${referralCode}* and get ₹100 FREE!\n\n${link}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
   };
 
@@ -154,21 +154,21 @@ export default function ReferralDashboard() {
         <div className="grid grid-cols-3 gap-4 text-center">
           <div>
             <div className="w-12 h-12 bg-amber-100 dark:bg-amber-900/30 rounded-full flex items-center justify-center mx-auto mb-2 text-2xl">
-              🔗
+
             </div>
             <p className="text-sm font-medium">Share Link</p>
             <p className="text-xs text-gray-500">Send to friends</p>
           </div>
           <div>
             <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-2 text-2xl">
-              👤
+
             </div>
             <p className="text-sm font-medium">Friend Joins</p>
             <p className="text-xs text-gray-500">Uses your code</p>
           </div>
           <div>
             <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center mx-auto mb-2 text-2xl">
-              💰
+
             </div>
             <p className="text-sm font-medium">Both Earn ₹100</p>
             <p className="text-xs text-gray-500">After first booking</p>

@@ -166,9 +166,9 @@ export default function AdminVehicles() {
                 </div>
 
                 <div className="flex items-center gap-2 text-sm text-gray-500 mb-4">
-                  <span>📍 {vehicle.city}</span>
+                  <span>{vehicle.city}</span>
                   <span>•</span>
-                  <span>⭐ {vehicle.averageRating?.toFixed(1) || 0}</span>
+                  <span>{vehicle.averageRating?.toFixed(1) || 0}</span>
                 </div>
 
                 {/* Admin Action Buttons */}

@@ -28,21 +28,21 @@ export default function KYCStatusBanner() {
     not_submitted: {
       bg: "bg-orange-50 border-orange-300 dark:bg-orange-900/20 dark:border-orange-700",
       text: "text-orange-800 dark:text-orange-300",
-      message: "⚠️ KYC verification required to book vehicles.",
+      message: "KYC verification required to book vehicles.",
       cta: "Complete KYC →",
     },
     pending: {
       bg: "bg-yellow-50 border-yellow-300 dark:bg-yellow-900/20 dark:border-yellow-700",
       text: "text-yellow-800 dark:text-yellow-300",
       message:
-        "⏳ Your KYC is under review. Bookings will be enabled once verified.",
+        "Your KYC is under review. Bookings will be enabled once verified.",
       cta: "View Status →",
     },
     rejected: {
       bg: "bg-red-50 border-red-300 dark:bg-red-900/20 dark:border-red-700",
       text: "text-red-800 dark:text-red-300",
       message:
-        "❌ Your KYC was rejected. Please re-upload your documents to book.",
+        "Your KYC was rejected. Please re-upload your documents to book.",
       cta: "Re-submit KYC →",
     },
   };

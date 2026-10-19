@@ -147,7 +147,7 @@ export default function Login() {
               </div>
             </div>
 
-            {/* ✅ Fixed Google Login Button */}
+            {/* Fixed Google Login Button */}
             <div className="flex justify-center">
               <GoogleLogin
                 onSuccess={handleGoogleSuccess}

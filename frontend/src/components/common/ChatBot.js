@@ -8,7 +8,7 @@ export default function ChatBot() {
     {
       role: "assistant",
       content:
-        "Hi! I'm **Zara**, your Wheelz assistant 🚗\nAsk me about vehicles, pricing, availability, or anything else!",
+        "Hi! I'm **Zara**, your Wheelz assistant\nAsk me about vehicles, pricing, availability, or anything else!",
     },
   ]);
   const [input, setInput] = useState("");

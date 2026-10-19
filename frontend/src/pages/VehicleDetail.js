@@ -5,26 +5,24 @@ import {
   reviewAPI,
   wishlistAPI,
   bookingAPI,
-  kycAPI, // ✅ Add KYC API
+  kycAPI,
 } from "../services/api";
 import { useAuth } from "../context/AuthContext";
-import { StarRating } from "../components/common/StarRating";
 import LoadingSpinner from "../components/common/LoadingSpinner";
 import ReviewModal from "../components/ReviewModal";
 import {
-  MapPinIcon,
-  HeartIcon,
-  ShareIcon,
-  CheckCircleIcon,
-  CalendarDaysIcon,
-  PhoneIcon,
-  StarIcon as StarOutline,
-} from "@heroicons/react/24/outline";
-import {
-  HeartIcon as HeartSolid,
-  StarIcon as StarSolid,
-} from "@heroicons/react/24/solid";
+  MapPin,
+  Heart,
+  Share2,
+  Check,
+  Phone,
+  Star,
+  ArrowUpRight,
+  ArrowLeft,
+} from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
+import { Reveal, SplitText, Magnetic, EASE } from "../components/motion";
 
 export default function VehicleDetail() {
   const { id } = useParams();
@@ -100,16 +98,14 @@ export default function VehicleDetail() {
     await wishlistAPI.toggle(id);
     toggleWishlist(id);
     toast.success(
-      isInWishlist(id) ? "Removed from wishlist" : "Added to wishlist ❤️",
+      isInWishlist(id) ? "Removed from wishlist" : "Saved to wishlist",
     );
   };
 
-  // ✅ Refresh reviews function
+  // Refresh reviews and the vehicle rating after a new review
   const refreshReviews = async () => {
-    console.log("Refreshing reviews...");
     try {
       const rRes = await reviewAPI.getByVehicle(id);
-      console.log("Fetched reviews:", rRes.data.reviews);
       setReviews(rRes.data.reviews || []);
 
       // Also refresh vehicle to update rating
@@ -129,7 +125,7 @@ export default function VehicleDetail() {
 
   const shareOnWhatsApp = () => {
     if (!vehicle) return;
-    const message = `🚗 *${vehicle.name}* by ${vehicle.brand}\n\n💰 Price: ₹${vehicle.currentPrice || vehicle.basePrice}/day\n📍 Location: ${vehicle.city}\n⭐ Rating: ${vehicle.averageRating || 0}★\n\n🔗 Book now: ${window.location.href}`;
+    const message = `*${vehicle.name}* by ${vehicle.brand}\n\nPrice: ₹${vehicle.currentPrice || vehicle.basePrice}/day\nLocation: ${vehicle.city}\nRating: ${vehicle.averageRating || 0}/5\n\nBook now: ${window.location.href}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, "_blank");
   };
 
@@ -138,20 +134,15 @@ export default function VehicleDetail() {
     toast.success("Link copied!");
   };
 
-  // ✅ Handle review success
+  // Handle review success
   const handleReviewSuccess = async () => {
-    console.log("Review submitted, refreshing...");
     await refreshReviews();
-    toast.success("Thank you for your review! 🌟");
+    toast.success("Thanks for your review");
   };
 
   const handleBookNow = async () => {
-    console.log("📖 Book Now clicked");
-    console.log("isAuthenticated:", isAuthenticated);
-    console.log("User:", user);
 
     if (!isAuthenticated) {
-      console.log("❌ Not authenticated, redirecting to login");
       toast.error("Please login to book a vehicle");
       navigate("/login");
       return;
@@ -163,36 +154,28 @@ export default function VehicleDetail() {
       // First, verify token is still valid
       const token = localStorage.getItem("wheelz_token");
       if (!token) {
-        console.log("❌ No token found");
         toast.error("Session expired. Please login again.");
         navigate("/login");
         return;
       }
 
       // Check KYC status
-      console.log("🔍 Checking KYC status...");
       const kycRes = await kycAPI.getStatus();
       const kycStatus = kycRes.data.kycStatus;
 
-      console.log("KYC Status:", kycStatus);
-
       if (kycStatus === "verified") {
-        console.log("✅ KYC verified, proceeding to booking");
         navigate(`/book/${id}`);
       } else if (kycStatus === "pending") {
-        console.log("⏳ KYC pending");
         toast.error("Your KYC is under review. Please wait for verification.", {
           duration: 4000,
         });
         navigate("/kyc");
       } else if (kycStatus === "rejected") {
-        console.log("❌ KYC rejected");
         toast.error("Your KYC was rejected. Please re-upload documents.", {
           duration: 4000,
         });
         navigate("/kyc");
       } else {
-        console.log("📋 KYC not submitted");
         toast.error(
           "KYC verification required. Please complete KYC before booking.",
           {
@@ -206,7 +189,6 @@ export default function VehicleDetail() {
 
       // If 401 or 403, token might be invalid
       if (error.response?.status === 401) {
-        console.log("❌ Token invalid, logging out");
         localStorage.removeItem("wheelz_token");
         localStorage.removeItem("wheelz_user");
         toast.error("Session expired. Please login again.");
@@ -224,307 +206,244 @@ export default function VehicleDetail() {
 
   const inWishlist = isInWishlist(id);
   const isPeak = vehicle.currentPrice > vehicle.basePrice;
+  const price = vehicle.currentPrice || vehicle.basePrice;
+  const images = vehicle.images?.length ? vehicle.images : [];
+  const specs = [
+    ["Year", vehicle.year],
+    ["Fuel", vehicle.fuelType],
+    ["Transmission", vehicle.transmission],
+    ["Seating", vehicle.seatingCapacity ? `${vehicle.seatingCapacity} seats` : "—"],
+    ["Mileage", vehicle.specifications?.mileage || "—"],
+    ["Engine", vehicle.specifications?.engine || "—"],
+  ];
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8 sm:px-6 lg:px-8 pt-24 animate-fade-in">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-        {/* Left: Images */}
-        <div>
-          <div className="rounded-2xl overflow-hidden bg-gray-100 dark:bg-gray-800 mb-3 aspect-[4/3]">
-            <img
-              src={vehicle.images?.[activeImg] || vehicle.images?.[0]}
-              alt={vehicle.name}
-              className="w-full h-full object-cover"
-            />
-          </div>
-          {vehicle.images?.length > 1 && (
-            <div className="flex gap-2 overflow-x-auto">
-              {vehicle.images.map((img, i) => (
-                <button
-                  key={i}
-                  onClick={() => setActiveImg(i)}
-                  className={`flex-shrink-0 w-20 h-16 rounded-xl overflow-hidden border-2 transition-colors ${
-                    activeImg === i ? "border-amber-500" : "border-transparent"
-                  }`}
-                >
-                  <img
-                    src={img}
-                    alt=""
-                    className="w-full h-full object-cover"
-                  />
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+    <div className="container-x pb-24 pt-24 md:pt-28">
+      <Link
+        to="/vehicles"
+        className="link-underline mb-8 inline-flex items-center gap-2 text-sm text-muted hover:text-ink"
+      >
+        <ArrowLeft size={14} /> Back to fleet
+      </Link>
 
-        {/* Right: Info */}
-        <div>
-          <div className="flex items-start justify-between gap-4 mb-2">
-            <div>
-              <span className="text-xs font-medium text-amber-500 bg-amber-50 dark:bg-amber-900/20 px-2 py-1 rounded-lg capitalize">
-                {vehicle.category} · {vehicle.subCategory}
-              </span>
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mt-2">
-                {vehicle.name}
-              </h1>
-            </div>
-            <div className="flex gap-2 flex-shrink-0">
+      <motion.div
+        initial={{ clipPath: "inset(10% 6% 10% 6% round 28px)", opacity: 0 }}
+        animate={{ clipPath: "inset(0% 0% 0% 0% round 28px)", opacity: 1 }}
+        transition={{ duration: 1.3, ease: EASE }}
+        className="relative aspect-[4/3] overflow-hidden rounded-[28px] bg-raised md:aspect-[21/9]"
+      >
+        <AnimatePresence initial={false}>
+          <motion.img
+            key={activeImg}
+            src={images[activeImg] || images[0]}
+            alt={vehicle.name}
+            initial={{ opacity: 0, scale: 1.05 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 1, ease: EASE }}
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+        </AnimatePresence>
+        {images.length > 1 && (
+          <div className="absolute bottom-4 left-4 flex gap-2 md:bottom-6 md:left-6">
+            {images.map((img, i) => (
               <button
-                onClick={handleWishlist}
-                className="w-10 h-10 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl flex items-center justify-center hover:border-red-300 transition-colors"
+                key={i}
+                onClick={() => setActiveImg(i)}
+                aria-label={`Show photo ${i + 1}`}
+                className={`h-14 w-20 overflow-hidden rounded-xl border-2 transition-all duration-300 md:h-16 md:w-24 ${
+                  activeImg === i ? "border-white" : "border-transparent opacity-60 hover:opacity-100"
+                }`}
               >
-                {inWishlist ? (
-                  <HeartSolid className="w-5 h-5 text-red-500" />
-                ) : (
-                  <HeartIcon className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-                )}
+                <img src={img} alt="" className="h-full w-full object-cover" />
               </button>
-
-              <div className="relative group">
-                <button className="w-10 h-10 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl flex items-center justify-center hover:border-amber-300 transition-colors">
-                  <ShareIcon className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-                </button>
-                <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
-                  <button
-                    onClick={shareOnWhatsApp}
-                    className="flex items-center gap-3 w-full px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-t-xl transition"
-                  >
-                    Share on WhatsApp
-                  </button>
-                  <button
-                    onClick={copyLink}
-                    className="flex items-center gap-3 w-full px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-b-xl transition"
-                  >
-                    Copy Link
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center flex-wrap gap-4 mb-4">
-            <StarRating
-              rating={vehicle.averageRating}
-              count={vehicle.totalReviews}
-              size="lg"
-            />
-            <div className="flex items-center gap-1 text-sm text-gray-500">
-              <MapPinIcon className="w-4 h-4" />
-              {vehicle.locationName}, {vehicle.city}
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3 mb-6">
-            {[
-              ["Year", vehicle.year],
-              [
-                "Fuel",
-                vehicle.fuelType.charAt(0).toUpperCase() +
-                  vehicle.fuelType.slice(1),
-              ],
-              ["Transmission", vehicle.transmission],
-              ["Seating", `${vehicle.seatingCapacity} seats`],
-              ["Mileage", vehicle.specifications?.mileage || "—"],
-              ["Engine", vehicle.specifications?.engine || "—"],
-            ].map(([label, value]) => (
-              <div
-                key={label}
-                className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-3"
-              >
-                <p className="text-xs text-gray-500 mb-0.5">{label}</p>
-                <p className="text-sm font-semibold text-gray-900 dark:text-white capitalize">
-                  {value}
-                </p>
-              </div>
-            ))}
-          </div>
-
-          {vehicle.specifications?.features?.length > 0 && (
-            <div className="mb-6">
-              <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                Features
-              </h3>
-              <div className="flex flex-wrap gap-2">
-                {vehicle.specifications.features.map((f) => (
-                  <span
-                    key={f}
-                    className="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-3 py-1.5 rounded-xl"
-                  >
-                    <CheckCircleIcon className="w-3 h-3 text-green-500" /> {f}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-
-          <div className="bg-gray-50 dark:bg-gray-800/50 rounded-2xl p-5">
-            <div className="flex items-end gap-3 mb-4">
-              <div>
-                <span className="text-3xl font-bold text-gray-900 dark:text-white">
-                  ₹
-                  {(vehicle.currentPrice || vehicle.basePrice).toLocaleString()}
-                </span>
-                <span className="text-gray-500 text-sm">/day</span>
-              </div>
-              {isPeak && (
-                <div className="text-sm">
-                  <span className="line-through text-gray-400">
-                    ₹{vehicle.basePrice.toLocaleString()}
-                  </span>
-                  <span className="ml-2 text-xs bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-2 py-0.5 rounded-lg">
-                    🔥 Peak Pricing
-                  </span>
-                </div>
-              )}
-            </div>
-
-            <div className="flex items-center gap-2 mb-4">
-              <div
-                className={`w-2.5 h-2.5 rounded-full ${vehicle.isAvailable ? "bg-green-500" : "bg-red-500"}`}
-              />
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                {vehicle.isAvailable
-                  ? "Available Now"
-                  : "Currently Unavailable"}
-              </span>
-            </div>
-
-            {vehicle.isAvailable ? (
-              <>
-                <button
-                  onClick={handleBookNow}
-                  disabled={isBookingLoading}
-                  className="w-full btn-primary flex items-center justify-center gap-2 mb-3"
-                >
-                  {isBookingLoading ? (
-                    <>
-                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      Checking...
-                    </>
-                  ) : (
-                    <>
-                      <CalendarDaysIcon className="w-5 h-5" />
-                      Book Now
-                    </>
-                  )}
-                </button>
-
-                {/* KYC Warning - Show if user is authenticated but KYC not done */}
-                {isAuthenticated && (
-                  <p className="text-xs text-amber-600 dark:text-amber-400 text-center mb-2">
-                    ⚠️ KYC verification required before booking
-                  </p>
-                )}
-
-                {/* Review Button - Only for paid users who haven't reviewed */}
-                {canReview && !hasReviewed && (
-                  <button
-                    onClick={() => setShowReviewModal(true)}
-                    className="w-full flex items-center justify-center gap-2 py-3 bg-purple-500 hover:bg-purple-600 text-white rounded-xl transition-all duration-200 font-medium mb-2"
-                  >
-                    <StarOutline className="w-5 h-5" />
-                    Write a Review
-                  </button>
-                )}
-
-                {/* Already Reviewed Message */}
-                {hasReviewed && (
-                  <div className="w-full text-center py-2 text-green-600 dark:text-green-400 text-sm flex items-center justify-center gap-2">
-                    <CheckCircleIcon className="w-4 h-4" />
-                    Thank you for your review! 🌟
-                  </div>
-                )}
-
-                <button
-                  onClick={callVendor}
-                  className="w-full flex items-center justify-center gap-2 py-3 bg-green-500 hover:bg-green-600 text-white rounded-xl transition-all duration-200 font-medium"
-                >
-                  <PhoneIcon className="w-5 h-5" />
-                  Call Vendor for Details
-                </button>
-
-                <p className="text-xs text-gray-500 text-center mt-2">
-                  📞 Call vendor to confirm availability or ask questions
-                </p>
-              </>
-            ) : (
-              <button
-                disabled
-                className="w-full py-3 bg-gray-200 dark:bg-gray-700 text-gray-500 rounded-xl font-semibold cursor-not-allowed"
-              >
-                Not Available
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Reviews Section */}
-      <div className="mt-14">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
-          Reviews ({reviews.length})
-        </h2>
-        {reviews.length === 0 ? (
-          <div className="text-center py-12 text-gray-500 bg-gray-50 dark:bg-gray-800/50 rounded-2xl">
-            <p className="text-4xl mb-3">⭐</p>
-            <p>No reviews yet. Be the first to review!</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {reviews.map((r) => (
-              <div
-                key={r._id}
-                className="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-100 dark:border-gray-700"
-              >
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-9 h-9 bg-amber-100 dark:bg-amber-900/30 rounded-full flex items-center justify-center font-bold text-amber-600 dark:text-amber-400 text-sm">
-                    {r.user?.name?.[0]?.toUpperCase()}
-                  </div>
-                  <div>
-                    <p className="font-semibold text-sm text-gray-900 dark:text-white">
-                      {r.user?.name}
-                    </p>
-                    <div className="flex items-center gap-1">
-                      {[1, 2, 3, 4, 5].map((star) =>
-                        star <= r.rating ? (
-                          <StarSolid
-                            key={star}
-                            className="w-3 h-3 text-amber-500"
-                          />
-                        ) : (
-                          <StarOutline
-                            key={star}
-                            className="w-3 h-3 text-gray-300"
-                          />
-                        ),
-                      )}
-                    </div>
-                  </div>
-                  <span className="ml-auto text-xs text-gray-400">
-                    {new Date(r.createdAt).toLocaleDateString("en-IN")}
-                  </span>
-                </div>
-                {r.title && (
-                  <p className="font-medium text-gray-800 dark:text-gray-200 text-sm mb-1">
-                    {r.title}
-                  </p>
-                )}
-                <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">
-                  {r.comment}
-                </p>
-                {r.isVerified && (
-                  <div className="flex items-center gap-1 mt-3 text-xs text-green-600 dark:text-green-400">
-                    <CheckCircleIcon className="w-3.5 h-3.5" /> Verified Rental
-                  </div>
-                )}
-              </div>
             ))}
           </div>
         )}
+        <span className="absolute right-4 top-4 rounded-full bg-black/40 px-3 py-1 font-mono text-[11px] text-white backdrop-blur-md md:right-6 md:top-6">
+          {String(activeImg + 1).padStart(2, "0")} / {String(Math.max(images.length, 1)).padStart(2, "0")}
+        </span>
+      </motion.div>
+
+      <div className="mt-12 grid gap-14 lg:grid-cols-12">
+        <div className="lg:col-span-7">
+          <p className="eyebrow mb-5">
+            {vehicle.category} · {vehicle.subCategory}
+          </p>
+          <h1 className="display text-5xl md:text-7xl">
+            <SplitText lines={[vehicle.name]} delay={0.3} />
+          </h1>
+          <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-muted">
+            {vehicle.totalReviews > 0 && (
+              <span className="flex items-center gap-1.5 text-ink">
+                <Star size={14} className="fill-accent text-accent" />
+                {Number(vehicle.averageRating || 0).toFixed(1)}
+                <span className="text-muted">({vehicle.totalReviews} reviews)</span>
+              </span>
+            )}
+            <span className="flex items-center gap-1.5">
+              <MapPin size={14} />
+              {[vehicle.locationName, vehicle.city].filter(Boolean).join(", ")}
+            </span>
+          </div>
+
+          <Reveal className="mt-14">
+            <p className="eyebrow mb-4">Specifications</p>
+            <dl className="grid grid-cols-2 border-t border-line/10 sm:grid-cols-3">
+              {specs.map(([label, value]) => (
+                <div key={label} className="border-b border-line/10 py-5 pr-4">
+                  <dt className="eyebrow">{label}</dt>
+                  <dd className="display-tight mt-2 text-xl capitalize">{value}</dd>
+                </div>
+              ))}
+            </dl>
+          </Reveal>
+
+          {vehicle.specifications?.features?.length > 0 && (
+            <Reveal className="mt-14">
+              <p className="eyebrow mb-4">What's included</p>
+              <ul className="grid gap-x-8 sm:grid-cols-2">
+                {vehicle.specifications.features.map((f) => (
+                  <li key={f} className="flex items-center gap-3 border-b border-line/10 py-3 text-sm">
+                    <Check size={14} className="text-accent" /> {f}
+                  </li>
+                ))}
+              </ul>
+            </Reveal>
+          )}
+        </div>
+
+        <aside className="lg:col-span-5">
+          <div className="sticky top-28 rounded-[24px] border border-line/10 bg-surface p-6 md:p-8">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="eyebrow mb-2">Per day</p>
+                <p className="display text-6xl">₹{price.toLocaleString("en-IN")}</p>
+                {isPeak && (
+                  <p className="mt-2 text-sm text-muted">
+                    <span className="line-through">₹{vehicle.basePrice.toLocaleString("en-IN")}</span>
+                    <span className="ml-2 rounded-full bg-accent/15 px-2 py-0.5 font-mono text-[11px] text-accent">
+                      Peak pricing
+                    </span>
+                  </p>
+                )}
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleWishlist}
+                  aria-label={inWishlist ? "Remove from wishlist" : "Save to wishlist"}
+                  aria-pressed={inWishlist}
+                  className="grid h-11 w-11 place-items-center rounded-full border border-line/15 transition-colors hover:border-ink"
+                >
+                  <Heart size={16} className={inWishlist ? "fill-accent text-accent" : ""} />
+                </button>
+                <div className="group relative">
+                  <button
+                    aria-label="Share"
+                    className="grid h-11 w-11 place-items-center rounded-full border border-line/15 transition-colors hover:border-ink"
+                  >
+                    <Share2 size={16} />
+                  </button>
+                  <div className="invisible absolute right-0 z-10 mt-2 w-48 rounded-2xl border border-line/10 bg-surface p-1.5 opacity-0 shadow-2xl transition-all duration-200 group-focus-within:visible group-focus-within:opacity-100 group-hover:visible group-hover:opacity-100">
+                    <button onClick={shareOnWhatsApp} className="w-full rounded-xl px-3 py-2.5 text-left text-sm hover:bg-raised">
+                      Share on WhatsApp
+                    </button>
+                    <button onClick={copyLink} className="w-full rounded-xl px-3 py-2.5 text-left text-sm hover:bg-raised">
+                      Copy link
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="my-6 flex items-center gap-2 border-y border-line/10 py-4 text-sm">
+              <span className={`h-2 w-2 rounded-full ${vehicle.isAvailable ? "bg-emerald-400" : "bg-line/30"}`} />
+              {vehicle.isAvailable ? "Available now" : "Currently unavailable"}
+            </div>
+
+            {vehicle.isAvailable ? (
+              <div className="space-y-3">
+                <Magnetic strength={0.15} className="w-full">
+                  <button
+                    onClick={handleBookNow}
+                    disabled={isBookingLoading}
+                    className="btn-primary w-full !py-4 text-base"
+                  >
+                    {isBookingLoading ? (
+                      <>
+                        <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                        Checking KYC…
+                      </>
+                    ) : (
+                      <>
+                        Book this ride <ArrowUpRight size={18} />
+                      </>
+                    )}
+                  </button>
+                </Magnetic>
+                <button onClick={callVendor} className="btn-ghost w-full">
+                  <Phone size={16} /> Call the owner
+                </button>
+                {canReview && !hasReviewed && (
+                  <button onClick={() => setShowReviewModal(true)} className="btn-ghost w-full">
+                    <Star size={16} /> Write a review
+                  </button>
+                )}
+                {hasReviewed && (
+                  <p className="flex items-center justify-center gap-2 text-sm text-muted">
+                    <Check size={14} className="text-accent" /> Thanks for reviewing this ride
+                  </p>
+                )}
+                {isAuthenticated && (
+                  <p className="pt-2 text-center text-xs text-muted">
+                    A verified KYC is needed before your first booking.
+                  </p>
+                )}
+              </div>
+            ) : (
+              <button disabled className="btn w-full cursor-not-allowed border border-line/10 text-muted">
+                Not available
+              </button>
+            )}
+          </div>
+        </aside>
       </div>
 
-      {/* Review Modal */}
+      <section className="mt-24 border-t border-line/10 pt-14">
+        <div className="mb-10 flex items-baseline justify-between">
+          <h2 className="display-tight text-4xl md:text-5xl">Reviews</h2>
+          <span className="font-mono text-sm text-muted">{String(reviews.length).padStart(2, "0")}</span>
+        </div>
+        {reviews.length === 0 ? (
+          <p className="text-muted">No reviews yet. Book it and be the first to share how it went.</p>
+        ) : (
+          <div className="grid gap-x-10 md:grid-cols-2">
+            {reviews.map((r, i) => (
+              <Reveal key={r._id} delay={(i % 2) * 0.06} className="border-b border-line/10 py-8">
+                <div className="mb-4 flex items-center justify-between">
+                  <span className="flex gap-0.5">
+                    {[1, 2, 3, 4, 5].map((s) => (
+                      <Star
+                        key={s}
+                        size={13}
+                        className={s <= r.rating ? "fill-accent text-accent" : "text-line/20"}
+                      />
+                    ))}
+                  </span>
+                  <span className="eyebrow">{new Date(r.createdAt).toLocaleDateString("en-IN")}</span>
+                </div>
+                {r.title && <p className="display-tight mb-2 text-xl">{r.title}</p>}
+                <p className="leading-relaxed text-muted">{r.comment}</p>
+                <p className="mt-4 text-sm font-medium">
+                  {r.user?.name}
+                  {r.isVerified && <span className="ml-2 text-xs font-normal text-accent">Verified rental</span>}
+                </p>
+              </Reveal>
+            ))}
+          </div>
+        )}
+      </section>
+
       <ReviewModal
         isOpen={showReviewModal}
         onClose={() => setShowReviewModal(false)}

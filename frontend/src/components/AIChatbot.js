@@ -20,7 +20,7 @@ export default function AIChatbot() {
       setMessages([
         {
           id: Date.now(),
-          text: "👋 Namaste! I'm your Wheelz AI Assistant. I can help you find and book the perfect vehicle! 🚗\n\nWhat are you looking for today?",
+          text: "Namaste! I'm your Wheelz AI Assistant. I can help you find and book the perfect vehicle!\n\nWhat are you looking for today?",
           sender: "bot",
           timestamp: new Date(),
         },
@@ -72,7 +72,7 @@ export default function AIChatbot() {
         ...prev,
         {
           id: Date.now() + 1,
-          text: "😅 Sorry, I'm having trouble connecting. Please try again.",
+          text: "Sorry, I'm having trouble connecting. Please try again.",
           sender: "bot",
           timestamp: new Date(),
         },
@@ -88,7 +88,7 @@ export default function AIChatbot() {
       ...prev,
       {
         id: Date.now(),
-        text: "🎉 Payment successful! Your booking is confirmed. You can view it in your dashboard. Thank you for choosing Wheelz! 🚗",
+        text: "Payment successful! Your booking is confirmed. You can view it in your dashboard. Thank you for choosing Wheelz!",
         sender: "bot",
         timestamp: new Date(),
       },

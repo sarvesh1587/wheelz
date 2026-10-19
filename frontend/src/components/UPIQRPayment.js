@@ -30,7 +30,7 @@ const UPIQRPayment = ({ bookingId, amount, onSuccess, onCancel }) => {
           disabled={loading}
           className="w-full bg-green-500 hover:bg-green-600 text-white py-3 rounded-xl font-semibold transition"
         >
-          {loading ? "Generating..." : "📱 Generate QR Code for UPI Payment"}
+          {loading ? "Generating..." : "Generate QR Code for UPI Payment"}
         </button>
         <button onClick={onCancel} className="w-full btn-secondary">
           Cancel

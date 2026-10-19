@@ -142,7 +142,7 @@ export default function Booking() {
         setAppliedPromo(res.data.promo);
         setPromoDiscount(res.data.promo.discountAmount);
         toast.success(
-          `🎉 Promo applied! You save ₹${res.data.promo.discountAmount}`,
+          `Promo applied! You save ₹${res.data.promo.discountAmount}`,
         );
       }
     } catch (error) {
@@ -200,7 +200,7 @@ export default function Booking() {
     try {
       await Promise.race([bookingAPI.create(bookingData), timeoutPromise]);
       toast.dismiss(toastId);
-      toast.success("Booking confirmed! 🎉");
+      toast.success("Booking confirmed!");
       setTimeout(() => navigate("/dashboard"), 1500);
     } catch (err) {
       console.error("Booking error:", err);
@@ -273,8 +273,8 @@ export default function Booking() {
               {/* ── Rental Type Toggle ── */}
               <div className="flex gap-2 mb-5">
                 {[
-                  { key: "daily", label: "📅 Daily Rental" },
-                  { key: "hourly", label: "⏱️ Hourly Rental" },
+                  { key: "daily", label: "Daily Rental" },
+                  { key: "hourly", label: "Hourly Rental" },
                 ].map(({ key, label }) => (
                   <button
                     key={key}
@@ -369,13 +369,13 @@ export default function Booking() {
 
               {availability && availability.isAvailable === false && (
                 <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/20 rounded-lg text-red-600 dark:text-red-400 text-sm text-center">
-                  ⚠️ Vehicle not available for selected dates
+                  Vehicle not available for selected dates
                 </div>
               )}
 
               {availability && availability.isAvailable === true && (
                 <div className="mt-4 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg text-green-600 dark:text-green-400 text-sm text-center">
-                  ✅ Vehicle available! You can proceed.
+                  Vehicle available! You can proceed.
                 </div>
               )}
             </div>
@@ -568,7 +568,7 @@ export default function Booking() {
                   {appliedPromo && (
                     <div className="mt-2 flex justify-between items-center bg-green-50 dark:bg-green-900/20 p-2 rounded-lg">
                       <span className="text-xs text-green-700 dark:text-green-400">
-                        ✅ {appliedPromo.code} applied
+                        {appliedPromo.code} applied
                       </span>
                       <span className="text-xs font-bold text-green-700 dark:text-green-400">
                         -₹{promoDiscount.toLocaleString()}

@@ -125,10 +125,10 @@ export default function AdminVehicleCard({ vehicle, onVehicleUpdate }) {
         </div>
 
         <div className="flex items-center gap-2 text-sm text-gray-500 mb-3">
-          <span>📍 {vehicle.city}</span>
+          <span>{vehicle.city}</span>
           <span>•</span>
           <span>
-            ⭐ {vehicle.averageRating?.toFixed(1) || 0} (
+            {vehicle.averageRating?.toFixed(1) || 0} (
             {vehicle.totalReviews || 0})
           </span>
         </div>

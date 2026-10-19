@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom"; // ✅ Add this
+import { useNavigate } from "react-router-dom"; // Add this
 import axios from "axios";
 import toast from "react-hot-toast";
 import { useAuth } from "../context/AuthContext";
@@ -22,14 +22,14 @@ const FileUploadBox = ({ label, name, onChange, file }) => (
       />
       {file ? (
         <div className="text-center">
-          <span className="text-green-500 text-2xl">✅</span>
+          <span className="text-green-500 text-2xl"></span>
           <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 truncate max-w-[180px]">
             {file.name}
           </p>
         </div>
       ) : (
         <div className="text-center">
-          <span className="text-3xl">📄</span>
+          <span className="text-3xl"></span>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
             Click to upload
           </p>
@@ -51,16 +51,16 @@ const StatusBadge = ({ status }) => {
     pending: {
       color:
         "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",
-      label: "⏳ Under Review",
+      label: "Under Review",
     },
     verified: {
       color:
         "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
-      label: "✅ Verified",
+      label: "Verified",
     },
     rejected: {
       color: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
-      label: "❌ Rejected",
+      label: "Rejected",
     },
   };
   const { color, label } = config[status] || config.not_submitted;
@@ -72,8 +72,8 @@ const StatusBadge = ({ status }) => {
 };
 
 export default function KYCUpload() {
-  const { user } = useAuth(); // ✅ Now this will work
-  const navigate = useNavigate(); // ✅ Add navigate
+  const { user } = useAuth(); // Now this will work
+  const navigate = useNavigate(); // Add navigate
   const [kycStatus, setKycStatus] = useState(null);
   const [rejectionReason, setRejectionReason] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -181,7 +181,7 @@ export default function KYCUpload() {
         aadhaarBack: null,
       });
 
-      // ✅ Redirect to home after 2 seconds
+      // Redirect to home after 2 seconds
       setTimeout(() => {
         navigate("/");
       }, 2000);
@@ -220,7 +220,7 @@ export default function KYCUpload() {
 
       {kycStatus === "verified" && (
         <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-2xl p-6 text-center">
-          <div className="text-5xl mb-3">🎉</div>
+          <div className="text-5xl mb-3"></div>
           <h2 className="text-lg font-semibold text-green-700 dark:text-green-400">
             You're Verified!
           </h2>
@@ -232,7 +232,7 @@ export default function KYCUpload() {
 
       {kycStatus === "pending" && (
         <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-2xl p-6 text-center">
-          <div className="text-5xl mb-3">⏳</div>
+          <div className="text-5xl mb-3"></div>
           <h2 className="text-lg font-semibold text-yellow-700 dark:text-yellow-400">
             Under Review
           </h2>
@@ -246,7 +246,7 @@ export default function KYCUpload() {
       {kycStatus === "rejected" && (
         <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-2xl p-4 mb-6">
           <p className="text-red-700 dark:text-red-400 font-medium">
-            ❌ KYC Rejected
+            KYC Rejected
           </p>
           <p className="text-red-600 dark:text-red-500 text-sm mt-1">
             Reason: {rejectionReason}. Please re-upload correct documents.
@@ -260,7 +260,7 @@ export default function KYCUpload() {
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-6 space-y-4">
             <h2 className="font-semibold text-gray-800 dark:text-white flex items-center gap-2">
-              🪪 Driving License
+              Driving License
             </h2>
             <div>
               <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -294,7 +294,7 @@ export default function KYCUpload() {
 
           <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-6 space-y-4">
             <h2 className="font-semibold text-gray-800 dark:text-white flex items-center gap-2">
-              📋 Aadhaar Card
+              Aadhaar Card
             </h2>
             <div>
               <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -328,7 +328,7 @@ export default function KYCUpload() {
           </div>
 
           <p className="text-xs text-gray-400 dark:text-gray-500 text-center">
-            🔒 Your documents are securely stored and only used for identity
+            Your documents are securely stored and only used for identity
             verification.
           </p>
 

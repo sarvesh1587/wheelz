@@ -110,7 +110,7 @@ export default function FindTrip() {
     setSearched(true);
 
     try {
-      // ✅ Check if token exists and is valid before making request
+      // Check if token exists and is valid before making request
       const token = localStorage.getItem("wheelz_token");
       if (!token) {
         toast.error("Please login to search trips");
@@ -145,7 +145,7 @@ export default function FindTrip() {
     } catch (error) {
       console.error("Search error:", error);
 
-      // ✅ Handle 401 specifically
+      // Handle 401 specifically
       if (error.response?.status === 401) {
         toast.error("Session expired. Please login again.");
         localStorage.removeItem("wheelz_token");
@@ -163,7 +163,7 @@ export default function FindTrip() {
 
   const swap = () => {
     setForm((f) => ({ ...f, from: f.to, to: f.from }));
-    toast.success("Routes swapped", { icon: "🔄" });
+    toast.success("Routes swapped", { icon: "" });
   };
 
   return (
@@ -227,7 +227,7 @@ export default function FindTrip() {
                       }}
                       className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700"
                     >
-                      📍 {city}
+                      {city}
                     </button>
                   ))}
                 </div>
@@ -269,7 +269,7 @@ export default function FindTrip() {
                       }}
                       className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700"
                     >
-                      📍 {city}
+                      {city}
                     </button>
                   ))}
                 </div>
@@ -374,7 +374,7 @@ export default function FindTrip() {
             >
               {trips.length === 0 ? (
                 <div className="text-center py-16 bg-white/5 rounded-2xl border border-white/10">
-                  <div className="text-6xl mb-4">🚗</div>
+                  <div className="text-6xl mb-4"></div>
                   <p className="text-lg font-medium text-white mb-2">
                     No trips found
                   </p>

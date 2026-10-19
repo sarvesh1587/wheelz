@@ -167,32 +167,32 @@ export default function TripDetail() {
 
           <div className="flex flex-wrap gap-2 text-xs">
             <span className="bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 px-3 py-1.5 rounded-lg">
-              📅 {depDate.toDateString()}
+              {depDate.toDateString()}
             </span>
             <span className="bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 px-3 py-1.5 rounded-lg">
-              💺 {trip.availableSeats}/{trip.totalSeats} seats available
+              {trip.availableSeats}/{trip.totalSeats} seats available
             </span>
             {trip.womenOnly && (
               <span className="bg-pink-50 dark:bg-pink-900/20 text-pink-600 px-3 py-1.5 rounded-lg border border-pink-100">
-                👩 Women only
+                Women only
               </span>
             )}
             {trip.acAvailable && (
               <span className="bg-blue-50 dark:bg-blue-900/20 text-blue-600 px-3 py-1.5 rounded-lg">
-                ❄️ AC
+                AC
               </span>
             )}
             {trip.instantBook && (
               <span className="bg-green-50 text-green-600 px-3 py-1.5 rounded-lg">
-                ⚡ Instant book
+                Instant book
               </span>
             )}
             <span className="bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 px-3 py-1.5 rounded-lg capitalize">
-              🧳 {trip.luggageAllowed} luggage
+              {trip.luggageAllowed} luggage
             </span>
             {!trip.smokingAllowed && (
               <span className="bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 px-3 py-1.5 rounded-lg">
-                🚭 No smoking
+                No smoking
               </span>
             )}
           </div>
@@ -216,10 +216,10 @@ export default function TripDetail() {
               </p>
               <div className="flex gap-2 mt-1">
                 <span className="text-xs bg-green-50 dark:bg-green-900/20 text-green-600 px-2 py-0.5 rounded-full">
-                  ✅ Verified
+                  Verified
                 </span>
                 <span className="text-xs bg-blue-50 dark:bg-blue-900/20 text-blue-600 px-2 py-0.5 rounded-full">
-                  🚗 {trip.driver?.ridesCompleted || 0} rides
+                  {trip.driver?.ridesCompleted || 0} rides
                 </span>
               </div>
             </div>
@@ -241,7 +241,7 @@ export default function TripDetail() {
                 />
               ) : (
                 <div className="w-20 h-14 bg-gray-100 dark:bg-gray-800 rounded-xl flex items-center justify-center text-2xl">
-                  🚗
+
                 </div>
               )}
               <div>
@@ -308,7 +308,7 @@ export default function TripDetail() {
                   {requesting
                     ? "Sending..."
                     : trip.instantBook
-                      ? "⚡ Book Instantly"
+                      ? "Book Instantly"
                       : "Send Seat Request"}
                 </button>
               </div>
@@ -328,10 +328,10 @@ export default function TripDetail() {
                     }`}
                   >
                     {myRequest.status === "approved"
-                      ? "✅ Approved"
+                      ? "Approved"
                       : myRequest.status === "pending"
-                        ? "⏳ Pending"
-                        : "❌ " + myRequest.status}
+                        ? "Pending"
+                        : "" + myRequest.status}
                   </span>
                 </div>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
@@ -348,7 +348,7 @@ export default function TripDetail() {
                       }
                       className="mt-3 w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-xl transition-colors text-sm"
                     >
-                      💳 Pay Now
+                      Pay Now
                     </button>
                   )}
 
@@ -357,7 +357,7 @@ export default function TripDetail() {
                     onClick={() => setChatOpen((o) => !o)}
                     className="mt-3 w-full border border-green-400 text-green-600 dark:text-green-400 font-semibold py-2.5 rounded-xl hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors text-sm"
                   >
-                    💬 {chatOpen ? "Close Chat" : "Chat with Driver"}
+                    {chatOpen ? "Close Chat" : "Chat with Driver"}
                   </button>
                 )}
 
@@ -429,7 +429,7 @@ export default function TripDetail() {
                   }}
                   className="text-xs bg-green-600 text-white px-3 py-1.5 rounded-lg"
                 >
-                  ✅ Mark Complete
+                  Mark Complete
                 </button>
               )}
             </div>
@@ -448,7 +448,7 @@ export default function TripDetail() {
 
         {/* Disclaimer */}
         <div className="bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800 rounded-xl p-4 text-xs text-amber-700 dark:text-amber-400">
-          ⚠️ <strong>Disclaimer:</strong> This is a cost-sharing arrangement
+          <strong>Disclaimer:</strong> This is a cost-sharing arrangement
           between private individuals. Wheelz is a platform only and is not
           liable for incidents during the trip. Verify driver identity before
           boarding.

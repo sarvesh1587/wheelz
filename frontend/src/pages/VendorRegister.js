@@ -286,10 +286,10 @@ export default function VendorRegister() {
                 For individuals renting out personal vehicles
               </p>
               <ul className="text-sm text-gray-600 space-y-2">
-                <li className="flex items-center gap-2">✅ Up to 5 vehicles</li>
-                <li className="flex items-center gap-2">💰 15% commission</li>
+                <li className="flex items-center gap-2">Up to 5 vehicles</li>
+                <li className="flex items-center gap-2">15% commission</li>
                 <li className="flex items-center gap-2">
-                  📄 Personal PAN required
+                  Personal PAN required
                 </li>
                 <li className="flex items-center gap-2">
                   🆔 Aadhar verification
@@ -311,13 +311,13 @@ export default function VendorRegister() {
               </p>
               <ul className="text-sm text-gray-600 space-y-2">
                 <li className="flex items-center gap-2">
-                  ✅ Unlimited vehicles
+                  Unlimited vehicles
                 </li>
-                <li className="flex items-center gap-2">💰 10% commission</li>
+                <li className="flex items-center gap-2">10% commission</li>
                 <li className="flex items-center gap-2">
-                  📄 Business PAN & GST required
+                  Business PAN & GST required
                 </li>
-                <li className="flex items-center gap-2">⭐ Priority support</li>
+                <li className="flex items-center gap-2">Priority support</li>
               </ul>
             </div>
           </div>

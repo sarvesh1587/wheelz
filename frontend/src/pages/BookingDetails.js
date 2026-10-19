@@ -107,7 +107,7 @@ export default function BookingDetails() {
                     : "text-red-600"
                 }`}
               >
-                {booking.paymentStatus === "paid" ? "✅ Paid" : "⏳ Pending"}
+                {booking.paymentStatus === "paid" ? "Paid" : "Pending"}
               </span>
             </div>
             <div className="flex justify-between">
@@ -174,7 +174,7 @@ export default function BookingDetails() {
               </div>
               <div className="mt-3 pt-3 border-t">
                 <p className="text-sm text-amber-600">
-                  📞 Please call vendor to coordinate pickup time
+                  Please call vendor to coordinate pickup time
                 </p>
               </div>
             </div>

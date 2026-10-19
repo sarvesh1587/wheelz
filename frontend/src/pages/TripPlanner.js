@@ -29,7 +29,7 @@ const POPULAR_TRIPS = [
     to: "Goa",
     days: 3,
     people: 2,
-    emoji: "🏖️",
+    emoji: "",
   },
   {
     label: "Delhi → Manali",
@@ -37,7 +37,7 @@ const POPULAR_TRIPS = [
     to: "Manali",
     days: 5,
     people: 4,
-    emoji: "🏔️",
+    emoji: "",
   },
   {
     label: "Bangalore → Coorg",
@@ -45,7 +45,7 @@ const POPULAR_TRIPS = [
     to: "Coorg",
     days: 2,
     people: 2,
-    emoji: "🌿",
+    emoji: "",
   },
   {
     label: "Delhi → Jaipur",
@@ -53,7 +53,7 @@ const POPULAR_TRIPS = [
     to: "Jaipur",
     days: 2,
     people: 3,
-    emoji: "🏰",
+    emoji: "",
   },
   {
     label: "Chennai → Pondicherry",
@@ -61,7 +61,7 @@ const POPULAR_TRIPS = [
     to: "Pondicherry",
     days: 2,
     people: 2,
-    emoji: "⛵",
+    emoji: "",
   },
   {
     label: "Bangalore → Goa",
@@ -69,7 +69,7 @@ const POPULAR_TRIPS = [
     to: "Goa",
     days: 4,
     people: 4,
-    emoji: "🎉",
+    emoji: "",
   },
 ];
 
@@ -211,7 +211,7 @@ export default function TripPlanner() {
           className="mb-8"
         >
           <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-3">
-            🔥 Popular routes
+            Popular routes
           </p>
           <div className="flex flex-wrap gap-2">
             {POPULAR_TRIPS.map((trip, idx) => (
@@ -223,7 +223,7 @@ export default function TripPlanner() {
                 onClick={() => applyPopularTrip(trip)}
                 className="flex items-center gap-2 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-gray-200 dark:border-gray-700 rounded-full px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 hover:border-amber-400 hover:text-amber-500 transition-all hover:shadow-md"
               >
-                <span>{trip.emoji}</span> {trip.label}
+                {trip.label}
               </motion.button>
             ))}
           </div>
@@ -248,7 +248,7 @@ export default function TripPlanner() {
                     : "text-gray-500 dark:text-gray-400 hover:text-amber-400"
                 }`}
               >
-                {m === "form" ? "📋 Fill Details" : "💬 Describe in Words"}
+                {m === "form" ? "Fill Details" : "Describe in Words"}
               </button>
             ))}
           </div>
@@ -364,7 +364,7 @@ export default function TripPlanner() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 flex items-center gap-1">
-                    🚗 Vehicle Preference
+                    Vehicle Preference
                   </label>
                   <select
                     name="preferredCategory"
@@ -415,7 +415,7 @@ export default function TripPlanner() {
                   your trip...
                 </>
               ) : (
-                <>🗺️ Plan My Trip</>
+                <>Plan My Trip</>
               )}
             </motion.button>
           </div>
@@ -435,7 +435,7 @@ export default function TripPlanner() {
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div>
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="text-2xl">🗺️</span>
+                      <span className="text-2xl"></span>
                       <h2 className="text-xl font-bold text-gray-900 dark:text-white">
                         {result.tripParams.from} → {result.tripParams.to}
                       </h2>
@@ -446,17 +446,17 @@ export default function TripPlanner() {
                   </div>
                   <div className="flex flex-wrap gap-2">
                     <span className="bg-white dark:bg-gray-800 rounded-lg px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 shadow-sm border border-gray-200 dark:border-gray-700">
-                      📅 {result.tripParams.days} days
+                      {result.tripParams.days} days
                     </span>
                     <span className="bg-white dark:bg-gray-800 rounded-lg px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 shadow-sm border border-gray-200 dark:border-gray-700">
-                      👥 {result.tripParams.people} people
+                      {result.tripParams.people} people
                     </span>
                     <span className="bg-white dark:bg-gray-800 rounded-lg px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 shadow-sm border border-gray-200 dark:border-gray-700">
-                      🛣️ ~{result.plans[0]?.tripDetails?.distance || "—"} km
+                      ~{result.plans[0]?.tripDetails?.distance || "—"} km
                     </span>
                     {result.tripParams.roundTrip && (
                       <span className="bg-white dark:bg-gray-800 rounded-lg px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 shadow-sm border border-gray-200 dark:border-gray-700">
-                        🔄 Round trip
+                        Round trip
                       </span>
                     )}
                   </div>
@@ -509,7 +509,7 @@ function VehiclePlanCard({ plan, isTop, tripParams, onBook }) {
     >
       {isTop && (
         <div className="bg-gradient-to-r from-amber-500 to-amber-600 text-white text-xs font-semibold text-center py-1.5 tracking-wide">
-          ⭐ AI TOP PICK
+          AI TOP PICK
         </div>
       )}
 
@@ -524,7 +524,7 @@ function VehiclePlanCard({ plan, isTop, tripParams, onBook }) {
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-3xl">
-                {vehicle.category === "bike" ? "🏍️" : "🚗"}
+                {vehicle.category === "bike" ? "" : ""}
               </div>
             )}
           </div>
@@ -587,24 +587,24 @@ function VehiclePlanCard({ plan, isTop, tripParams, onBook }) {
             <div className="mt-3 space-y-1.5 border-t border-gray-200 dark:border-gray-600 pt-3">
               {[
                 [
-                  "🚗 Rental",
+                  "Rental",
                   `₹${costBreakdown.rentalCost.toLocaleString()}`,
                   `₹{vehicle.basePrice}/day × ${tripParams.days} days`,
                 ],
                 [
-                  "⛽ Fuel",
+                  "Fuel",
                   `₹${costBreakdown.fuelCost.toLocaleString()}`,
                   `~${plan.tripDetails.totalKm}km total`,
                 ],
                 [
-                  "🛣️ Tolls (est.)",
+                  "Tolls (est.)",
                   `₹${costBreakdown.tollsEstimate.toLocaleString()}`,
                   "approximate",
                 ],
                 ...(costBreakdown.driverCost > 0
                   ? [
                       [
-                        "👨‍✈️ Driver",
+                        "Driver",
                         `₹${costBreakdown.driverCost.toLocaleString()}`,
                         `₹700/day × ${tripParams.days} days`,
                       ],

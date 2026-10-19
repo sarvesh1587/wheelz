@@ -135,7 +135,7 @@ export default function AdminHomepage() {
             <div>
               <div className="flex items-center gap-3 mb-2">
                 <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center text-2xl">
-                  👑
+
                 </div>
                 <h1 className="text-2xl md:text-3xl font-bold">
                   Welcome back, {user?.name?.split(" ")[0]}!
@@ -176,7 +176,7 @@ export default function AdminHomepage() {
         {/* Quick Actions Grid */}
         <div className="mb-10">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-            <span>⚡</span> Quick Actions
+            <span></span> Quick Actions
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {quickActions.map((action, index) => (
@@ -200,7 +200,7 @@ export default function AdminHomepage() {
           <div className="flex justify-between items-center mb-4">
             <div>
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                <span>⭐</span> Featured Vehicles
+                <span></span> Featured Vehicles
               </h2>
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                 Most popular vehicles - manage them directly from here
