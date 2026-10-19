@@ -1,27 +1,16 @@
 /**
- * FindTrip Page — Premium Wheelz Rideshare Search (Amber Theme)
+ * FindTrip Page — Wheelz Rideshare Search
  * File: frontend/src/pages/FindTrip.js
  */
 
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
 import toast from "react-hot-toast";
-import {
-  MagnifyingGlassIcon,
-  ArrowsRightLeftIcon,
-  MapPinIcon,
-  CalendarIcon,
-  UserGroupIcon,
-  ShieldCheckIcon,
-  SparklesIcon,
-  BoltIcon,
-  ClockIcon,
-  StarIcon,
-  ArrowRightIcon,
-  PlusIcon,
-} from "@heroicons/react/24/outline";
+import { ArrowLeftRight, ArrowRight, ArrowUpRight, Plus, Search, ShieldCheck } from "lucide-react";
+import { Reveal, Magnetic } from "../components/motion";
+import { PageHeader, Empty, Spinner } from "../components/ui";
 
 const API =
   process.env.REACT_APP_API_URL || "https://wheelz-ldq2.onrender.com/api";
@@ -167,229 +156,180 @@ export default function FindTrip() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-900 to-gray-950">
-      {/* Hero Section */}
-      <div className="relative overflow-hidden pt-16 pb-8">
-        <div className="relative max-w-4xl mx-auto px-4 text-center">
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
-            <div className="inline-flex items-center gap-2 bg-amber-500/10 backdrop-blur-sm border border-amber-500/20 text-amber-400 px-4 py-2 rounded-full text-sm font-medium mb-6">
-              <SparklesIcon className="w-4 h-4 animate-pulse" />
-              Premium Ridesharing
-            </div>
-            <h1 className="text-4xl md:text-5xl font-bold mb-4">
-              <span className="text-white">Find Your </span>
-              <span className="bg-gradient-to-r from-amber-400 to-amber-500 bg-clip-text text-transparent">
-                Perfect Ride
-              </span>
-            </h1>
-            <p className="text-gray-400 text-lg max-w-lg mx-auto">
-              Connect with verified drivers. Split costs. Travel sustainably.
-            </p>
-          </motion.div>
-        </div>
-      </div>
+    <div className="container-x pb-24 pt-28 md:pt-32">
+      <PageHeader
+        index="01"
+        eyebrow="Ridesharing"
+        title={["Find a", "shared ride."]}
+        lede="Connect with verified drivers. Split costs. Travel sustainably."
+        actions={
+          <Link to="/offer-trip" className="btn-ghost">
+            <Plus size={16} /> Offer a trip
+          </Link>
+        }
+      />
 
-      <div className="relative max-w-5xl mx-auto px-4 pb-16">
-        {/* Search Form */}
-        <motion.form
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          onSubmit={handleSearch}
-          className="bg-white/5 backdrop-blur-xl rounded-2xl p-6 mb-8 border border-white/10"
-        >
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            <div className="relative">
-              <label className="block text-sm font-medium text-gray-400 mb-1">
-                <MapPinIcon className="w-4 h-4 inline mr-1 text-amber-400" />
-                From
-              </label>
-              <input
-                type="text"
-                value={form.from}
-                onChange={(e) => handleCityInput(e.target.value, "from")}
-                onFocus={() => setFocusedField("from")}
-                onBlur={() => setTimeout(() => setFocusedField(null), 200)}
-                placeholder="Mumbai"
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-amber-500/50"
+      {/* Search Form */}
+      <Reveal as="form" onSubmit={handleSearch} className="mb-16 rounded-[28px] border border-line/10 bg-surface p-6 md:p-10">
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-12">
+          <div className="relative lg:col-span-4">
+            <label className="field-label">From</label>
+            <input
+              type="text"
+              value={form.from}
+              onChange={(e) => handleCityInput(e.target.value, "from")}
+              onFocus={() => setFocusedField("from")}
+              onBlur={() => setTimeout(() => setFocusedField(null), 200)}
+              placeholder="Mumbai"
+              className="field display-tight !text-2xl"
+            />
+            {focusedField === "from" && suggestions.from.length > 0 && (
+              <CitySuggestions
+                cities={suggestions.from}
+                onPick={(city) => {
+                  setForm((f) => ({ ...f, from: city }));
+                  setSuggestions((f) => ({ ...f, from: [] }));
+                }}
               />
-              {focusedField === "from" && suggestions.from.length > 0 && (
-                <div className="absolute top-full left-0 right-0 mt-2 bg-gray-800 rounded-xl overflow-hidden z-10 border border-gray-700">
-                  {suggestions.from.map((city) => (
-                    <button
-                      key={city}
-                      type="button"
-                      onClick={() => {
-                        setForm((f) => ({ ...f, from: city }));
-                        setSuggestions((f) => ({ ...f, from: [] }));
-                      }}
-                      className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700"
-                    >
-                      {city}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div className="relative">
-              <label className="block text-sm font-medium text-gray-400 mb-1">
-                <MapPinIcon className="w-4 h-4 inline mr-1 text-amber-400" />
-                To
-              </label>
-              <div className="relative">
-                <input
-                  type="text"
-                  value={form.to}
-                  onChange={(e) => handleCityInput(e.target.value, "to")}
-                  onFocus={() => setFocusedField("to")}
-                  onBlur={() => setTimeout(() => setFocusedField(null), 200)}
-                  placeholder="Goa"
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-amber-500/50"
-                />
-                <button
-                  type="button"
-                  onClick={swap}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-lg bg-white/5 border border-white/10 text-gray-400 hover:text-amber-400"
-                >
-                  <ArrowsRightLeftIcon className="w-4 h-4" />
-                </button>
-              </div>
-              {focusedField === "to" && suggestions.to.length > 0 && (
-                <div className="absolute top-full left-0 right-0 mt-2 bg-gray-800 rounded-xl overflow-hidden z-10 border border-gray-700">
-                  {suggestions.to.map((city) => (
-                    <button
-                      key={city}
-                      type="button"
-                      onClick={() => {
-                        setForm((f) => ({ ...f, to: city }));
-                        setSuggestions((f) => ({ ...f, to: [] }));
-                      }}
-                      className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700"
-                    >
-                      {city}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-400 mb-1">
-                <CalendarIcon className="w-4 h-4 inline mr-1 text-amber-400" />
-                Date
-              </label>
-              <input
-                type="date"
-                value={form.date}
-                min={new Date().toISOString().split("T")[0]}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, date: e.target.value }))
-                }
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-amber-500/50"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-400 mb-1">
-                <UserGroupIcon className="w-4 h-4 inline mr-1 text-amber-400" />
-                Seats Needed
-              </label>
-              <select
-                value={form.seats}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, seats: e.target.value }))
-                }
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-amber-500/50"
-              >
-                {[1, 2, 3, 4].map((n) => (
-                  <option key={n} value={n}>
-                    {n} seat{n > 1 ? "s" : ""}
-                  </option>
-                ))}
-              </select>
-            </div>
+            )}
           </div>
 
-          <div className="flex items-center gap-3 mb-4">
+          <div className="relative lg:col-span-4">
+            <label className="field-label">To</label>
+            <div className="relative">
+              <input
+                type="text"
+                value={form.to}
+                onChange={(e) => handleCityInput(e.target.value, "to")}
+                onFocus={() => setFocusedField("to")}
+                onBlur={() => setTimeout(() => setFocusedField(null), 200)}
+                placeholder="Goa"
+                className="field display-tight !pr-12 !text-2xl"
+              />
+              <button
+                type="button"
+                onClick={swap}
+                aria-label="Swap cities"
+                className="absolute right-0 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full border border-line/15 text-muted transition-colors hover:border-ink hover:text-ink"
+              >
+                <ArrowLeftRight size={14} />
+              </button>
+            </div>
+            {focusedField === "to" && suggestions.to.length > 0 && (
+              <CitySuggestions
+                cities={suggestions.to}
+                onPick={(city) => {
+                  setForm((f) => ({ ...f, to: city }));
+                  setSuggestions((f) => ({ ...f, to: [] }));
+                }}
+              />
+            )}
+          </div>
+
+          <div className="lg:col-span-2">
+            <label className="field-label">Date</label>
+            <input
+              type="date"
+              value={form.date}
+              min={new Date().toISOString().split("T")[0]}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, date: e.target.value }))
+              }
+              className="field [color-scheme:inherit]"
+            />
+          </div>
+
+          <div className="lg:col-span-2">
+            <label className="field-label">Seats</label>
+            <select
+              value={form.seats}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, seats: e.target.value }))
+              }
+              className="field [&>option]:bg-surface"
+            >
+              {[1, 2, 3, 4].map((n) => (
+                <option key={n} value={n}>
+                  {n} seat{n > 1 ? "s" : ""}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <div className="mt-10 flex flex-col gap-6 border-t border-line/10 pt-6 sm:flex-row sm:items-center sm:justify-between">
+          <label className="flex cursor-pointer items-center gap-3 text-sm text-muted">
             <button
               type="button"
+              role="switch"
+              aria-checked={form.womenOnly}
               onClick={() =>
                 setForm((f) => ({ ...f, womenOnly: !f.womenOnly }))
               }
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                form.womenOnly ? "bg-amber-500" : "bg-white/20"
+              className={`relative inline-flex h-6 w-11 items-center rounded-full border transition-colors ${
+                form.womenOnly ? "border-accent bg-accent" : "border-line/20 bg-transparent"
               }`}
             >
               <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  form.womenOnly ? "translate-x-6" : "translate-x-1"
+                className={`inline-block h-4 w-4 transform rounded-full transition-transform ${
+                  form.womenOnly ? "translate-x-6 bg-accent-ink" : "translate-x-1 bg-muted"
                 }`}
               />
             </button>
-            <label className="text-sm text-gray-400 cursor-pointer">
-              <ShieldCheckIcon className="w-4 h-4 inline mr-1 text-pink-400" />
-              Women-only trips only
-            </label>
-          </div>
+            <ShieldCheck size={14} className="text-accent" />
+            Women-only trips only
+          </label>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 disabled:opacity-50 text-white font-semibold py-3 rounded-xl transition-all flex items-center justify-center gap-2"
+          <Magnetic strength={0.2}>
+            <button type="submit" disabled={loading} className="btn-primary !px-8 !py-4">
+              {loading ? (
+                <>
+                  <Spinner /> Searching…
+                </>
+              ) : (
+                <>
+                  <Search size={16} /> Search trips
+                </>
+              )}
+            </button>
+          </Magnetic>
+        </div>
+      </Reveal>
+
+      {/* Debug Info - Remove after testing */}
+      {debug && (
+        <p className="mb-4 font-mono text-xs text-muted">
+          Debug:{" "}
+          {debug.count
+            ? `${debug.count} trips found`
+            : debug.error || "No trips"}
+        </p>
+      )}
+
+      {/* Results */}
+      <AnimatePresence>
+        {searched && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
           >
-            {loading ? (
-              <>
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />{" "}
-                Searching...
-              </>
+            {trips.length === 0 ? (
+              <Empty
+                title="No trips found."
+                action={
+                  <button onClick={() => navigate("/offer-trip")} className="btn-primary">
+                    <Plus size={16} /> Offer a trip
+                  </button>
+                }
+              >
+                Try different cities or dates.
+              </Empty>
             ) : (
               <>
-                <MagnifyingGlassIcon className="w-5 h-5" /> Search Trips
-              </>
-            )}
-          </button>
-        </motion.form>
-
-        {/* Debug Info - Remove after testing */}
-        {debug && (
-          <div className="mb-4 p-3 bg-gray-800/50 rounded-lg text-xs">
-            <p className="text-gray-400">
-              Debug:{" "}
-              {debug.count
-                ? `${debug.count} trips found`
-                : debug.error || "No trips"}
-            </p>
-          </div>
-        )}
-
-        {/* Results */}
-        <AnimatePresence>
-          {searched && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-            >
-              {trips.length === 0 ? (
-                <div className="text-center py-16 bg-white/5 rounded-2xl border border-white/10">
-                  <div className="text-6xl mb-4"></div>
-                  <p className="text-lg font-medium text-white mb-2">
-                    No trips found
-                  </p>
-                  <p className="text-sm text-gray-400 mb-6">
-                    Try different cities or dates
-                  </p>
-                  <button
-                    onClick={() => navigate("/offer-trip")}
-                    className="bg-amber-500 hover:bg-amber-600 text-white px-6 py-2 rounded-xl inline-flex items-center gap-2"
-                  >
-                    <PlusIcon className="w-5 h-5" /> Offer a Trip
-                  </button>
-                </div>
-              ) : (
-                <div className="space-y-4">
+                <p className="eyebrow mb-4">
+                  {String(trips.length).padStart(2, "0")} trip{trips.length !== 1 ? "s" : ""} found
+                </p>
+                <div className="border-t border-line/10">
                   {trips.map((trip) => (
                     <TripCard
                       key={trip._id}
@@ -398,11 +338,28 @@ export default function FindTrip() {
                     />
                   ))}
                 </div>
-              )}
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+              </>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+function CitySuggestions({ cities, onPick }) {
+  return (
+    <div className="absolute left-0 right-0 top-full z-20 mt-2 overflow-hidden rounded-2xl border border-line/10 bg-surface p-1.5 shadow-2xl" data-lenis-prevent>
+      {cities.map((city) => (
+        <button
+          key={city}
+          type="button"
+          onClick={() => onPick(city)}
+          className="w-full rounded-xl px-3 py-2.5 text-left text-sm text-ink transition-colors hover:bg-raised"
+        >
+          {city}
+        </button>
+      ))}
     </div>
   );
 }
@@ -430,65 +387,48 @@ function TripCard({ trip, onBook }) {
   }
 
   return (
-    <div
+    <button
+      type="button"
       onClick={onBook}
-      className="bg-white/5 backdrop-blur-xl rounded-2xl p-5 cursor-pointer hover:bg-white/10 transition-all border border-white/10"
+      className="group grid w-full gap-6 border-b border-line/10 py-8 text-left transition-colors md:grid-cols-12 md:items-center"
     >
-      <div className="flex flex-wrap justify-between items-start gap-4">
-        <div className="flex-1">
-          {/* Route */}
-          <div className="flex items-center gap-2 mb-3">
-            <MapPinIcon className="w-4 h-4 text-amber-400" />
-            <span className="font-semibold text-white">{trip.fromCity}</span>
-            <ArrowRightIcon className="w-4 h-4 text-gray-500" />
-            <MapPinIcon className="w-4 h-4 text-green-400" />
-            <span className="font-semibold text-white">{trip.toCity}</span>
-          </div>
+      <div className="md:col-span-6">
+        <p className="eyebrow mb-3">
+          {getDateLabel()} · {trip.departureTime || "10:00"}
+        </p>
+        <h3 className="display-tight flex flex-wrap items-center gap-3 text-3xl md:text-4xl">
+          <span>{trip.fromCity}</span>
+          <ArrowRight size={24} className="text-accent transition-transform duration-500 ease-out-expo group-hover:translate-x-1" />
+          <span>{trip.toCity}</span>
+        </h3>
+      </div>
 
-          {/* Details */}
-          <div className="flex flex-wrap gap-3 text-sm text-gray-400 mb-3">
-            <span className="flex items-center gap-1">
-              <CalendarIcon className="w-3 h-3" /> {getDateLabel()} at{" "}
-              {trip.departureTime || "10:00"}
-            </span>
-            <span className="flex items-center gap-1">
-              <UserGroupIcon className="w-3 h-3" /> {trip.availableSeats} seats
-              left
-            </span>
-            {trip.womenOnly && (
-              <span className="flex items-center gap-1 text-pink-400">
-                <ShieldCheckIcon className="w-3 h-3" /> Women only
-              </span>
-            )}
-          </div>
-
-          {/* Driver */}
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-amber-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
-              {trip.driver?.name?.[0]?.toUpperCase() || "D"}
-            </div>
-            <div>
-              <p className="text-sm font-medium text-white">
-                {trip.driver?.name || "Driver"}
-              </p>
-              <p className="text-xs text-gray-500">
-                {trip.driver?.ridesCompleted || 0} rides
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Price */}
-        <div className="text-right">
-          <p className="text-2xl font-bold text-amber-400">
-            ₹{trip.pricePerSeat?.toLocaleString()}
+      <div className="flex items-center gap-3 md:col-span-3">
+        <span className="grid h-10 w-10 place-items-center rounded-full bg-raised text-sm font-semibold">
+          {trip.driver?.name?.[0]?.toUpperCase() || "D"}
+        </span>
+        <div>
+          <p className="text-sm font-medium">{trip.driver?.name || "Driver"}</p>
+          <p className="text-xs text-muted">
+            {trip.driver?.ridesCompleted || 0} rides · {trip.availableSeats} seats left
           </p>
-          <p className="text-xs text-gray-500">per seat</p>
-          <button className="mt-2 px-4 py-1.5 bg-amber-500 text-white text-sm rounded-lg hover:bg-amber-600 transition-colors">
-            View Details
-          </button>
+          {trip.womenOnly && (
+            <p className="mt-1 flex items-center gap-1 text-xs text-accent">
+              <ShieldCheck size={12} /> Women only
+            </p>
+          )}
         </div>
       </div>
-    </div>
+
+      <div className="flex items-center justify-between gap-4 md:col-span-3 md:justify-end">
+        <div className="md:text-right">
+          <p className="display text-3xl">₹{trip.pricePerSeat?.toLocaleString()}</p>
+          <p className="eyebrow mt-1">per seat</p>
+        </div>
+        <span className="grid h-11 w-11 place-items-center rounded-full border border-line/15 transition-colors group-hover:border-accent group-hover:bg-accent group-hover:text-accent-ink">
+          <ArrowUpRight size={16} />
+        </span>
+      </div>
+    </button>
   );
 }

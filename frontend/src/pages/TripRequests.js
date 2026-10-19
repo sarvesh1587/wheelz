@@ -3,16 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { rideShareAPI } from "../services/api";
 import toast from "react-hot-toast";
-import {
-  MapPinIcon,
-  CalendarIcon,
-  UserGroupIcon,
-  CheckCircleIcon,
-  XCircleIcon,
-  SparklesIcon,
-  EnvelopeIcon,
-  ArrowLeftIcon,
-} from "@heroicons/react/24/outline";
+import { ArrowLeft, ArrowRight, Calendar, Check, Mail, Users, X } from "lucide-react";
+import { EASE } from "../components/motion";
+import { PageHeader, Empty, PageLoader } from "../components/ui";
 
 export default function TripRequests() {
   const navigate = useNavigate();
@@ -62,128 +55,91 @@ export default function TripRequests() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center pt-20">
-        <div className="w-12 h-12 border-4 border-amber-500 border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
+  if (loading) return <PageLoader label="Loading requests" />;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-950 pt-24 pb-12">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <button
-          onClick={() => navigate("/dashboard")}
-          className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-amber-500 mb-6"
-        >
-          <ArrowLeftIcon className="w-5 h-5" /> Back to Dashboard
-        </button>
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-8"
-        >
-          <div className="inline-flex items-center gap-2 bg-amber-500/10 backdrop-blur-sm border border-amber-500/20 text-amber-400 px-4 py-2 rounded-full text-sm font-medium mb-4">
-            <SparklesIcon className="w-4 h-4 animate-pulse" /> Passenger
-            Requests
-          </div>
-          <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400 bg-clip-text text-transparent">
-            Trip Requests
-          </h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-2">
-            Approve or reject passengers who want to join your trip
-          </p>
-        </motion.div>
+    <div className="container-x pb-24 pt-28 md:pt-32">
+      <button
+        onClick={() => navigate("/dashboard")}
+        className="link-underline mb-8 inline-flex items-center gap-2 text-sm text-muted hover:text-ink"
+      >
+        <ArrowLeft size={14} /> Back to dashboard
+      </button>
 
-        {requests.length === 0 ? (
-          <div className="text-center py-16 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700">
-            <div className="text-5xl mb-4"></div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-              No pending requests
-            </h3>
-            <p className="text-gray-500">
-              When passengers request to join your trips, they'll appear here
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {requests.map((req, idx) => (
-              <motion.div
-                key={req._id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: idx * 0.05 }}
-                className="bg-white dark:bg-gray-800 rounded-2xl overflow-hidden shadow-md border border-gray-100 dark:border-gray-700"
-              >
-                <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 px-5 py-3 border-b border-amber-100 dark:border-amber-800">
-                  <div className="flex items-center justify-between flex-wrap gap-2">
-                    <div className="flex items-center gap-2">
-                      <MapPinIcon className="w-4 h-4 text-amber-500" />
-                      <span className="font-medium">{req.trip?.fromCity}</span>
-                      <span>→</span>
-                      <MapPinIcon className="w-4 h-4 text-green-500" />
-                      <span className="font-medium">{req.trip?.toCity}</span>
-                    </div>
-                    <div className="flex items-center gap-3 text-xs text-gray-500">
-                      <span className="flex items-center gap-1">
-                        <CalendarIcon className="w-3 h-3" />{" "}
-                        {new Date(req.trip?.departureDate).toLocaleDateString()}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <UserGroupIcon className="w-3 h-3" />{" "}
-                        {req.seatsRequested} seat(s)
-                      </span>
-                    </div>
-                  </div>
+      <PageHeader
+        index="01"
+        eyebrow="Passenger requests"
+        title={["Trip requests."]}
+        lede="Approve or reject passengers who want to join your trip."
+      />
+
+      {requests.length === 0 ? (
+        <Empty title="No pending requests.">
+          When passengers request to join your trips, they'll appear here.
+        </Empty>
+      ) : (
+        <div className="border-t border-line/10">
+          {requests.map((req, idx) => (
+            <motion.article
+              key={req._id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: idx * 0.05, duration: 0.6, ease: EASE }}
+              className="grid gap-6 border-b border-line/10 py-8 lg:grid-cols-12 lg:items-center"
+            >
+              <div className="lg:col-span-4">
+                <h3 className="display-tight flex flex-wrap items-center gap-3 text-2xl">
+                  <span>{req.trip?.fromCity}</span>
+                  <ArrowRight size={18} className="text-accent" />
+                  <span>{req.trip?.toCity}</span>
+                </h3>
+                <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-sm text-muted">
+                  <span className="flex items-center gap-1.5">
+                    <Calendar size={14} /> {new Date(req.trip?.departureDate).toLocaleDateString()}
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <Users size={14} /> {req.seatsRequested} seat(s)
+                  </span>
                 </div>
-                <div className="p-5">
-                  <div className="flex flex-wrap gap-5">
-                    <div className="flex items-center gap-3">
-                      <div className="w-14 h-14 bg-gradient-to-r from-amber-500 to-amber-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
-                        {req.passenger?.name?.[0]?.toUpperCase() || "P"}
-                      </div>
-                      <div>
-                        <h3 className="font-semibold">
-                          {req.passenger?.name || "Passenger"}
-                        </h3>
-                      </div>
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 text-sm text-gray-600">
-                        <EnvelopeIcon className="w-4 h-4" />{" "}
-                        {req.passenger?.email || "Email not available"}
-                      </div>
-                      {req.message && (
-                        <div className="mt-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                          <p className="text-xs text-gray-500 mb-1">Message:</p>
-                          <p className="text-sm">{req.message}</p>
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => handleApprove(req._id)}
-                        disabled={processingId === req._id}
-                        className="px-5 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg flex items-center gap-2"
-                      >
-                        <CheckCircleIcon className="w-4 h-4" /> Approve
-                      </button>
-                      <button
-                        onClick={() => handleReject(req._id)}
-                        disabled={processingId === req._id}
-                        className="px-5 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg flex items-center gap-2"
-                      >
-                        <XCircleIcon className="w-4 h-4" /> Reject
-                      </button>
-                    </div>
-                  </div>
+              </div>
+
+              <div className="flex gap-4 lg:col-span-5">
+                <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-raised font-semibold">
+                  {req.passenger?.name?.[0]?.toUpperCase() || "P"}
+                </span>
+                <div className="min-w-0">
+                  <p className="font-medium">{req.passenger?.name || "Passenger"}</p>
+                  <p className="mt-0.5 flex items-center gap-1.5 truncate text-sm text-muted">
+                    <Mail size={13} /> {req.passenger?.email || "Email not available"}
+                  </p>
+                  {req.message && (
+                    <blockquote className="mt-3 border-l-2 border-accent pl-3 text-sm italic text-muted">
+                      “{req.message}”
+                    </blockquote>
+                  )}
                 </div>
-              </motion.div>
-            ))}
-          </div>
-        )}
-      </div>
+              </div>
+
+              <div className="flex gap-2 lg:col-span-3 lg:justify-end">
+                <button
+                  onClick={() => handleApprove(req._id)}
+                  disabled={processingId === req._id}
+                  className="btn-primary !px-5 !py-2.5"
+                >
+                  <Check size={15} /> Approve
+                </button>
+                <button
+                  onClick={() => handleReject(req._id)}
+                  disabled={processingId === req._id}
+                  className="btn-ghost !px-5 !py-2.5 hover:!border-red-500 hover:!bg-transparent hover:!text-red-500"
+                >
+                  <X size={15} /> Reject
+                </button>
+              </div>
+            </motion.article>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

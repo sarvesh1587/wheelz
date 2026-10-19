@@ -387,7 +387,7 @@ export default function Dashboard() {
         ))}
       </div>
 
-      <div className="sticky top-16 z-30 -mx-5 mb-10 overflow-x-auto border-y border-line/10 bg-canvas/85 px-5 backdrop-blur-xl sm:-mx-8 sm:px-8 md:top-20 lg:-mx-12 lg:px-12">
+      <div className="sticky top-16 z-30 -mx-5 mb-10 overflow-x-auto overflow-y-hidden [scrollbar-width:none] border-y border-line/10 bg-canvas/85 px-5 backdrop-blur-xl sm:-mx-8 sm:px-8 md:top-20 lg:-mx-12 lg:px-12">
         <nav className="flex gap-8" aria-label="Dashboard sections">
           {tabs.map((tab) => (
             <button
@@ -401,7 +401,7 @@ export default function Dashboard() {
               {tab.label}
               {tab.count > 0 && <span className="font-mono text-[11px] text-muted">{String(tab.count).padStart(2, "0")}</span>}
               {activeTab === tab.id && (
-                <motion.span layoutId="dash-tab" className="absolute inset-x-0 -bottom-px h-px bg-accent" />
+                <motion.span layoutId="dash-tab" className="absolute inset-x-0 bottom-0 h-px bg-accent" />
               )}
             </button>
           ))}

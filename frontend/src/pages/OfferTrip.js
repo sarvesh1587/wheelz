@@ -3,15 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { rideShareAPI, bookingAPI } from "../services/api";
 import toast from "react-hot-toast";
-import {
-  MapPinIcon,
-  CalendarIcon,
-  UserGroupIcon,
-  CurrencyRupeeIcon,
-  SparklesIcon,
-  ChevronRightIcon,
-  ShieldCheckIcon,
-} from "@heroicons/react/24/outline";
+import { ArrowRight, ArrowUpRight, Check, ShieldCheck, Sparkles } from "lucide-react";
+import { EASE } from "../components/motion";
+import { PageHeader, Empty, Row, PageLoader } from "../components/ui";
 
 export default function OfferTrip() {
   const navigate = useNavigate();
@@ -103,274 +97,178 @@ export default function OfferTrip() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center pt-20">
-        <div className="w-12 h-12 border-4 border-amber-500 border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
+  if (loading) return <PageLoader label="Loading bookings" />;
+
+  const set = (patch) => setFormData({ ...formData, ...patch });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-950 pt-24 pb-12">
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-8"
-        >
-          <div className="inline-flex items-center gap-2 bg-amber-500/10 backdrop-blur-sm border border-amber-500/20 text-amber-400 px-4 py-2 rounded-full text-sm font-medium mb-4">
-            <SparklesIcon className="w-4 h-4 animate-pulse" /> Share Your
-            Journey
-          </div>
-          <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400 bg-clip-text text-transparent">
-            Offer a Trip
-          </h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-3 max-w-xl mx-auto">
-            Share empty seats from your confirmed booking and earn back rental
-            cost
-          </p>
-        </motion.div>
+    <div className="container-x pb-24 pt-28 md:pt-32">
+      <PageHeader
+        index="01"
+        eyebrow="Share your journey"
+        title={["Offer a trip."]}
+        lede="Share empty seats from your confirmed booking and earn back rental cost."
+      />
 
-        {confirmedBookings.length === 0 ? (
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl shadow-xl border border-white/20 dark:border-gray-700/30 p-8 text-center"
-          >
-            <div className="text-6xl mb-4"></div>
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-              No Confirmed Bookings
-            </h2>
-            <p className="text-gray-500 dark:text-gray-400 mb-6">
-              You need to book and confirm a vehicle before you can offer shared
-              trips.
-            </p>
-            <button
-              onClick={() => navigate("/vehicles")}
-              className="px-6 py-3 bg-gradient-to-r from-amber-500 to-amber-600 text-white font-semibold rounded-xl hover:shadow-lg transition-all"
-            >
-              Book a Vehicle First
+      {confirmedBookings.length === 0 ? (
+        <Empty
+          title="No confirmed bookings."
+          action={
+            <button onClick={() => navigate("/vehicles")} className="btn-primary">
+              Book a vehicle first <ArrowUpRight size={16} />
             </button>
-          </motion.div>
-        ) : (
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl shadow-xl border border-white/20 dark:border-gray-700/30 overflow-hidden"
-          >
-            <form onSubmit={handleSubmit} className="p-6 space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Select Your Confirmed Booking *
-                </label>
-                <select
-                  value={formData.bookingId}
-                  onChange={(e) =>
-                    setFormData({ ...formData, bookingId: e.target.value })
-                  }
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 focus:ring-2 focus:ring-amber-500"
-                  required
-                >
-                  <option value="">Select a confirmed booking</option>
-                  {confirmedBookings.map((booking) => (
-                    <option key={booking._id} value={booking._id}>
-                      {booking.vehicle?.name} - {booking.pickupLocation} (
-                      {new Date(booking.startDate).toLocaleDateString()})
-                    </option>
-                  ))}
-                </select>
-                <p className="text-xs text-green-600 dark:text-green-400 mt-1 flex items-center gap-1">
-                  <ShieldCheckIcon className="w-3 h-3" /> Only confirmed
-                  bookings can be shared
-                </p>
-              </div>
+          }
+        >
+          You need to book and confirm a vehicle before you can offer shared trips.
+        </Empty>
+      ) : (
+        <motion.form
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.9, ease: EASE }}
+          onSubmit={handleSubmit}
+          className="grid gap-12 lg:grid-cols-12"
+        >
+          <div className="space-y-12 lg:col-span-8">
+            <section>
+              <p className="eyebrow mb-6 flex items-center gap-3"><span className="text-accent">(01)</span> Booking</p>
+              <label className="field-label">Confirmed booking</label>
+              <select
+                value={formData.bookingId}
+                onChange={(e) => set({ bookingId: e.target.value })}
+                className="field [&>option]:bg-surface"
+                required
+              >
+                <option value="">Select a confirmed booking</option>
+                {confirmedBookings.map((booking) => (
+                  <option key={booking._id} value={booking._id}>
+                    {booking.vehicle?.name} - {booking.pickupLocation} (
+                    {new Date(booking.startDate).toLocaleDateString()})
+                  </option>
+                ))}
+              </select>
+              <p className="mt-2 flex items-center gap-1.5 text-xs text-muted">
+                <ShieldCheck size={12} className="text-accent" /> Only confirmed bookings can be shared
+              </p>
+            </section>
 
-              <div className="grid grid-cols-2 gap-4">
+            <section>
+              <p className="eyebrow mb-6 flex items-center gap-3"><span className="text-accent">(02)</span> Route</p>
+              <div className="grid grid-cols-1 gap-8 sm:grid-cols-2">
                 <div>
-                  <label className="block text-sm font-medium mb-2">
-                    From *
-                  </label>
-                  <div className="relative">
-                    <MapPinIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                    <input
-                      type="text"
-                      value={formData.from}
-                      onChange={(e) =>
-                        setFormData({ ...formData, from: e.target.value })
-                      }
-                      className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 focus:ring-2 focus:ring-amber-500"
-                      placeholder="Mumbai"
-                      required
-                    />
-                  </div>
+                  <label className="field-label">From</label>
+                  <input
+                    type="text"
+                    value={formData.from}
+                    onChange={(e) => set({ from: e.target.value })}
+                    className="field display-tight !text-2xl"
+                    placeholder="Mumbai"
+                    required
+                  />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2">To *</label>
-                  <div className="relative">
-                    <MapPinIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                    <input
-                      type="text"
-                      value={formData.to}
-                      onChange={(e) =>
-                        setFormData({ ...formData, to: e.target.value })
-                      }
-                      className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 focus:ring-2 focus:ring-amber-500"
-                      placeholder="Goa"
-                      required
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Departure Date *
-                  </label>
-                  <div className="relative">
-                    <CalendarIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                    <input
-                      type="date"
-                      value={formData.departureDate}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          departureDate: e.target.value,
-                        })
-                      }
-                      className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 focus:ring-2 focus:ring-amber-500"
-                      required
-                    />
-                  </div>
+                  <label className="field-label">To</label>
+                  <input
+                    type="text"
+                    value={formData.to}
+                    onChange={(e) => set({ to: e.target.value })}
+                    className="field display-tight !text-2xl"
+                    placeholder="Goa"
+                    required
+                  />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Departure Time
-                  </label>
+                  <label className="field-label">Departure date</label>
+                  <input
+                    type="date"
+                    value={formData.departureDate}
+                    onChange={(e) => set({ departureDate: e.target.value })}
+                    className="field"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="field-label">Departure time</label>
                   <input
                     type="time"
                     value={formData.departureTime}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        departureTime: e.target.value,
-                      })
-                    }
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 focus:ring-2 focus:ring-amber-500"
+                    onChange={(e) => set({ departureTime: e.target.value })}
+                    className="field"
                   />
                 </div>
               </div>
+            </section>
 
-              <div className="grid grid-cols-2 gap-4">
+            <section>
+              <p className="eyebrow mb-6 flex items-center gap-3"><span className="text-accent">(03)</span> Seats & price</p>
+              <div className="grid grid-cols-1 gap-8 sm:grid-cols-2">
                 <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Total Seats *
-                  </label>
-                  <div className="relative">
-                    <UserGroupIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                    <input
-                      type="number"
-                      min="1"
-                      max="7"
-                      value={formData.totalSeats}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          totalSeats: parseInt(e.target.value),
-                        })
-                      }
-                      className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 focus:ring-2 focus:ring-amber-500"
-                      required
-                    />
-                  </div>
+                  <label className="field-label">Total seats</label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="7"
+                    value={formData.totalSeats}
+                    onChange={(e) => set({ totalSeats: parseInt(e.target.value) })}
+                    className="field"
+                    required
+                  />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Price per Seat (₹)
-                  </label>
-                  <div className="flex gap-2">
-                    <div className="relative flex-1">
-                      <CurrencyRupeeIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                      <input
-                        type="number"
-                        value={formData.pricePerSeat}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            pricePerSeat: parseInt(e.target.value),
-                          })
-                        }
-                        className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 focus:ring-2 focus:ring-amber-500"
-                        placeholder="Auto"
-                      />
-                    </div>
-                    <button
-                      type="button"
-                      onClick={calculateAutoPrice}
-                      className="px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-xl text-sm hover:bg-amber-100 transition-colors"
-                    >
-                      Auto
+                  <label className="field-label">Price per seat (₹)</label>
+                  <div className="flex items-end gap-3">
+                    <input
+                      type="number"
+                      value={formData.pricePerSeat}
+                      onChange={(e) => set({ pricePerSeat: parseInt(e.target.value) })}
+                      className="field flex-1"
+                      placeholder="Auto"
+                    />
+                    <button type="button" onClick={calculateAutoPrice} className="chip">
+                      <Sparkles size={13} /> Auto
                     </button>
                   </div>
                 </div>
               </div>
+            </section>
 
-              <div className="space-y-3 pt-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Travel Preferences
-                </label>
-                <div className="grid grid-cols-2 gap-3">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={formData.womenOnly}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          womenOnly: e.target.checked,
-                        })
-                      }
-                      className="rounded text-amber-500"
-                    />
-                    <span className="text-sm">Women only</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={formData.allowPets}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          allowPets: e.target.checked,
-                        })
-                      }
-                      className="rounded text-amber-500"
-                    />
-                    <span className="text-sm">Pets allowed</span>
-                  </label>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
+            <section>
+              <p className="eyebrow mb-6 flex items-center gap-3"><span className="text-accent">(04)</span> Travel preferences</p>
+              <div className="mb-8 flex flex-wrap gap-2">
+                {[
+                  ["womenOnly", "Women only"],
+                  ["allowPets", "Pets allowed"],
+                ].map(([key, label]) => (
+                  <button
+                    key={key}
+                    type="button"
+                    aria-pressed={formData[key]}
+                    onClick={() => set({ [key]: !formData[key] })}
+                    className={`chip ${formData[key] ? "!border-accent !bg-accent !text-accent-ink" : ""}`}
+                  >
+                    {formData[key] && <Check size={13} />} {label}
+                  </button>
+                ))}
+              </div>
+              <div className="grid grid-cols-1 gap-8 sm:grid-cols-2">
+                <div>
+                  <label className="field-label">On the road</label>
                   <select
                     value={formData.musicPreference}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        musicPreference: e.target.value,
-                      })
-                    }
-                    className="px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm"
+                    onChange={(e) => set({ musicPreference: e.target.value })}
+                    className="field [&>option]:bg-surface"
                   >
                     <option value="silence">Silence preferred</option>
                     <option value="conversation">Conversation</option>
                     <option value="music">Music</option>
                   </select>
+                </div>
+                <div>
+                  <label className="field-label">Luggage space</label>
                   <select
                     value={formData.luggageSpace}
-                    onChange={(e) =>
-                      setFormData({ ...formData, luggageSpace: e.target.value })
-                    }
-                    className="px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm"
+                    onChange={(e) => set({ luggageSpace: e.target.value })}
+                    className="field [&>option]:bg-surface"
                   >
                     <option value="none">No luggage space</option>
                     <option value="small">Small (backpack)</option>
@@ -379,17 +277,30 @@ export default function OfferTrip() {
                   </select>
                 </div>
               </div>
+            </section>
+          </div>
 
-              <button
-                type="submit"
-                className="w-full py-3.5 bg-gradient-to-r from-amber-500 to-amber-600 text-white font-semibold rounded-xl hover:shadow-lg transition-all flex items-center justify-center gap-2"
-              >
-                Offer Trip <ChevronRightIcon className="w-5 h-5" />
+          <aside className="lg:col-span-4">
+            <div className="sticky top-28 rounded-[24px] border border-line/10 bg-surface p-6 md:p-8">
+              <p className="eyebrow mb-4">Summary</p>
+              <p className="display-tight flex flex-wrap items-center gap-2 text-2xl">
+                <span>{formData.from || "From"}</span>
+                <ArrowRight size={18} className="text-accent" />
+                <span>{formData.to || "To"}</span>
+              </p>
+              <div className="mt-6">
+                <Row label="Date">{formData.departureDate || "—"}</Row>
+                <Row label="Time">{formData.departureTime || "10:00"}</Row>
+                <Row label="Seats">{formData.totalSeats || "—"}</Row>
+                <Row label="Per seat">{formData.pricePerSeat ? `₹${formData.pricePerSeat}` : "Auto"}</Row>
+              </div>
+              <button type="submit" className="btn-primary mt-8 w-full !py-4">
+                Offer trip <ArrowUpRight size={16} />
               </button>
-            </form>
-          </motion.div>
-        )}
-      </div>
+            </div>
+          </aside>
+        </motion.form>
+      )}
     </div>
   );
 }
