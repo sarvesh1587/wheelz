@@ -106,10 +106,16 @@ export default function AIChatbot() {
     return (
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 z-50 w-14 h-14 bg-gradient-to-r from-amber-500 to-amber-600 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center group"
+        aria-label="Open Wheelz AI assistant"
+        className="group fixed bottom-6 right-6 z-50 flex items-center gap-2.5 rounded-full bg-ink py-3 pl-4 pr-5 text-sm font-medium text-canvas shadow-2xl shadow-black/30 transition-transform duration-500 ease-out-expo hover:-translate-y-0.5"
       >
+        <span className="relative flex h-2 w-2">
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-70" />
+          <span className="relative inline-flex h-2 w-2 rounded-full bg-accent" />
+        </span>
+        <span className="hidden sm:inline">Ask Wheelz AI</span>
         <svg
-          className="w-7 h-7 text-white"
+          className="h-5 w-5 sm:hidden"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -121,7 +127,6 @@ export default function AIChatbot() {
             d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
           />
         </svg>
-        <span className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full animate-pulse" />
       </button>
     );
   }
@@ -135,13 +140,16 @@ export default function AIChatbot() {
       />
 
       {/* Chat Window */}
-      <div className="fixed bottom-6 right-6 z-50 w-full max-w-md bg-white dark:bg-gray-900 rounded-2xl shadow-2xl overflow-hidden animate-slide-up">
+      <div
+        data-lenis-prevent
+        className="fixed bottom-4 right-4 z-50 w-[calc(100%-2rem)] max-w-md animate-fade-in overflow-hidden rounded-[24px] border border-line/10 bg-surface shadow-2xl shadow-black/40 sm:bottom-6 sm:right-6"
+      >
         {/* Header */}
-        <div className="bg-gradient-to-r from-amber-500 to-amber-600 px-5 py-3 flex items-center justify-between">
+        <div className="flex items-center justify-between bg-ink px-5 py-4 text-canvas">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
+            <div className="grid h-8 w-8 place-items-center rounded-full bg-accent text-accent-ink">
               <svg
-                className="w-5 h-5 text-white"
+                className="h-4 w-4"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -155,16 +163,19 @@ export default function AIChatbot() {
               </svg>
             </div>
             <div>
-              <h3 className="font-bold text-white">Wheelz AI Assistant</h3>
-              <p className="text-xs text-white/80">Online • Ready to help</p>
+              <h3 className="display-tight text-base">Wheelz AI</h3>
+              <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-canvas/60">
+                Online
+              </p>
             </div>
           </div>
           <button
             onClick={() => setIsOpen(false)}
-            className="p-1 rounded-full hover:bg-white/20 transition-colors"
+            aria-label="Close assistant"
+            className="grid h-8 w-8 place-items-center rounded-full transition-colors hover:bg-canvas/10"
           >
             <svg
-              className="w-5 h-5 text-white"
+              className="h-4 w-4"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -180,7 +191,7 @@ export default function AIChatbot() {
         </div>
 
         {/* Messages */}
-        <div className="h-96 overflow-y-auto p-4 space-y-3 bg-gray-50 dark:bg-gray-800/50">
+        <div className="h-96 space-y-3 overflow-y-auto bg-canvas p-4">
           {messages.map((msg) => (
             <div
               key={msg.id}
@@ -189,13 +200,13 @@ export default function AIChatbot() {
               <div
                 className={`max-w-[80%] px-4 py-2 rounded-2xl ${
                   msg.sender === "user"
-                    ? "bg-gradient-to-r from-amber-500 to-amber-600 text-white rounded-br-sm"
-                    : "bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded-bl-sm shadow-sm"
+                    ? "rounded-br-sm bg-ink text-canvas"
+                    : "rounded-bl-sm border border-line/10 bg-surface text-ink"
                 }`}
               >
                 <p className="text-sm whitespace-pre-wrap">{msg.text}</p>
                 <p
-                  className={`text-xs mt-1 ${msg.sender === "user" ? "text-white/70" : "text-gray-400"}`}
+                  className={`mt-1 font-mono text-[10px] ${msg.sender === "user" ? "text-canvas/60" : "text-muted"}`}
                 >
                   {formatTime(msg.timestamp)}
                 </p>
@@ -235,21 +246,22 @@ export default function AIChatbot() {
         </div>
 
         {/* Input */}
-        <div className="border-t border-gray-200 dark:border-gray-700 p-3 bg-white dark:bg-gray-900">
-          <div className="flex gap-2">
+        <div className="border-t border-line/10 bg-surface p-3">
+          <div className="flex items-center gap-2 rounded-full border border-line/15 p-1 pl-4 focus-within:border-ink">
             <input
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyPress={(e) => e.key === "Enter" && sendMessage()}
               placeholder="Type your message..."
-              className="flex-1 px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+              className="min-w-0 flex-1 bg-transparent py-2 text-sm text-ink outline-none placeholder:text-muted"
               disabled={loading}
             />
             <button
               onClick={sendMessage}
               disabled={loading || !input.trim()}
-              className="px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 text-white font-semibold rounded-xl disabled:opacity-50 hover:shadow-lg transition-all"
+              aria-label="Send message"
+              className="grid h-9 w-9 place-items-center rounded-full bg-accent text-accent-ink transition-opacity disabled:opacity-40"
             >
               <svg
                 className="w-5 h-5"
@@ -266,8 +278,8 @@ export default function AIChatbot() {
               </svg>
             </button>
           </div>
-          <p className="text-xs text-gray-400 text-center mt-2">
-            Powered by AI • Get help with booking vehicles
+          <p className="mt-2 text-center font-mono text-[10px] uppercase tracking-[0.16em] text-muted">
+            AI answers can be wrong — check before you book
           </p>
         </div>
       </div>

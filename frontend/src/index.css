@@ -100,6 +100,14 @@
     @apply btn border border-line/15 text-ink hover:border-ink hover:bg-ink hover:text-canvas;
   }
 
+  .field {
+    @apply w-full rounded-none border-0 border-b border-line/20 bg-transparent px-0 py-3 text-base text-ink outline-none transition-colors placeholder:text-muted/70 focus:border-ink focus:ring-0;
+  }
+
+  .field-label {
+    @apply eyebrow mb-1 block;
+  }
+
   .chip {
     @apply inline-flex items-center gap-1.5 rounded-full border border-line/15 px-3.5 py-1.5 text-xs font-medium text-ink/80 transition-colors duration-300 hover:border-ink hover:text-ink;
   }

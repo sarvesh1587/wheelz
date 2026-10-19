@@ -12,6 +12,10 @@ export default function SmoothScroll() {
   const { pathname } = useLocation();
 
   useEffect(() => {
+    // Every route starts at the top; don't let the browser restore old offsets.
+    if ("scrollRestoration" in window.history) {
+      window.history.scrollRestoration = "manual";
+    }
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const touch = window.matchMedia("(pointer: coarse)").matches;
     if (reduce || touch) return undefined;
