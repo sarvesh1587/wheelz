@@ -11,7 +11,9 @@ function load() {
       .getAll({ limit: 500 })
       .then((res) => {
         const vehicles = res.data.vehicles || [];
-        const cities = [...new Set(vehicles.map((v) => v.city).filter(Boolean))].sort();
+        // Listings are typed by owners ("pune", "Pune "), so dedupe case-insensitively.
+        const titleCase = (c) => c.trim().toLowerCase().replace(/\b\w/g, (m) => m.toUpperCase());
+        const cities = [...new Set(vehicles.map((v) => v.city && titleCase(v.city)).filter(Boolean))].sort();
         const reviews = vehicles.reduce((s, v) => s + (v.totalReviews || 0), 0);
         const ratingSum = vehicles.reduce((s, v) => s + (v.averageRating || 0) * (v.totalReviews || 0), 0);
         return {

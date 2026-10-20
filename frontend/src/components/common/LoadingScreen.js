@@ -64,26 +64,31 @@ export default function LoadingScreen({ onDone }) {
   }, []);
 
   useEffect(() => {
-    let frame;
-    let finished = false;
+    // Time-based easing on a timer (not rAF), so a background tab, where
+    // animation frames pause, still finishes the intro.
+    let timer;
+    let finishAt = null;
+    let last = performance.now();
+    let value = 0;
     const tick = () => {
-      const elapsed = performance.now() - startedAt.current;
-      setProgress((p) => {
-        // Creep toward 90 while waiting; run to 100 once ready and past the minimum.
-        const canFinish = ready.current && elapsed > MIN_MS;
-        const target = canFinish ? 100 : 90;
-        const next = p + (target - p) * (canFinish ? 0.12 : 0.03);
-        if (canFinish && next > 99.5 && !finished) {
-          finished = true;
-          setTimeout(() => onDone?.(), 250);
-          return 100;
-        }
-        return next;
-      });
-      if (!finished) frame = requestAnimationFrame(tick);
+      const now = performance.now();
+      const dt = Math.min(now - last, 500);
+      last = now;
+      const elapsed = now - startedAt.current;
+      const canFinish = ready.current && elapsed > MIN_MS;
+      if (canFinish && finishAt === null) finishAt = now + 500;
+      const target = canFinish ? 100 : 90;
+      value += (target - value) * (1 - Math.exp(-dt / (canFinish ? 120 : 700)));
+      if (finishAt !== null && now >= finishAt) value = 100;
+      setProgress(value);
+      if (value >= 100) {
+        setTimeout(() => onDone?.(), 200);
+        return;
+      }
+      timer = setTimeout(tick, 16);
     };
-    frame = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(frame);
+    timer = setTimeout(tick, 16);
+    return () => clearTimeout(timer);
   }, [onDone]);
 
   useEffect(() => {

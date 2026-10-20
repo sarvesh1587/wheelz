@@ -277,7 +277,7 @@ router.get("/reports", protect, authorize("admin"), async (req, res) => {
         { $match: { createdAt: { $gte: since } } },
         { $lookup: { from: "vehicles", localField: "vehicle", foreignField: "_id", as: "v" } },
         { $unwind: "$v" },
-        { $group: { _id: "$v.city", bookings: { $sum: 1 }, revenue: { $sum: { $cond: [{ $eq: ["$paymentStatus", "paid"] }, "$finalAmount", 0] } } } },
+        { $group: { _id: { $toLower: { $trim: { input: "$v.city" } } }, bookings: { $sum: 1 }, revenue: { $sum: { $cond: [{ $eq: ["$paymentStatus", "paid"] }, "$finalAmount", 0] } } } },
         { $sort: { bookings: -1 } },
         { $limit: 8 },
       ]),
@@ -307,6 +307,8 @@ router.get("/reports", protect, authorize("admin"), async (req, res) => {
       ]),
     ]);
 
+    // Owners type cities freely ("pune", "Pune "); report them once, title-cased.
+    const titleCase = (c) => String(c).trim().toLowerCase().replace(/\b\w/g, (m) => m.toUpperCase());
     const roles = Object.fromEntries(userCounts.map((r) => [r._id || "unknown", r.count]));
     const fleet = vehicleCounts[0] || { total: 0, available: 0, cities: [] };
 
@@ -322,12 +324,12 @@ router.get("/reports", protect, authorize("admin"), async (req, res) => {
         vendors: roles.vendor || 0,
         vehicles: fleet.total,
         availableVehicles: fleet.available,
-        cities: fleet.cities.filter(Boolean).sort(),
+        cities: [...new Set(fleet.cities.filter(Boolean).map(titleCase))].sort(),
       },
       revenueByMonth: revenueByMonth.map((r) => ({ year: r._id.y, month: r._id.m, revenue: r.revenue, bookings: r.bookings })),
       bookingsByWeekday: bookingsByWeekday.map((r) => ({ day: r._id.d, category: r._id.c || "other", count: r.count })),
       revenueByCategory: byCategory.map((r) => ({ category: r._id || "other", revenue: r.revenue, count: r.count })),
-      topCities: byCity.map((r) => ({ city: r._id || "Unknown", bookings: r.bookings, revenue: r.revenue })),
+      topCities: byCity.map((r) => ({ city: r._id ? titleCase(r._id) : "Unknown", bookings: r.bookings, revenue: r.revenue })),
       bookingStatus: statusCounts.map((r) => ({ status: r._id || "unknown", count: r.count })),
       fleetMix: fleetByCategory.map((r) => ({ type: r._id || "Other", count: r.count })),
       userGrowth: userGrowth.map((r) => ({ year: r._id.y, month: r._id.m, users: r.users })),
