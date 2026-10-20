@@ -109,7 +109,7 @@ export default function Navbar() {
         initial={false}
         animate={{ y: hidden && !menuOpen ? "-110%" : "0%" }}
         transition={{ duration: 0.5, ease: EASE }}
-        className="fixed inset-x-0 top-0 z-50"
+        className="fixed inset-x-0 top-0 z-[65]"
       >
         <div
           className={`transition-colors duration-500 ${
@@ -262,52 +262,168 @@ export default function Navbar() {
       <AnimatePresence>
         {menuOpen && (
           <motion.div
-            initial={{ clipPath: "inset(0 0 100% 0)" }}
-            animate={{ clipPath: "inset(0 0 0% 0)" }}
-            exit={{ clipPath: "inset(0 0 100% 0)" }}
-            transition={{ duration: 0.7, ease: EASE }}
-            className="fixed inset-0 z-40 flex flex-col justify-between bg-canvas px-5 pb-8 pt-24 md:hidden"
+            key="mobile-menu"
+            // Circular reveal that grows out of the burger button (top right).
+            initial={{ clipPath: "circle(0px at calc(100% - 40px) 32px)" }}
+            animate={{ clipPath: "circle(150% at calc(100% - 40px) 32px)" }}
+            exit={{
+              clipPath: "circle(0px at calc(100% - 40px) 32px)",
+              transition: { duration: 0.55, ease: [0.7, 0, 0.84, 0], delay: 0.15 },
+            }}
+            transition={{ duration: 0.9, ease: EASE }}
+            className="fixed inset-0 z-[60] flex flex-col overflow-hidden bg-canvas px-5 pb-8 pt-24 md:hidden"
           >
-            <ul className="space-y-1">
-              {[{ to: "/", label: "Home" }, ...navItems, { to: "/vendor/register", label: "List vehicle" }].map(
-                (item, i) => (
-                  <li key={item.to} className="overflow-hidden">
-                    <motion.button
-                      initial={{ y: "100%" }}
-                      animate={{ y: "0%" }}
-                      transition={{ duration: 0.8, ease: EASE, delay: 0.15 + i * 0.05 }}
-                      onClick={() => go(item.to)}
-                      className={`display block text-[8vw] leading-[1.15] ${
-                        isActive(item.to) ? "text-accent" : "text-ink"
-                      }`}
-                    >
-                      {item.label}
-                    </motion.button>
-                  </li>
-                ),
-              )}
-            </ul>
+            {/* Slow-drifting amber glow */}
+            <motion.div
+              aria-hidden
+              className="pointer-events-none absolute -bottom-32 -right-24 h-[420px] w-[420px] rounded-full bg-accent/25 blur-[90px]"
+              initial={{ scale: 0.4, opacity: 0 }}
+              animate={{ scale: [1, 1.15, 1], opacity: 1, x: [0, -30, 0], y: [0, -20, 0] }}
+              transition={{
+                opacity: { duration: 0.8, delay: 0.2 },
+                scale: { duration: 8, repeat: Infinity, ease: "easeInOut" },
+                x: { duration: 10, repeat: Infinity, ease: "easeInOut" },
+                y: { duration: 9, repeat: Infinity, ease: "easeInOut" },
+              }}
+            />
 
-            {!isAuthenticated ? (
-              <div className="grid grid-cols-2 gap-3">
-                <button onClick={() => go("/login")} className="btn-ghost">
-                  Log in
-                </button>
-                <button onClick={() => go("/register")} className="btn-primary">
-                  Get started
-                </button>
-              </div>
-            ) : (
-              <div className="flex items-center justify-between border-t border-line/10 pt-5">
-                <div>
-                  <p className="text-sm font-semibold">{user?.name}</p>
-                  <p className="text-xs text-muted">{user?.email}</p>
+            {/* Oversized wordmark rising from the bottom edge */}
+            <motion.p
+              aria-hidden
+              className="display pointer-events-none absolute -bottom-[0.18em] left-0 right-0 select-none whitespace-nowrap text-center text-[34vw] leading-none text-ink/[0.05]"
+              initial={{ y: "60%" }}
+              animate={{ y: "0%" }}
+              exit={{ y: "60%", transition: { duration: 0.4 } }}
+              transition={{ duration: 1.2, ease: EASE, delay: 0.25 }}
+            >
+              Wheelz<span className="text-accent/40">.</span>
+            </motion.p>
+
+            <motion.div
+              className="relative flex items-center justify-between"
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, transition: { duration: 0.2 } }}
+              transition={{ duration: 0.6, ease: EASE, delay: 0.2 }}
+            >
+              <span className="eyebrow">Menu</span>
+              <span className="eyebrow">Car &amp; bike rental</span>
+            </motion.div>
+
+            <motion.ul
+              className="relative mt-4"
+              initial="hidden"
+              animate="show"
+              exit="exit"
+              variants={{
+                show: { transition: { staggerChildren: 0.06, delayChildren: 0.25 } },
+                exit: { transition: { staggerChildren: 0.03, staggerDirection: -1 } },
+              }}
+            >
+              {[{ to: "/", label: "Home" }, ...navItems, { to: "/vendor/register", label: "List vehicle" }].map(
+                (item, i) => {
+                  const active = isActive(item.to);
+                  return (
+                    <motion.li key={item.to} className="relative">
+                      {/* Hairline that draws in left to right */}
+                      <motion.span
+                        aria-hidden
+                        className="absolute inset-x-0 bottom-0 h-px origin-left bg-line/10"
+                        variants={{
+                          hidden: { scaleX: 0 },
+                          show: { scaleX: 1, transition: { duration: 0.9, ease: EASE } },
+                          exit: { scaleX: 0, transition: { duration: 0.3 } },
+                        }}
+                      />
+                      <motion.button
+                        onClick={() => go(item.to)}
+                        whileTap={{ scale: 0.97 }}
+                        className="group flex w-full items-center gap-4 overflow-hidden py-3.5 text-left"
+                      >
+                        <motion.span
+                          className={`w-7 shrink-0 font-mono text-[11px] ${active ? "text-accent" : "text-muted"}`}
+                          variants={{
+                            hidden: { opacity: 0, x: -10 },
+                            show: { opacity: 1, x: 0, transition: { duration: 0.6, ease: EASE } },
+                            exit: { opacity: 0, transition: { duration: 0.2 } },
+                          }}
+                        >
+                          {String(i + 1).padStart(2, "0")}
+                        </motion.span>
+                        <span className="block overflow-hidden">
+                          <motion.span
+                            className={`display block text-[8vw] leading-[1.15] transition-colors duration-300 ${
+                              active ? "text-accent" : "text-ink group-hover:text-accent group-active:text-accent"
+                            }`}
+                            variants={{
+                              hidden: { y: "110%", rotate: 4 },
+                              show: { y: "0%", rotate: 0, transition: { duration: 0.9, ease: EASE } },
+                              exit: { y: "-110%", transition: { duration: 0.35, ease: [0.7, 0, 0.84, 0] } },
+                            }}
+                          >
+                            {item.label}
+                          </motion.span>
+                        </span>
+                        <motion.span
+                          className="ml-auto grid h-9 w-9 shrink-0 place-items-center rounded-full border border-line/15 text-ink transition-colors duration-300 group-hover:border-accent group-hover:bg-accent group-hover:text-accent-ink group-active:bg-accent group-active:text-accent-ink"
+                          variants={{
+                            hidden: { opacity: 0, scale: 0.5, rotate: -45 },
+                            show: { opacity: 1, scale: 1, rotate: 0, transition: { duration: 0.6, ease: EASE } },
+                            exit: { opacity: 0, scale: 0.5, transition: { duration: 0.2 } },
+                          }}
+                        >
+                          {active ? (
+                            <span className="relative flex h-2 w-2">
+                              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-70" />
+                              <span className="relative inline-flex h-2 w-2 rounded-full bg-accent" />
+                            </span>
+                          ) : (
+                            <ArrowUpRight
+                              size={15}
+                              className="transition-transform duration-300 group-hover:rotate-45"
+                            />
+                          )}
+                        </motion.span>
+                      </motion.button>
+                    </motion.li>
+                  );
+                },
+              )}
+            </motion.ul>
+
+            <motion.div
+              className="relative mt-auto pt-8"
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 12, transition: { duration: 0.2 } }}
+              transition={{ duration: 0.8, ease: EASE, delay: 0.6 }}
+            >
+              {!isAuthenticated ? (
+                <div className="grid grid-cols-2 gap-3">
+                  <button onClick={() => go("/login")} className="btn-ghost bg-canvas/60 backdrop-blur-md">
+                    Log in
+                  </button>
+                  <button onClick={() => go("/register")} className="btn-primary">
+                    Get started <ArrowUpRight size={16} />
+                  </button>
                 </div>
-                <button onClick={handleLogout} className="chip">
-                  Log out
-                </button>
-              </div>
-            )}
+              ) : (
+                <div className="flex items-center justify-between gap-4 rounded-[24px] border border-line/10 bg-surface/70 p-3 pl-4 backdrop-blur-xl">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-accent font-display text-sm font-bold text-accent-ink">
+                      {user?.name?.[0]?.toUpperCase() || "U"}
+                    </span>
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold">{user?.name}</p>
+                      <p className="truncate text-xs text-muted">{user?.email}</p>
+                    </div>
+                  </div>
+                  <button onClick={handleLogout} className="chip shrink-0">
+                    Log out
+                  </button>
+                </div>
+              )}
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
