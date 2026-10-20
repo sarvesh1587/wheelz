@@ -9,6 +9,8 @@ import {
 } from "framer-motion";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { SplitText, Magnetic, EASE } from "../motion";
+import { aiAPI } from "../../services/api";
+import usePlatformStats from "../../hooks/usePlatformStats";
 
 const SLIDES = [
   {
@@ -29,20 +31,10 @@ const SLIDES = [
   },
 ];
 
-const STATS = [
-  { value: "500+", label: "Vehicles" },
-  { value: "15", label: "Cities" },
-  { value: "50K", label: "Renters" },
-  { value: "4.8", label: "Avg. rating" },
-];
-
-const QUICK_TAGS = [
+const BASE_TAGS = [
   { label: "Cars", type: "category", query: "car" },
   { label: "Bikes", type: "category", query: "bike" },
   { label: "Electric", type: "fuelType", query: "electric" },
-  { label: "Mumbai", type: "city", query: "Mumbai" },
-  { label: "Bangalore", type: "city", query: "Bangalore" },
-  { label: "Delhi", type: "city", query: "Delhi" },
 ];
 
 export default function AnimatedHero() {
@@ -52,6 +44,19 @@ export default function AnimatedHero() {
   const [searching, setSearching] = useState(false);
   const [slide, setSlide] = useState(0);
   const mediaRef = useRef(null);
+  const platform = usePlatformStats();
+
+  // Only real numbers: counted from the live fleet.
+  const STATS = [
+    { value: platform.ready ? platform.vehicles : "—", label: "Vehicles" },
+    { value: platform.ready ? platform.cities.length : "—", label: platform.cities.length === 1 ? "City" : "Cities" },
+    { value: platform.ready ? platform.cars : "—", label: "Cars" },
+    { value: platform.ready ? platform.bikes : "—", label: "Bikes" },
+  ];
+  const QUICK_TAGS = [
+    ...BASE_TAGS,
+    ...platform.cities.slice(0, 4).map((c) => ({ label: c, type: "city", query: c })),
+  ];
 
   const { scrollYProgress } = useScroll({
     target: mediaRef,
@@ -70,15 +75,7 @@ export default function AnimatedHero() {
     if (!nlQuery.trim()) return;
     setSearching(true);
     try {
-      const response = await fetch(
-        `${process.env.REACT_APP_API_URL || "http://localhost:5000"}/api/ai/smart-search`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ query: nlQuery }),
-        },
-      );
-      const data = await response.json();
+      const { data } = await aiAPI.smartSearch(nlQuery);
       const params = data.extractedParams;
       const qs = new URLSearchParams();
       if (params?.category) qs.set("category", params.category);
@@ -117,7 +114,9 @@ export default function AnimatedHero() {
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-60" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-accent" />
             </span>
-            Live in 15 cities
+            {platform.ready
+              ? `Live in ${platform.cities.length} ${platform.cities.length === 1 ? "city" : "cities"}`
+              : "Live now"}
           </p>
         </motion.div>
 

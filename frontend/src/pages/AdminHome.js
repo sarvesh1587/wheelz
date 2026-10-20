@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import {
@@ -10,9 +10,15 @@ import {
   ArrowRight as ArrowRightIcon,
 } from "lucide-react";
 import { PageHeader, Panel, Stat } from "../components/ui";
+import { adminAPI } from "../services/api";
 
 export default function AdminHome() {
   const { user } = useAuth();
+  const [stats, setStats] = useState(null);
+  useEffect(() => {
+    adminAPI.getDashboard().then((r) => setStats(r.data.stats)).catch(() => {});
+  }, []);
+  const n = (v) => (stats ? (v || 0).toLocaleString("en-IN") : "—");
 
   const quickActions = [
     {
@@ -53,10 +59,10 @@ export default function AdminHome() {
 
       {/* Quick Stats */}
       <div className="mb-16 grid grid-cols-2 gap-x-6 gap-y-10 md:grid-cols-4">
-        <Stat label="Total vehicles" value="150+" />
-        <Stat label="Total users" value="1.2K+" />
-        <Stat label="Total revenue" value="₹12.5L" />
-        <Stat label="Bookings" value="850+" />
+        <Stat label="Total vehicles" value={n(stats?.vehicles?.total)} />
+        <Stat label="Customers" value={n(stats?.users?.total)} />
+        <Stat label="Revenue (paid)" value={stats ? `₹${n(stats.revenue?.total)}` : "—"} />
+        <Stat label="Bookings" value={n(stats?.bookings?.total)} />
       </div>
 
       {/* Quick Actions Grid */}

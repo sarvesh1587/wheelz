@@ -55,27 +55,6 @@ export default function FindTrip() {
   const [suggestions, setSuggestions] = useState({ from: [], to: [] });
   const [focusedField, setFocusedField] = useState(null);
   const [debug, setDebug] = useState(null);
-  // Check if token is expired
-  const isTokenExpired = () => {
-    const token = localStorage.getItem("wheelz_token");
-    if (!token) return true;
-
-    try {
-      const payload = JSON.parse(atob(token.split(".")[1]));
-      return payload.exp * 1000 < Date.now();
-    } catch {
-      return true;
-    }
-  };
-
-  // In handleSearch, add this at the beginning:
-  if (isTokenExpired()) {
-    toast.error("Session expired. Please login again.");
-    localStorage.removeItem("wheelz_token");
-    localStorage.removeItem("wheelz_user");
-    navigate("/login");
-    return;
-  }
   const handleCityInput = (value, field) => {
     setForm((f) => ({ ...f, [field]: value }));
     if (value.length > 0) {
@@ -99,24 +78,16 @@ export default function FindTrip() {
     setSearched(true);
 
     try {
-      // Check if token exists and is valid before making request
+      // Search is public; send the token only when the user is signed in.
       const token = localStorage.getItem("wheelz_token");
-      if (!token) {
-        toast.error("Please login to search trips");
-        navigate("/login");
-        return;
-      }
-
       const params = new URLSearchParams();
-      params.append("from", form.from);
-      params.append("to", form.to);
+      params.append("from", form.from.trim());
+      params.append("to", form.to.trim());
       if (form.date) params.append("date", form.date);
       if (form.seats) params.append("seats", form.seats);
       if (form.womenOnly) params.append("womenOnly", "true");
 
-      const config = {
-        headers: { Authorization: `Bearer ${token}` },
-      };
+      const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
 
       const res = await axios.get(`${API}/rideshare/search`, {
         params,
@@ -126,7 +97,7 @@ export default function FindTrip() {
       if (res.data.success) {
         setTrips(res.data.trips || []);
         if (res.data.trips?.length === 0) {
-          toast.info("No trips found. Try different cities or dates.");
+          toast("No trips found. Try different cities or dates.");
         }
       } else {
         toast.error(res.data.message || "Search failed");

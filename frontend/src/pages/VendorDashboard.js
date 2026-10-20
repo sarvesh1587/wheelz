@@ -147,10 +147,10 @@ export default function VendorDashboard() {
     pdfContent.innerHTML = `
       <div style="max-width: 800px; margin: 0 auto;">
         <!-- Header -->
-        <div style="text-align: center; margin-bottom: 30px; border-bottom: 2px solid #FF4D00; padding-bottom: 20px;">
+        <div style="text-align: center; margin-bottom: 30px; border-bottom: 2px solid #F59E0B; padding-bottom: 20px;">
           <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
-            <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #FF4D00, #E04300); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold; color: white;">W</div>
-            <h1 style="color: #FF4D00; margin: 0;">WHEELZ</h1>
+            <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #F59E0B, #D97706); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold; color: white;">W</div>
+            <h1 style="color: #F59E0B; margin: 0;">WHEELZ</h1>
           </div>
           <h2 style="margin: 10px 0 5px; color: #333;">Booking Confirmation</h2>
           <p style="color: #666; margin: 0;">Booking ID: ${selectedBooking.bookingRef}</p>
@@ -159,7 +159,7 @@ export default function VendorDashboard() {
 
         <!-- Customer Details -->
         <div style="margin-bottom: 20px;">
-          <h3 style="color: #FF4D00; margin-bottom: 10px; border-left: 3px solid #FF4D00; padding-left: 10px;">Customer Information</h3>
+          <h3 style="color: #F59E0B; margin-bottom: 10px; border-left: 3px solid #F59E0B; padding-left: 10px;">Customer Information</h3>
           <table style="width: 100%; border-collapse: collapse;">
             <tr style="border-bottom: 1px solid #eee;">
               <td style="padding: 8px; font-weight: bold; width: 120px;">Full Name</td>
@@ -182,7 +182,7 @@ export default function VendorDashboard() {
 
         <!-- Vehicle Details -->
         <div style="margin-bottom: 20px;">
-          <h3 style="color: #FF4D00; margin-bottom: 10px; border-left: 3px solid #FF4D00; padding-left: 10px;">Vehicle Information</h3>
+          <h3 style="color: #F59E0B; margin-bottom: 10px; border-left: 3px solid #F59E0B; padding-left: 10px;">Vehicle Information</h3>
           <table style="width: 100%; border-collapse: collapse;">
             <tr style="border-bottom: 1px solid #eee;">
               <td style="padding: 8px; font-weight: bold; width: 120px;">Vehicle Name</td>
@@ -205,7 +205,7 @@ export default function VendorDashboard() {
 
         <!-- Booking Details -->
         <div style="margin-bottom: 20px;">
-          <h3 style="color: #FF4D00; margin-bottom: 10px; border-left: 3px solid #FF4D00; padding-left: 10px;">Booking Information</h3>
+          <h3 style="color: #F59E0B; margin-bottom: 10px; border-left: 3px solid #F59E0B; padding-left: 10px;">Booking Information</h3>
           <table style="width: 100%; border-collapse: collapse;">
             <tr style="border-bottom: 1px solid #eee;">
               <td style="padding: 8px; font-weight: bold; width: 120px;">Pickup Date</td>
@@ -228,7 +228,7 @@ export default function VendorDashboard() {
 
         <!-- Price Breakdown -->
         <div style="margin-bottom: 20px;">
-          <h3 style="color: #FF4D00; margin-bottom: 10px; border-left: 3px solid #FF4D00; padding-left: 10px;">Price Breakdown</h3>
+          <h3 style="color: #F59E0B; margin-bottom: 10px; border-left: 3px solid #F59E0B; padding-left: 10px;">Price Breakdown</h3>
           <table style="width: 100%; border-collapse: collapse;">
             <tr style="border-bottom: 1px solid #eee;">
               <td style="padding: 8px; font-weight: bold;">Price per day</td>
@@ -265,16 +265,16 @@ export default function VendorDashboard() {
                     .join("")
                 : ""
             }
-            <tr style="border-top: 2px solid #FF4D00;">
+            <tr style="border-top: 2px solid #F59E0B;">
               <td style="padding: 12px 8px; font-weight: bold; font-size: 16px;">Total Amount</td>
-              <td style="padding: 12px 8px; font-size: 20px; font-weight: bold; color: #FF4D00;">₹${selectedBooking.finalAmount?.toLocaleString() || selectedBooking.totalAmount?.toLocaleString()}</td>
+              <td style="padding: 12px 8px; font-size: 20px; font-weight: bold; color: #F59E0B;">₹${selectedBooking.finalAmount?.toLocaleString() || selectedBooking.totalAmount?.toLocaleString()}</td>
             </tr>
           </table>
         </div>
 
         <!-- Status -->
         <div style="margin-bottom: 20px;">
-          <h3 style="color: #FF4D00; margin-bottom: 10px; border-left: 3px solid #FF4D00; padding-left: 10px;">Status</h3>
+          <h3 style="color: #F59E0B; margin-bottom: 10px; border-left: 3px solid #F59E0B; padding-left: 10px;">Status</h3>
           <table style="width: 100%; border-collapse: collapse;">
             <tr style="border-bottom: 1px solid #eee;">
               <td style="padding: 8px; font-weight: bold; width: 120px;">Booking Status</td>

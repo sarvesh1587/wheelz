@@ -91,7 +91,7 @@ export default function BookingSuccess() {
       </div>
 
       <p className="mt-12 border-t border-line/10 pt-6 text-xs text-muted">
-        Need help? Contact our 24/7 support at support@wheelz.com
+        Need help? Write to support@wheelz.com
       </p>
 
       {/* Payment Receipt Modal */}

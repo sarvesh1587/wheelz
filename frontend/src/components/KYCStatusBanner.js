@@ -1,26 +1,17 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import axios from "axios";
 import { ArrowUpRight } from "lucide-react";
-
-const API = process.env.REACT_APP_API_URL || "http://localhost:5000/api";
+import { kycAPI } from "../services/api";
 
 export default function KYCStatusBanner() {
   const [kycStatus, setKycStatus] = useState(null);
 
   useEffect(() => {
-    const fetchStatus = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const { data } = await axios.get(`${API}/kyc/status`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setKycStatus(data.kycStatus);
-      } catch (err) {
-        console.error(err);
-      }
-    };
-    fetchStatus();
+    if (!localStorage.getItem("wheelz_token")) return;
+    kycAPI
+      .getStatus()
+      .then(({ data }) => setKycStatus(data.kycStatus || "not_submitted"))
+      .catch(() => {});
   }, []);
 
   if (!kycStatus || kycStatus === "verified") return null;

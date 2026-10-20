@@ -7,12 +7,13 @@ import { vehicleAPI, aiAPI } from "../services/api";
 import VehicleCard from "../components/vehicle/VehicleCard";
 import AnimatedHero from "../components/home/AnimatedHero";
 import { Reveal, SplitText, Magnetic, Marquee, Eyebrow, EASE } from "../components/motion";
+import usePlatformStats from "../hooks/usePlatformStats";
 
 const HOW_IT_WORKS = [
   {
     step: "01",
     title: "Search in plain words",
-    desc: "Type what you need — a scooter under ₹400 in Pune, an SUV for Goa. Filter by price, type and features.",
+    desc: "Type what you need — a scooter under ₹400, an SUV for the weekend. Filter by price, type and features.",
   },
   {
     step: "02",
@@ -26,7 +27,6 @@ const HOW_IT_WORKS = [
   },
 ];
 
-const TICKER = ["Mumbai", "Bangalore", "Delhi", "Pune", "Goa", "Hyderabad", "Jaipur", "Chennai"];
 
 const TABS = [
   { id: "all", label: "All" },
@@ -34,20 +34,6 @@ const TABS = [
   { id: "bike", label: "Bikes" },
 ];
 
-const DISCOUNT = 20;
-
-// Featured vehicles are shown with a flat promotional discount.
-const applyDiscount = (vehicle) => {
-  const discountedPrice = Math.round(vehicle.basePrice * (1 - DISCOUNT / 100));
-  return {
-    ...vehicle,
-    originalPrice: vehicle.basePrice,
-    discountedPrice,
-    discountPercentage: DISCOUNT,
-    discountAmount: vehicle.basePrice - discountedPrice,
-    isDiscounted: true,
-  };
-};
 
 function SectionHeader({ index, eyebrow, lines, children }) {
   return (
@@ -66,6 +52,7 @@ function SectionHeader({ index, eyebrow, lines, children }) {
 }
 
 export default function Home() {
+  const platform = usePlatformStats();
   const [featured, setFeatured] = useState([]);
   const [recommendations, setRecommendations] = useState([]);
   const [loadingFeatured, setLoadingFeatured] = useState(true);
@@ -86,22 +73,24 @@ export default function Home() {
 
   const discountedVehicles = (
     activeTab === "all" ? featured : featured.filter((v) => v.category === activeTab)
-  ).map(applyDiscount);
+  );
 
   return (
     <div>
       <AnimatedHero />
 
+      {platform.cities.length > 0 && (
       <section className="border-y border-line/10 py-6 md:py-8">
         <Marquee>
-          {TICKER.map((city) => (
-            <span key={city} className="display flex items-center gap-8 pr-8 text-5xl md:text-7xl">
+          {(platform.cities.length < 4 ? [...platform.cities, ...platform.cities, ...platform.cities] : platform.cities).map((city, i) => (
+            <span key={`${city}-${i}`} className="display flex items-center gap-8 pr-8 text-5xl md:text-7xl">
               {city}
               <span className="inline-block h-3 w-3 rounded-full bg-accent md:h-4 md:w-4" />
             </span>
           ))}
         </Marquee>
       </section>
+      )}
 
       <section className="container-x py-24 md:py-36">
         <SectionHeader index="02" eyebrow="Featured fleet" lines={["This week's", "favourites."]}>
@@ -127,7 +116,7 @@ export default function Home() {
               ))}
             </div>
             <p className="max-w-xs text-sm text-muted md:text-right">
-              The most-booked rides right now, {DISCOUNT}% off for a limited time.
+              The most-booked rides right now, at the price you actually pay.
             </p>
           </div>
         </SectionHeader>

@@ -45,7 +45,7 @@ export default function ResetPassword() {
       title={['New', 'password.']}
       subtitle="Enter your new password below."
       image="https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=1600&q=80"
-      quote={{ text: 'Locked out on a Sunday, back on the road by lunch.', author: 'Meera, Hyderabad' }}
+      quote={{ text: 'Reset your password and get back on the road.', author: 'Wheelz' }}
     >
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>

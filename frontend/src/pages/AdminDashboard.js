@@ -176,7 +176,7 @@ export default function AdminDashboard() {
   ];
 
   const categoryData = [
-    { name: "Cars", value: 65, color: "#FF4D00" },
+    { name: "Cars", value: 65, color: "#F59E0B" },
     { name: "Bikes", value: 35, color: "#9D9A93" },
   ];
 

@@ -5,9 +5,11 @@ import { useAuth } from "../context/AuthContext";
 import { authAPI } from "../services/api";
 import toast from "react-hot-toast";
 import AuthShell from "../components/auth/AuthShell";
+import usePlatformStats, { joinCities } from "../hooks/usePlatformStats";
 import { useGoogleReCaptcha } from "@google-recaptcha/react"; // ADD THIS
 
 export default function Register() {
+  const platform = usePlatformStats();
   const navigate = useNavigate();
   const { login } = useAuth();
   const googleReCaptcha = useGoogleReCaptcha(); // ADD THIS
@@ -94,9 +96,9 @@ export default function Register() {
     <AuthShell
       eyebrow="Join Wheelz"
       title={["Create", "your account."]}
-      subtitle="Rent cars and bikes from verified owners across 15 cities."
+      subtitle={platform.cities.length ? `Rent cars and bikes from verified owners in ${joinCities(platform.cities)}.` : "Rent cars and bikes from verified owners."}
       image="https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=1600&q=80"
-      quote={{ text: "Weekend in Goa on a Royal Enfield. Smoothest rental I've had.", author: "Rohit, Pune" }}
+      quote={{ text: "Cars and bikes from verified owners. Book in minutes, pay securely.", author: "Wheelz" }}
     >
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>

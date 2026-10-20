@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { Reveal, Magnetic, EASE } from "../components/motion";
 import { PageHeader, Segmented, StatusPill, Row } from "../components/ui";
+import usePlatformStats from "../hooks/usePlatformStats";
 
 const API_BASE =
   process.env.REACT_APP_API_URL || "https://wheelz-ldq2.onrender.com/api";
@@ -97,6 +98,10 @@ const INDIAN_CITIES = [
 ];
 
 export default function TripPlanner() {
+  const platform = usePlatformStats();
+  // Trips start where we actually have vehicles; destinations can be anywhere.
+  const PICKUP_CITIES = platform.cities.length ? platform.cities : INDIAN_CITIES;
+  const popularTrips = POPULAR_TRIPS.filter((t) => !platform.ready || platform.cities.includes(t.from));
   const navigate = useNavigate();
   const [mode, setMode] = useState("form");
   const [loading, setLoading] = useState(false);
@@ -190,16 +195,18 @@ export default function TripPlanner() {
       />
 
       {/* Popular Trips */}
+      {popularTrips.length > 0 && (
       <Reveal className="mb-10">
         <p className="eyebrow mb-4">Popular routes</p>
         <div className="flex flex-wrap gap-2">
-          {POPULAR_TRIPS.map((trip) => (
+          {popularTrips.map((trip) => (
             <button key={trip.label} onClick={() => applyPopularTrip(trip)} className="chip">
               {trip.label}
             </button>
           ))}
         </div>
       </Reveal>
+      )}
 
       {/* Main Form Card */}
       <Reveal delay={0.1} className="rounded-[28px] border border-line/10 bg-surface p-6 md:p-10">
@@ -241,7 +248,7 @@ export default function TripPlanner() {
               <label className="field-label">From</label>
               <select name="from" value={form.from} onChange={handleFormChange} className="field display-tight !text-xl [&>option]:bg-surface">
                 <option value="">Select city</option>
-                {INDIAN_CITIES.map((c) => (
+                {PICKUP_CITIES.map((c) => (
                   <option key={c} value={c}>
                     {c}
                   </option>

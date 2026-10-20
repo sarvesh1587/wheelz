@@ -188,6 +188,7 @@ export const adminAPI = {
   toggleVendorStatus: (id, status) =>
     api.put(`/admin/vendors/${id}/status`, { approved: status }),
   getRevenueBreakdown: () => api.get("/admin/revenue/breakdown"),
+  getReports: (params) => api.get("/admin/reports", { params }),
 };
 
 export const reviewAPI = {

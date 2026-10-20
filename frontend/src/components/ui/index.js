@@ -1,4 +1,27 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
+
+// Resolved token colours for libraries (recharts, canvas) that can't read
+// CSS variables. Re-reads when the light/dark class on <html> changes.
+const TOKEN_NAMES = ["canvas", "surface", "raised", "ink", "muted", "line", "accent"];
+function readTokens() {
+  const css = getComputedStyle(document.documentElement);
+  const out = {};
+  TOKEN_NAMES.forEach((n) => {
+    const v = css.getPropertyValue(`--${n}`).trim().split(/\s+/).join(", ");
+    out[n] = `rgb(${v})`;
+    out[`${n}A`] = (a) => `rgba(${v}, ${a})`;
+  });
+  return out;
+}
+export function useThemeColors() {
+  const [colors, setColors] = useState(readTokens);
+  useEffect(() => {
+    const obs = new MutationObserver(() => setColors(readTokens()));
+    obs.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+    return () => obs.disconnect();
+  }, []);
+  return colors;
+}
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
 import { SplitText, Eyebrow, EASE } from "../motion";

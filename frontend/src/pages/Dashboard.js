@@ -39,6 +39,7 @@ import PaymentReceipt from "../components/PaymentReceipt";
 import { useConfetti } from "../hooks/useConfetti";
 import { DashboardSkeleton } from "../components/common/Skeleton";
 import TrackingMap from "../components/TrackingMap";
+import KYCStatusBanner from "../components/KYCStatusBanner";
 
 // ─── City Coordinates Map (22 Indian Cities) ────────────────────────────────
 const CITY_COORDS = {
@@ -184,7 +185,7 @@ export default function Dashboard() {
               } catch (error) { toast.error("Payment verification failed"); }
             },
             prefill: { name: user?.name, email: user?.email, contact: user?.phone },
-            theme: { color: "#FF4D00" },
+            theme: { color: "#F59E0B" },
             modal: { ondismiss: () => { toast.error("Payment cancelled"); setProcessingRidePayment(null); } },
           };
           new window.Razorpay(options).open();
@@ -324,7 +325,7 @@ export default function Dashboard() {
           } catch (error) { toast.error("Payment verification failed"); }
         },
         prefill: { name: user?.name, email: user?.email, contact: user?.phone },
-        theme: { color: "#FF4D00" },
+        theme: { color: "#F59E0B" },
         modal: { ondismiss: () => { setProcessingPayment(false); } },
       };
       new window.Razorpay(options).open();
@@ -378,6 +379,8 @@ export default function Dashboard() {
           </Link>
         }
       />
+
+      <KYCStatusBanner />
 
       <div className="mb-14 grid grid-cols-2 gap-x-6 gap-y-10 lg:grid-cols-4">
         {statsCards.map((stat, idx) => (

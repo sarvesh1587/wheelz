@@ -78,7 +78,7 @@ export default function Login() {
         title={["Log in."]}
         subtitle="Pick up where you left off."
         image="https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=1600&q=80"
-        quote={{ text: "Booked a Creta in four minutes. Keys were waiting at the pickup point.", author: "Ananya, Bangalore" }}
+        quote={{ text: "Verified owners, clear prices, keys at the pickup point.", author: "Wheelz" }}
       >
             {/* Email/Password Form */}
             <form onSubmit={handleSubmit} className="space-y-6">

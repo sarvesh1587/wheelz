@@ -19,20 +19,20 @@ const warmGray = {
   950: "#0B0B0C",
 };
 
-// Signal orange. Replaces amber/orange/pink so old accent utilities
+// Amber. Replaces amber/orange/pink/yellow so old accent utilities
 // collapse into a single brand accent instead of a rainbow of gradients.
 const signal = {
-  50: "#FFF2EC",
-  100: "#FFE0D1",
-  200: "#FFBE9F",
-  300: "#FF9567",
-  400: "#FF6E33",
-  500: "#FF4D00",
-  600: "#E04300",
-  700: "#B33600",
-  800: "#852800",
-  900: "#5A1B00",
-  950: "#2E0E00",
+  50: "#FFFBEB",
+  100: "#FEF3C7",
+  200: "#FDE68A",
+  300: "#FCD34D",
+  400: "#FBBF24",
+  500: "#F59E0B",
+  600: "#D97706",
+  700: "#B45309",
+  800: "#92400E",
+  900: "#78350F",
+  950: "#451A03",
 };
 
 module.exports = {
@@ -53,6 +53,7 @@ module.exports = {
         amber: signal,
         orange: signal,
         pink: signal,
+        yellow: signal,
       },
       fontFamily: {
         sans: ['"Inter Tight"', "ui-sans-serif", "system-ui", "sans-serif"],

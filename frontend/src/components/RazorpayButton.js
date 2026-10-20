@@ -68,7 +68,7 @@ export default function RazorpayButton({ bookingId, amount, onSuccess }) {
           contact: localStorage.getItem("user_phone") || "",
         },
         theme: {
-          color: "#FF4D00",
+          color: "#F59E0B",
         },
         modal: {
           ondismiss: () => {

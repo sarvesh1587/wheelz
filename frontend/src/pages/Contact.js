@@ -6,7 +6,7 @@ import { PageHeader, Spinner } from "../components/ui";
 
 const CHANNELS = [
   { label: "Phone", value: "+91 6307800255", href: "tel:+916307800255", note: "Mon-Sat, 9AM-9PM" },
-  { label: "Email", value: "hm2300439@gmail.com", href: "mailto:hm2300439@gmail.com", note: "24/7 Response" },
+  { label: "Email", value: "hm2300439@gmail.com", href: "mailto:hm2300439@gmail.com", note: "We usually reply within a day" },
   { label: "Office", value: "Ajmera, Pune", note: "Visit by appointment" },
 ];
 

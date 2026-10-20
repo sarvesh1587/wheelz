@@ -30,7 +30,7 @@ L.Icon.Default.mergeOptions({
 
 // Custom icons
 const carIcon = new L.DivIcon({
-  html: '<div style="width:22px;height:22px;border-radius:9999px;background:#FF4D00;border:3px solid #fff;box-shadow:0 2px 10px rgba(0,0,0,.35)"></div>',
+  html: '<div style="width:22px;height:22px;border-radius:9999px;background:#F59E0B;border:3px solid #fff;box-shadow:0 2px 10px rgba(0,0,0,.35)"></div>',
   className: "",
   iconSize: [36, 36],
   iconAnchor: [18, 18],
@@ -154,7 +154,7 @@ export default function TrackingMap({
           {pickup && (
             <Polyline
               positions={[driverLocation, pickup]}
-              color="#FF4D00"
+              color="#F59E0B"
               weight={4}
               dashArray="10, 10"
               opacity={0.7}

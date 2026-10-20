@@ -2,13 +2,17 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { ArrowUpRight } from "lucide-react";
 import { SplitText, Reveal, Magnetic, Eyebrow, Marquee } from "../components/motion";
+import usePlatformStats, { joinCities } from "../hooks/usePlatformStats";
 
 export default function About() {
+  const platform = usePlatformStats();
+  const dash = (v) => (platform.ready ? v : "—");
+  // Counted from the live fleet, never rounded up.
   const stats = [
-    { number: "500+", label: "Vehicles" },
-    { number: "15+", label: "Cities" },
-    { number: "50K+", label: "Happy Customers" },
-    { number: "4.2", label: "Customer Rating" },
+    { number: dash(platform.vehicles), label: "Vehicles listed" },
+    { number: dash(platform.cities.length), label: platform.cities.length === 1 ? "City" : "Cities" },
+    { number: dash(platform.reviews), label: "Verified reviews" },
+    { number: platform.rating ? platform.rating.toFixed(1) : "—", label: "Average rating" },
   ];
 
   const values = [
@@ -19,7 +23,7 @@ export default function About() {
     },
     {
       title: "Customer First",
-      description: "24/7 customer support and hassle-free booking experience.",
+      description: "Real people answering support, and a booking flow without surprises.",
     },
     {
       title: "Quality Assurance",
@@ -35,24 +39,23 @@ export default function About() {
   const milestones = [
     {
       year: "2024",
-      title: "Company Founded",
-      description:
-        "wheelz started with a vision to revolutionize vehicle rentals in India",
-    },
-    {
-      year: "2024",
-      title: "First 1000 Bookings",
-      description: "Achieved 1000 successful bookings within first 3 months",
+      title: "Started in Pune",
+      description: "Wheelz began with a handful of verified cars and bikes and one simple booking flow.",
     },
     {
       year: "2025",
-      title: "Expanded to 15 Cities",
-      description: "Launched operations in 15 major Indian cities",
+      title: "Payments and KYC",
+      description: "Razorpay checkout and document-based KYC so every rental is paid and verified.",
+    },
+    {
+      year: "2025",
+      title: "Ridesharing",
+      description: "Renters can offer empty seats on their trips and split the cost.",
     },
     {
       year: "2026",
-      title: "AI Integration",
-      description: "Introduced AI-powered chatbot and smart search",
+      title: "AI search and trip planner",
+      description: "Describe what you need in plain words; the planner picks a vehicle and estimates the cost.",
     },
   ];
 
@@ -74,13 +77,12 @@ export default function About() {
               affordable, and hassle-free for everyone in India.
             </p>
             <p>
-              What started as a small operation in Pune has now grown into a trusted platform serving thousands of
-              customers across 15+ major cities. We've helped over 50,000 happy renters find their perfect ride, from
-              economy cars to luxury SUVs and premium bikes.
+              We started in Pune and grow city by city, only where we have vehicles you can actually book.
+              {platform.cities.length > 0 && <> Today you can rent with us in {joinCities(platform.cities)}.</>}
             </p>
             <p>
-              Our AI-powered platform ensures you get the best vehicle at the best price, with transparent pricing and
-              24/7 customer support.
+              AI search helps you find the right car or bike quickly, prices are shown upfront, and every owner is
+              verified before their vehicles go live.
             </p>
             <div className="flex flex-wrap gap-3 pt-4">
               <Link to="/vehicles" className="btn-primary">
@@ -169,7 +171,7 @@ export default function About() {
           ],
           [
             "Our vision",
-            "To become India's most trusted and innovative vehicle rental platform, setting new standards for quality, reliability, and customer satisfaction in the mobility space.",
+            "To be the rental platform people trust in every city we operate in, by keeping quality, reliability and pricing honest.",
           ],
         ].map(([title, body], i) => (
           <Reveal key={title} delay={i * 0.08} className="rounded-[28px] border border-line/10 bg-surface p-8 md:p-12">
@@ -186,7 +188,7 @@ export default function About() {
         </h2>
         <div className="mt-10 flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
           <p className="max-w-md text-muted">
-            Join thousands of happy customers who trust us for their mobility needs.
+            Browse the fleet, pick your dates and you're set.
           </p>
           <div className="flex flex-wrap gap-3">
             <Magnetic>

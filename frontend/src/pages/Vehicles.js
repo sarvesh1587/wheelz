@@ -4,19 +4,8 @@ import { vehicleAPI, aiAPI } from "../services/api";
 import VehicleCard from "../components/vehicle/VehicleCard";
 import { Sparkles, X, ArrowRight } from "lucide-react";
 import { SplitText, Eyebrow } from "../components/motion";
+import usePlatformStats from "../hooks/usePlatformStats";
 
-const CITIES = [
-  "All Cities",
-  "Mumbai",
-  "Delhi",
-  "Bangalore",
-  "Hyderabad",
-  "Chennai",
-  "Pune",
-  "Jaipur",
-  "Kolkata",
-  "Kota",
-];
 const FUEL_TYPES = ["All", "petrol", "diesel", "electric", "hybrid"];
 const SORT_OPTIONS = [
   { value: "", label: "Most Recent" },
@@ -27,6 +16,8 @@ const SORT_OPTIONS = [
 ];
 
 export default function Vehicles() {
+  const platform = usePlatformStats();
+  const CITIES = ["All Cities", ...platform.cities];
   const [searchParams, setSearchParams] = useSearchParams();
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -171,7 +162,7 @@ export default function Vehicles() {
             type="text"
             value={nlQuery}
             onChange={(e) => setNlQuery(e.target.value)}
-            placeholder="Electric car under ₹2000 in Mumbai"
+            placeholder={`Electric car under ₹2000${platform.cities[0] ? ` in ${platform.cities[0]}` : ""}`}
             aria-label="Describe the vehicle you need"
             className="min-w-0 flex-1 bg-transparent py-2.5 text-sm outline-none placeholder:text-muted"
           />
