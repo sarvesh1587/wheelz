@@ -12,12 +12,10 @@ import {
   Sparkles,
   LogOut,
   Repeat,
-  Route,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
 import { EASE, Magnetic } from "../motion";
-import { getLenis } from "../motion/SmoothScroll";
 
 const ADMIN_NAV = [
   { to: "/admin", label: "Dashboard" },
@@ -42,8 +40,6 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [hidden, setHidden] = useState(false);
   const lastY = useRef(0);
-  const burgerRef = useRef(null);
-  const menuRef = useRef(null);
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -67,27 +63,8 @@ export default function Navbar() {
     setProfileOpen(false);
   }, [location]);
 
-  // Lock the page behind the open menu. Lenis drives scrolling on desktop, so
-  // overflow alone isn't enough; <html> is locked too for iOS.
   useEffect(() => {
-    if (!menuOpen) return undefined;
-    const lenis = getLenis();
-    lenis?.stop();
-    const html = document.documentElement;
-    const prev = [html.style.overflow, document.body.style.overflow];
-    html.style.overflow = "hidden";
-    document.body.style.overflow = "hidden";
-    const onKey = (e) => e.key === "Escape" && setMenuOpen(false);
-    window.addEventListener("keydown", onKey);
-    const focusTimer = setTimeout(() => menuRef.current?.querySelector("button, a")?.focus(), 350);
-    const burger = burgerRef.current;
-    return () => {
-      lenis?.start();
-      [html.style.overflow, document.body.style.overflow] = prev;
-      window.removeEventListener("keydown", onKey);
-      clearTimeout(focusTimer);
-      burger?.focus({ preventScroll: true });
-    };
+    document.body.style.overflow = menuOpen ? "hidden" : "";
   }, [menuOpen]);
 
   const go = (to) => {
@@ -132,7 +109,7 @@ export default function Navbar() {
         initial={false}
         animate={{ y: hidden && !menuOpen ? "-110%" : "0%" }}
         transition={{ duration: 0.5, ease: EASE }}
-        className="fixed inset-x-0 top-0 z-[65]"
+        className="fixed inset-x-0 top-0 z-50"
       >
         <div
           className={`transition-colors duration-500 ${
@@ -153,7 +130,7 @@ export default function Navbar() {
               )}
             </Link>
 
-            <ul className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-9 lg:flex">
+            <ul className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-9 md:flex">
               {navItems.map((item) => (
                 <li key={item.to}>
                   <Link
@@ -236,7 +213,7 @@ export default function Navbar() {
                   </AnimatePresence>
                 </div>
               ) : (
-                <div className="hidden items-center gap-5 lg:flex">
+                <div className="hidden items-center gap-5 md:flex">
                   <Link to="/login" className="link-underline text-sm font-medium">
                     Log in
                   </Link>
@@ -252,19 +229,17 @@ export default function Navbar() {
               {!adminMode && (
                 <Link
                   to="/vendor/register"
-                  className="hidden text-sm font-medium text-muted transition-colors hover:text-ink xl:inline"
+                  className="hidden text-sm font-medium text-muted transition-colors hover:text-ink lg:inline"
                 >
                   List your vehicle
                 </Link>
               )}
 
               <button
-                ref={burgerRef}
                 onClick={() => setMenuOpen((o) => !o)}
                 aria-label={menuOpen ? "Close menu" : "Open menu"}
                 aria-expanded={menuOpen}
-                aria-controls="mobile-menu"
-                className="grid h-10 w-10 place-items-center rounded-full border border-line/10 transition-colors hover:border-ink lg:hidden"
+                className="grid h-10 w-10 place-items-center rounded-full border border-line/10 md:hidden"
               >
                 <span className="relative block h-2.5 w-4">
                   <span
@@ -287,115 +262,52 @@ export default function Navbar() {
       <AnimatePresence>
         {menuOpen && (
           <motion.div
-            id="mobile-menu"
-            ref={menuRef}
-            role="dialog"
-            aria-modal="true"
-            aria-label="Menu"
-            data-lenis-prevent
             initial={{ clipPath: "inset(0 0 100% 0)" }}
             animate={{ clipPath: "inset(0 0 0% 0)" }}
             exit={{ clipPath: "inset(0 0 100% 0)" }}
             transition={{ duration: 0.7, ease: EASE }}
-            className="fixed inset-0 z-[60] flex flex-col overflow-y-auto overscroll-contain bg-canvas px-5 pb-8 pt-24 sm:px-8 md:pt-28 lg:hidden"
+            className="fixed inset-0 z-40 flex flex-col justify-between bg-canvas px-5 pb-8 pt-24 md:hidden"
           >
-            <p className="eyebrow mb-4">Menu</p>
-            <ul className="border-t border-line/10">
-              {[
-                { to: isAdmin && adminMode ? "/admin" : "/", label: isAdmin && adminMode ? "Overview" : "Home" },
-                ...navItems.filter((item) => item.to !== "/admin"),
-                ...(adminMode ? [] : [{ to: "/vendor/register", label: "List vehicle" }]),
-              ].map((item, i) => (
-                <li key={item.to} className="overflow-hidden border-b border-line/10">
-                  <motion.button
-                    initial={{ y: "100%" }}
-                    animate={{ y: "0%" }}
-                    transition={{ duration: 0.8, ease: EASE, delay: 0.15 + i * 0.05 }}
-                    onClick={() => go(item.to)}
-                    aria-current={isActive(item.to) ? "page" : undefined}
-                    className={`group flex w-full items-baseline gap-4 py-3 text-left transition-colors ${
-                      isActive(item.to) ? "text-accent" : "text-ink hover:text-accent"
-                    }`}
-                  >
-                    <span className="w-7 shrink-0 font-mono text-[11px] text-muted">
-                      ({String(i + 1).padStart(2, "0")})
-                    </span>
-                    <span className="display min-w-0 whitespace-nowrap text-[clamp(1.6rem,8.4vw,4rem)] leading-[1.05]">{item.label}</span>
-                    <ArrowUpRight
-                      size={20}
-                      className="ml-auto hidden shrink-0 self-center opacity-0 transition-opacity group-hover:opacity-100 sm:block"
-                    />
-                  </motion.button>
-                </li>
-              ))}
-            </ul>
-
-            {isAuthenticated && (
-              <motion.div
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, ease: EASE, delay: 0.45 }}
-                className="mt-10"
-              >
-                <p className="eyebrow mb-3">Account</p>
-                <div className="grid grid-cols-2 gap-2">
-                  {[
-                    ...profileItems.filter((item) => item.to !== "/trip-planner"),
-                    ...(!isAdmin || !adminMode ? [{ label: "My trips", icon: Route, to: "/my-trips" }] : []),
-                  ].map(({ label, icon: Icon, to }) => (
-                    <button
-                      key={label}
-                      onClick={() => go(to)}
-                      className={`flex items-center gap-2.5 rounded-2xl border px-3.5 py-3 text-left text-sm transition-colors ${
-                        isActive(to)
-                          ? "border-accent text-accent"
-                          : "border-line/10 text-ink/80 hover:border-ink hover:text-ink"
+            <ul className="space-y-1">
+              {[{ to: "/", label: "Home" }, ...navItems, { to: "/vendor/register", label: "List vehicle" }].map(
+                (item, i) => (
+                  <li key={item.to} className="overflow-hidden">
+                    <motion.button
+                      initial={{ y: "100%" }}
+                      animate={{ y: "0%" }}
+                      transition={{ duration: 0.8, ease: EASE, delay: 0.15 + i * 0.05 }}
+                      onClick={() => go(item.to)}
+                      className={`display block text-[8vw] leading-[1.15] ${
+                        isActive(item.to) ? "text-accent" : "text-ink"
                       }`}
                     >
-                      <Icon size={16} strokeWidth={1.75} className="shrink-0" />
-                      <span className="truncate">{/* "Switch to admin view" -> "Admin view" so it fits a half-width tile */}
-                        {label.startsWith("Switch to ") ? label.slice(10).replace(/^./, (c) => c.toUpperCase()) : label}</span>
-                    </button>
-                  ))}
-                </div>
-              </motion.div>
-            )}
-
-            <div className="mt-auto pt-10">
-              <button
-                onClick={toggle}
-                className="mb-5 inline-flex items-center gap-2 rounded-full border border-line/15 px-4 py-2 text-sm text-ink/80 transition-colors hover:border-ink hover:text-ink"
-              >
-                {dark ? <Sun size={14} /> : <Moon size={14} />}
-                {dark ? "Light mode" : "Dark mode"}
-              </button>
-
-              {!isAuthenticated ? (
-                <div className="grid grid-cols-2 gap-3">
-                  <button onClick={() => go("/login")} className="btn-ghost">
-                    Log in
-                  </button>
-                  <button onClick={() => go("/register")} className="btn-primary">
-                    Get started
-                  </button>
-                </div>
-              ) : (
-                <div className="flex items-center justify-between gap-4 border-t border-line/10 pt-5">
-                  <div className="flex min-w-0 items-center gap-3">
-                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-ink font-display text-sm font-bold text-canvas">
-                      {user?.name?.[0]?.toUpperCase() || "U"}
-                    </span>
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-semibold">{user?.name}</p>
-                      <p className="truncate text-xs text-muted">{user?.email}</p>
-                    </div>
-                  </div>
-                  <button onClick={handleLogout} className="chip shrink-0 hover:!border-red-500 hover:!text-red-500">
-                    <LogOut size={14} /> Log out
-                  </button>
-                </div>
+                      {item.label}
+                    </motion.button>
+                  </li>
+                ),
               )}
-            </div>
+            </ul>
+
+            {!isAuthenticated ? (
+              <div className="grid grid-cols-2 gap-3">
+                <button onClick={() => go("/login")} className="btn-ghost">
+                  Log in
+                </button>
+                <button onClick={() => go("/register")} className="btn-primary">
+                  Get started
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center justify-between border-t border-line/10 pt-5">
+                <div>
+                  <p className="text-sm font-semibold">{user?.name}</p>
+                  <p className="text-xs text-muted">{user?.email}</p>
+                </div>
+                <button onClick={handleLogout} className="chip">
+                  Log out
+                </button>
+              </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
