@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { adminAPI, vehicleAPI, bookingAPI, kycAPI } from "../services/api";
+import { adminAPI, vehicleAPI, kycAPI } from "../services/api";
 import toast from "react-hot-toast";
 import {
   Users as UsersIcon,
@@ -16,7 +16,8 @@ import {
   IdCard as IdentificationIcon,
 } from "lucide-react";
 import { Reveal } from "../components/motion";
-import { PageHeader, Stat, PageLoader } from "../components/ui";
+import { PageHeader, Stat, PageLoader, useThemeColors } from "../components/ui";
+import VendorModal from "../components/admin/VendorModal";
 
 const TOOLTIP = {
   background: "rgb(var(--surface))",
@@ -31,13 +32,12 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   ResponsiveContainer,
   PieChart,
   Pie,
   Cell,
 } from "recharts";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
@@ -49,6 +49,7 @@ export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState("overview");
   const [selectedVendor, setSelectedVendor] = useState(null);
   const [showVendorModal, setShowVendorModal] = useState(false);
+  const colors = useThemeColors();
 
   useEffect(() => {
     fetchDashboardData();
@@ -56,14 +57,15 @@ export default function AdminDashboard() {
 
   const fetchDashboardData = async () => {
     try {
-      const [dashboardRes, allUsersRes, vehiclesRes, bookingsRes, kycRes] =
+      const [dashboardRes, allUsersRes, vehiclesRes, kycRes] =
         await Promise.all([
           adminAPI.getDashboard(),
           adminAPI.getAllUsers(),
-          vehicleAPI.getAll({ limit: 100 }),
-          bookingAPI.getAll({ limit: 100 }),
+          vehicleAPI.getAll({ limit: 500 }),
           kycAPI.getAll({ status: "pending" }), // Get pending KYC
         ]);
+      // Monthly revenue needs the reports endpoint; absent on older API deploys.
+      const reportsRes = await adminAPI.getReports({ days: 180 }).catch(() => null);
 
       const allUsers = allUsersRes.data?.users || [];
       const customers = allUsers.filter((user) => user.role === "customer");
@@ -73,10 +75,20 @@ export default function AdminDashboard() {
       setUsers(customers);
       setVendors(vendorsList);
       setKycSubmissions(kycRes.data.kycs || []); // Set KYC submissions
+      const fleet = vehiclesRes.data.vehicles || [];
+      const stats = dashboardRes.data?.stats || {};
+      const statuses = reportsRes?.data?.bookingStatus || [];
       setDashboardData((prev) => ({
         ...prev,
-        totalVehicles: vehiclesRes.data.vehicles?.length || 0,
-        totalBookings: bookingsRes.data.bookings?.length || 0,
+        totalVehicles: stats.vehicles?.total ?? fleet.length,
+        totalBookings: stats.bookings?.total ?? 0,
+        totalRevenue: stats.revenue?.total ?? 0,
+        activeBookings: reportsRes ? statuses.filter((r) => r.status === "confirmed").reduce((n, r) => n + r.count, 0) : null,
+        fleetSplit: [
+          { name: "Cars", value: fleet.filter((v) => v.category === "car").length },
+          { name: "Bikes", value: fleet.filter((v) => v.category === "bike").length },
+        ],
+        revenueByMonth: reportsRes?.data?.revenueByMonth || null,
       }));
     } catch (error) {
       console.error("Error fetching admin data:", error);
@@ -112,7 +124,7 @@ export default function AdminDashboard() {
 
   const toggleVendorStatus = async (vendorId, currentStatus) => {
     try {
-      await adminAPI.toggleUserActive(vendorId);
+      await adminAPI.toggleVendorStatus(vendorId, !currentStatus);
       toast.success(
         `Vendor ${currentStatus ? "deactivated" : "activated"} successfully`,
       );
@@ -159,26 +171,29 @@ export default function AdminDashboard() {
       color: "",
     }, // Added
     {
-      label: "Active Bookings",
-      value: dashboardData?.activeBookings || 0,
+      label: "Revenue (paid)",
+      value: `₹${(dashboardData?.totalRevenue || 0).toLocaleString("en-IN")}`,
       icon: CheckCircleIcon,
       color: "",
     },
   ];
 
-  const revenueData = [
-    { month: "Jan", revenue: 120000 },
-    { month: "Feb", revenue: 150000 },
-    { month: "Mar", revenue: 180000 },
-    { month: "Apr", revenue: 220000 },
-    { month: "May", revenue: 250000 },
-    { month: "Jun", revenue: 280000 },
-  ];
+  const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const revenueData = (() => {
+    const rows = dashboardData?.revenueByMonth;
+    if (!rows) return null;
+    const now = new Date();
+    return Array.from({ length: 6 }, (_, i) => {
+      const d = new Date(now.getFullYear(), now.getMonth() - 5 + i, 1);
+      const hit = rows.find((r) => r.year === d.getFullYear() && r.month === d.getMonth() + 1);
+      return { month: MONTHS[d.getMonth()], revenue: hit?.revenue || 0 };
+    });
+  })();
 
-  const categoryData = [
-    { name: "Cars", value: 65, color: "#F59E0B" },
-    { name: "Bikes", value: 35, color: "#9D9A93" },
-  ];
+  const categoryData = (dashboardData?.fleetSplit || []).map((d, i) => ({
+    ...d,
+    color: i === 0 ? colors.accent : colors.muted,
+  }));
 
   if (loading) {
     return <PageLoader label="Loading admin dashboard" />;
@@ -215,22 +230,21 @@ export default function AdminDashboard() {
               <ChartBarIcon className="w-5 h-5 text-accent" />
               Revenue Overview
             </h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={revenueData}>
-<CartesianGrid stroke="rgb(var(--line) / 0.08)" vertical={false} />
-                <XAxis dataKey="month" stroke="rgb(var(--muted))" tickLine={false} axisLine={false} fontSize={12} />
-                <YAxis stroke="rgb(var(--muted))" tickLine={false} axisLine={false} fontSize={12} />
-                <Tooltip contentStyle={TOOLTIP} />
-                <Legend />
-                <Line
-                  type="monotone"
-                  dataKey="revenue"
-                  stroke="rgb(var(--accent))"
-                  strokeWidth={2}
-                  dot={false}
-                />
-              </LineChart>
-            </ResponsiveContainer>
+            {revenueData ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={revenueData}>
+                  <CartesianGrid stroke={colors.lineA(0.08)} vertical={false} />
+                  <XAxis dataKey="month" stroke={colors.muted} tickLine={false} axisLine={false} fontSize={12} />
+                  <YAxis stroke={colors.muted} tickLine={false} axisLine={false} fontSize={12} />
+                  <Tooltip contentStyle={TOOLTIP} formatter={(v) => [`₹${v.toLocaleString("en-IN")}`, "Revenue"]} />
+                  <Line type="monotone" dataKey="revenue" stroke={colors.accent} strokeWidth={2} dot={false} />
+                </LineChart>
+              </ResponsiveContainer>
+            ) : (
+              <p className="grid h-[300px] place-items-center text-center text-sm text-muted">
+                Monthly revenue appears once the latest API is deployed.
+              </p>
+            )}
           </motion.div>
 
           {/* Vehicle Distribution Chart */}
@@ -253,8 +267,10 @@ export default function AdminDashboard() {
                   label={({ name, percent }) =>
                     `${name}: ${(percent * 100).toFixed(0)}%`
                   }
+                  innerRadius={60}
                   outerRadius={100}
-                  fill="#8884d8"
+                  paddingAngle={2}
+                  stroke="none"
                   dataKey="value"
                 >
                   {categoryData.map((entry, index) => (
@@ -753,12 +769,12 @@ export default function AdminDashboard() {
       </div>
 
       {/* Vendor Details Modal */}
-      <AnimatePresence>
-        {showVendorModal && selectedVendor && (
-          // ... your existing modal code ...
-          <div>Modal Content</div>
-        )}
-      </AnimatePresence>
+      <VendorModal
+        vendor={selectedVendor}
+        open={showVendorModal && !!selectedVendor}
+        onClose={() => setShowVendorModal(false)}
+        onChanged={fetchDashboardData}
+      />
     </div>
   );
 }

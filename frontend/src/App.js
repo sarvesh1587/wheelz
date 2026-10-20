@@ -1,4 +1,4 @@
-import React, { Suspense, lazy, useState, useEffect } from "react";
+import React, { Suspense, lazy, useState, useCallback } from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -13,7 +13,7 @@ import { ThemeProvider } from "./context/ThemeContext";
 import Navbar from "./components/common/Navbar";
 import Footer from "./components/common/Footer";
 import LoadingSpinner from "./components/common/LoadingSpinner";
-import LoadingScreen from "./components/common/LoadingScreen";
+import LoadingScreen, { RouteProgress } from "./components/common/LoadingScreen";
 import SmoothScroll from "./components/motion/SmoothScroll";
 
 // Pages
@@ -102,7 +102,7 @@ function AppRoutes() {
       <SmoothScroll />
       <Navbar />
       <main className="flex-grow">
-        <Suspense fallback={<LoadingSpinner />}>
+        <Suspense fallback={<RouteProgress />}>
           <Routes>
             {/* Public Routes */}
             <Route path="/" element={<Home />} />
@@ -357,14 +357,10 @@ export default function App() {
     () => !sessionStorage.getItem(INTRO_KEY),
   );
 
-  useEffect(() => {
-    if (!appLoading) return undefined;
-    const timer = setTimeout(() => {
-      sessionStorage.setItem(INTRO_KEY, "1");
-      setAppLoading(false);
-    }, 1900);
-    return () => clearTimeout(timer);
-  }, [appLoading]);
+  const finishIntro = useCallback(() => {
+    sessionStorage.setItem(INTRO_KEY, "1");
+    setAppLoading(false);
+  }, []);
 
   return (
     <ThemeProvider>
@@ -372,7 +368,7 @@ export default function App() {
         <Router>
           <AppRoutes />
           <AnimatePresence>
-            {appLoading && <LoadingScreen key="intro" />}
+            {appLoading && <LoadingScreen key="intro" onDone={finishIntro} />}
           </AnimatePresence>
         </Router>
       </AuthProvider>

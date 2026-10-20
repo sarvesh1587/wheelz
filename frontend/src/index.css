@@ -177,6 +177,24 @@ html:not(.dark) .bg-surface {
   box-shadow: 0 1px 2px rgb(14 14 16 / 0.04), 0 8px 24px -12px rgb(14 14 16 / 0.08);
 }
 
+@keyframes road {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: -24px 0;
+  }
+}
+
+@keyframes route {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(300%);
+  }
+}
+
 @keyframes grain {
   0%,
   100% {

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { adminAPI, vehicleAPI, bookingAPI } from "../services/api";
+import { adminAPI } from "../services/api";
 import toast from "react-hot-toast";
 import {
   CircleUser as UserCircleIcon,
@@ -32,16 +32,11 @@ export default function AdminVendorDetails() {
   const fetchVendorDetails = async () => {
     try {
       // Fetch vendor details
+      // One call returns the vendor plus only their own vehicles and bookings.
       const vendorRes = await adminAPI.getUserById(id);
       setVendor(vendorRes.data.user);
-
-      // Fetch vendor's vehicles
-      const vehiclesRes = await vehicleAPI.getAll({ vendorId: id });
-      setVehicles(vehiclesRes.data.vehicles || []);
-
-      // Fetch vendor's bookings
-      const bookingsRes = await bookingAPI.getAll({ vendorId: id });
-      setBookings(bookingsRes.data.bookings || []);
+      setVehicles(vendorRes.data.vehicles || []);
+      setBookings(vendorRes.data.bookings || []);
     } catch (error) {
       console.error("Error fetching vendor details:", error);
       toast.error("Failed to load vendor details");

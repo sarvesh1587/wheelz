@@ -25,7 +25,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Reveal } from "../components/motion";
-import { PageHeader, Panel, Stat, PageLoader } from "../components/ui";
+import { PageHeader, Panel, Stat, PageLoader, useThemeColors } from "../components/ui";
 import {
   LineChart,
   Line,
@@ -39,6 +39,7 @@ import {
 import html2pdf from "html2pdf.js";
 
 export default function VendorDashboard() {
+  const colors = useThemeColors();
   const { user } = useAuth();
   const navigate = useNavigate();
   const [vehicles, setVehicles] = useState([]);
@@ -349,14 +350,22 @@ export default function VendorDashboard() {
     },
   ];
 
-  const revenueData = [
-    { month: "Jan", revenue: 25000 },
-    { month: "Feb", revenue: 35000 },
-    { month: "Mar", revenue: 45000 },
-    { month: "Apr", revenue: 55000 },
-    { month: "May", revenue: 65000 },
-    { month: "Jun", revenue: 75000 },
-  ];
+  // Paid revenue per month for the last six months, from this vendor's bookings.
+  const revenueData = (() => {
+    const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const now = new Date();
+    return Array.from({ length: 6 }, (_, i) => {
+      const d = new Date(now.getFullYear(), now.getMonth() - 5 + i, 1);
+      const revenue = bookings
+        .filter((b) => b.paymentStatus === "paid")
+        .filter((b) => {
+          const t = new Date(b.createdAt);
+          return t.getFullYear() === d.getFullYear() && t.getMonth() === d.getMonth();
+        })
+        .reduce((sum, b) => sum + (b.finalAmount || b.totalAmount || 0), 0);
+      return { month: MONTHS[d.getMonth()], revenue };
+    });
+  })();
 
   const getStatusBadge = (status) => {
     const badges = {
@@ -408,13 +417,13 @@ export default function VendorDashboard() {
         <Panel index="02" title="Revenue · last 6 months" className="mb-14">
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={revenueData}>
-              <CartesianGrid stroke="rgb(var(--line) / 0.08)" vertical={false} />
-              <XAxis dataKey="month" stroke="rgb(var(--muted))" tickLine={false} axisLine={false} fontSize={12} />
-              <YAxis stroke="rgb(var(--muted))" tickLine={false} axisLine={false} fontSize={12} />
+              <CartesianGrid stroke={colors.lineA(0.08)} vertical={false} />
+              <XAxis dataKey="month" stroke={colors.muted} tickLine={false} axisLine={false} fontSize={12} />
+              <YAxis stroke={colors.muted} tickLine={false} axisLine={false} fontSize={12} />
               <Tooltip
                 contentStyle={{ background: "rgb(var(--surface))", border: "1px solid rgb(var(--line) / 0.1)", borderRadius: 16, color: "rgb(var(--ink))" }}
               />
-              <Line type="monotone" dataKey="revenue" stroke="rgb(var(--accent))" strokeWidth={2} dot={false} />
+              <Line type="monotone" dataKey="revenue" stroke={colors.accent} strokeWidth={2} dot={false} />
             </LineChart>
           </ResponsiveContainer>
         </Panel>

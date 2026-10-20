@@ -135,6 +135,92 @@ router.get(
   },
 );
 
+// Last four characters only; encrypted values ("iv:cipher") are never sent.
+const mask = (v) => {
+  if (!v) return "";
+  if (String(v).includes(":")) return "On file";
+  return `•••• ${String(v).slice(-4)}`;
+};
+
+// One user with everything an admin needs to review them: vehicles they own,
+// bookings made on those vehicles and earnings. Sensitive IDs are masked.
+router.get("/users/:id", protect, authorize("admin"), async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id).select("-password").lean();
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+    if (user.individualDetails) {
+      user.individualDetails.aadharNumber = mask(user.individualDetails.aadharNumber);
+      user.individualDetails.panNumber = mask(user.individualDetails.panNumber);
+    }
+    if (user.businessDetails) user.businessDetails.panNumber = mask(user.businessDetails.panNumber);
+    if (user.vendorDetails) {
+      user.vendorDetails.panNumber = mask(user.vendorDetails.panNumber);
+      user.vendorDetails.bankAccountNumber = mask(user.vendorDetails.bankAccountNumber);
+    }
+    if (user.bankDetails) user.bankDetails.accountNumber = mask(user.bankDetails.accountNumber);
+
+    const vehicles = await Vehicle.find({ vendor: user._id })
+      .select("name brand images city category basePrice currentPrice isAvailable isApproved averageRating totalReviews createdAt")
+      .sort({ createdAt: -1 })
+      .lean();
+    const vehicleIds = vehicles.map((v) => v._id);
+    const bookings = vehicleIds.length
+      ? await Booking.find({ vehicle: { $in: vehicleIds } })
+          .sort({ createdAt: -1 })
+          .limit(50)
+          .populate("vehicle", "name images")
+          .populate("user", "name email")
+          .lean()
+      : await Booking.find({ user: user._id })
+          .sort({ createdAt: -1 })
+          .limit(50)
+          .populate("vehicle", "name images")
+          .lean();
+
+    const paid = bookings.filter((b) => b.paymentStatus === "paid");
+    res.json({
+      success: true,
+      user,
+      vehicles,
+      bookings,
+      stats: {
+        vehicles: vehicles.length,
+        availableVehicles: vehicles.filter((v) => v.isAvailable).length,
+        bookings: bookings.length,
+        revenue: paid.reduce((s, b) => s + (b.finalAmount || 0), 0),
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Approve or revoke a vendor in one call.
+router.put("/vendors/:id/status", protect, authorize("admin"), async (req, res) => {
+  try {
+    const vendor = await User.findById(req.params.id);
+    if (!vendor || vendor.role !== "vendor") {
+      return res.status(404).json({ success: false, message: "Vendor not found" });
+    }
+    const approved = Boolean(req.body.approved);
+    vendor.isVendorApproved = approved;
+    if (approved) {
+      vendor.isActive = true;
+      if (!vendor.vendorSince) vendor.vendorSince = new Date();
+    }
+    await vendor.save();
+    res.json({
+      success: true,
+      message: `${vendor.name} ${approved ? "approved" : "set to pending"}`,
+      vendor,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 // Platform reports: every number comes from the database, nothing is estimated.
 // ?days=7|30|90|365 limits the time-series and transaction window.
 router.get("/reports", protect, authorize("admin"), async (req, res) => {
