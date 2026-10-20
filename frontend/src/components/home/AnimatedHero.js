@@ -1,35 +1,11 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  motion,
-  AnimatePresence,
-  useScroll,
-  useTransform,
-  useReducedMotion,
-} from "framer-motion";
+import { motion } from "framer-motion";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { SplitText, Magnetic, EASE } from "../motion";
 import { aiAPI } from "../../services/api";
+import RideMatcher from "./RideMatcher";
 import usePlatformStats from "../../hooks/usePlatformStats";
-
-const SLIDES = [
-  {
-    src: "https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=2000&q=80",
-    caption: "City sedans",
-  },
-  {
-    src: "https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=2000&q=80",
-    caption: "Touring bikes",
-  },
-  {
-    src: "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=2000&q=80",
-    caption: "Weekend escapes",
-  },
-  {
-    src: "https://images.unsplash.com/photo-1593941707882-5a14953f2b6a?w=2000&q=80",
-    caption: "Electric",
-  },
-];
 
 const BASE_TAGS = [
   { label: "Cars", type: "category", query: "car" },
@@ -39,11 +15,8 @@ const BASE_TAGS = [
 
 export default function AnimatedHero() {
   const navigate = useNavigate();
-  const reduce = useReducedMotion();
   const [nlQuery, setNlQuery] = useState("");
   const [searching, setSearching] = useState(false);
-  const [slide, setSlide] = useState(0);
-  const mediaRef = useRef(null);
   const platform = usePlatformStats();
 
   // Only real numbers: counted from the live fleet.
@@ -58,17 +31,6 @@ export default function AnimatedHero() {
     ...platform.cities.slice(0, 4).map((c) => ({ label: c, type: "city", query: c })),
   ];
 
-  const { scrollYProgress } = useScroll({
-    target: mediaRef,
-    offset: ["start end", "end start"],
-  });
-  const imageY = useTransform(scrollYProgress, [0, 1], ["-12%", "12%"]);
-  const imageScale = useTransform(scrollYProgress, [0, 0.5], [1.18, 1.04]);
-
-  useEffect(() => {
-    const id = setInterval(() => setSlide((s) => (s + 1) % SLIDES.length), 5000);
-    return () => clearInterval(id);
-  }, []);
 
   const handleSmartSearch = async (e) => {
     e.preventDefault();
@@ -199,73 +161,7 @@ export default function AnimatedHero() {
         </div>
       </div>
 
-      {/* Full-bleed media panel: clip reveal on load, parallax on scroll */}
-      <div className="container-x mt-12 md:mt-16">
-        <motion.div
-          ref={mediaRef}
-          initial={reduce ? false : { clipPath: "inset(18% 8% 0% 8% round 28px)" }}
-          animate={{ clipPath: "inset(0% 0% 0% 0% round 28px)" }}
-          transition={{ duration: 1.6, ease: EASE, delay: 0.5 }}
-          className="relative h-[62vh] overflow-hidden rounded-[28px] md:h-[78vh]"
-        >
-          <motion.div style={reduce ? undefined : { y: imageY, scale: imageScale }} className="absolute inset-0">
-            <AnimatePresence initial={false}>
-              <motion.img
-                key={slide}
-                src={SLIDES[slide].src}
-                alt={SLIDES[slide].caption}
-                initial={{ opacity: 0, scale: 1.06 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 1.6, ease: EASE }}
-                className="absolute inset-0 h-full w-full object-cover"
-              />
-            </AnimatePresence>
-          </motion.div>
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-black/10" />
-
-          <div className="absolute inset-x-0 bottom-0 flex items-end justify-between p-5 text-white md:p-8">
-            <div className="overflow-hidden">
-              <AnimatePresence mode="wait">
-                <motion.p
-                  key={slide}
-                  initial={{ y: "100%" }}
-                  animate={{ y: "0%" }}
-                  exit={{ y: "-100%" }}
-                  transition={{ duration: 0.7, ease: EASE }}
-                  className="display-tight text-2xl md:text-4xl"
-                >
-                  {SLIDES[slide].caption}
-                </motion.p>
-              </AnimatePresence>
-            </div>
-            <div className="flex items-center gap-4">
-              <span className="font-mono text-xs tabular-nums text-white/70">
-                {String(slide + 1).padStart(2, "0")} / {String(SLIDES.length).padStart(2, "0")}
-              </span>
-              <div className="flex gap-1.5">
-                {SLIDES.map((s, i) => (
-                  <button
-                    key={s.caption}
-                    onClick={() => setSlide(i)}
-                    aria-label={`Show ${s.caption}`}
-                    className="relative h-1 w-8 overflow-hidden rounded-full bg-white/25"
-                  >
-                    {i === slide && (
-                      <motion.span
-                        initial={{ width: 0 }}
-                        animate={{ width: "100%" }}
-                        transition={{ duration: 5, ease: "linear" }}
-                        className="absolute inset-y-0 left-0 bg-white"
-                      />
-                    )}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </motion.div>
-      </div>
+      <RideMatcher />
     </section>
   );
 }

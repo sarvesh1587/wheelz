@@ -177,6 +177,41 @@ html:not(.dark) .bg-surface {
   box-shadow: 0 1px 2px rgb(14 14 16 / 0.04), 0 8px 24px -12px rgb(14 14 16 / 0.08);
 }
 
+/* ---------- Ride matcher budget slider ---------- */
+.matcher-range {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(
+    to right,
+    rgb(var(--accent)) 0%,
+    rgb(var(--accent)) var(--pct, 50%),
+    rgb(var(--line) / 0.12) var(--pct, 50%)
+  );
+  cursor: pointer;
+}
+.matcher-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  height: 26px;
+  width: 26px;
+  border-radius: 999px;
+  background: rgb(var(--ink));
+  border: 6px solid rgb(var(--accent));
+  box-shadow: 0 0 0 6px rgb(var(--accent) / 0.18);
+  transition: transform 0.2s;
+}
+.matcher-range::-webkit-slider-thumb:active {
+  transform: scale(1.15);
+}
+.matcher-range::-moz-range-thumb {
+  height: 18px;
+  width: 18px;
+  border-radius: 999px;
+  background: rgb(var(--ink));
+  border: 5px solid rgb(var(--accent));
+}
+
 @keyframes road {
   from {
     background-position: 0 0;
