@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { SplitText, Magnetic, EASE } from "../motion";
 import { aiAPI } from "../../services/api";
-import RideMatcher from "./RideMatcher";
+import SpinGarage from "./SpinGarage";
 import usePlatformStats from "../../hooks/usePlatformStats";
 
 const BASE_TAGS = [
@@ -161,7 +161,7 @@ export default function AnimatedHero() {
         </div>
       </div>
 
-      <RideMatcher />
+      <SpinGarage />
     </section>
   );
 }
