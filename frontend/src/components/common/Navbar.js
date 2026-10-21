@@ -12,10 +12,13 @@ import {
   Sparkles,
   LogOut,
   Repeat,
+  Search,
+  CarFront,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
-import { EASE, Magnetic } from "../motion";
+import { EASE } from "../motion";
+import NavPill from "./NavPill";
 
 const ADMIN_NAV = [
   { to: "/admin", label: "Dashboard" },
@@ -30,6 +33,20 @@ const USER_NAV = [
   { to: "/find-trip", label: "Find a trip" },
   { to: "/offer-trip", label: "Offer a trip" },
   { to: "/trip-planner", label: "AI Planner" },
+];
+
+// Desktop pill groups the two trip pages under one dropdown.
+const USER_PILL = [
+  { to: "/vehicles", label: "Fleet" },
+  {
+    label: "Trips",
+    children: [
+      { to: "/find-trip", label: "Find a trip", note: "Join a ride going your way", icon: Search },
+      { to: "/offer-trip", label: "Offer a trip", note: "Fill the empty seats in your car", icon: CarFront },
+      { to: "/trip-planner", label: "AI Planner", note: "Plan a route, stops and budget", icon: Sparkles },
+    ],
+  },
+  { to: "/offers", label: "Offers" },
 ];
 
 export default function Navbar() {
@@ -130,21 +147,17 @@ export default function Navbar() {
               )}
             </Link>
 
-            <ul className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-9 md:flex">
-              {navItems.map((item) => (
-                <li key={item.to}>
-                  <Link
-                    to={item.to}
-                    aria-current={isActive(item.to) ? "page" : undefined}
-                    className={`link-underline text-sm font-medium transition-colors ${
-                      isActive(item.to) ? "text-ink" : "text-muted hover:text-ink"
-                    }`}
-                  >
-                    {item.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
+            <NavPill
+              items={isAdmin && adminMode ? ADMIN_NAV : USER_PILL}
+              isActive={isActive}
+              cta={
+                adminMode
+                  ? null
+                  : isAuthenticated
+                    ? { to: "/dashboard", label: "Dashboard" }
+                    : { to: "/register", label: "Get started" }
+              }
+            />
 
             <div className="relative z-10 flex items-center gap-2 md:gap-3">
               <button
@@ -213,23 +226,15 @@ export default function Navbar() {
                   </AnimatePresence>
                 </div>
               ) : (
-                <div className="hidden items-center gap-5 md:flex">
-                  <Link to="/login" className="link-underline text-sm font-medium">
-                    Log in
-                  </Link>
-                  <Magnetic>
-                    <Link to="/register" className="btn-primary !py-2.5">
-                      Get started
-                      <ArrowUpRight size={16} />
-                    </Link>
-                  </Magnetic>
-                </div>
+                <Link to="/login" className="link-underline hidden text-sm font-medium md:inline">
+                  Log in
+                </Link>
               )}
 
               {!adminMode && (
                 <Link
                   to="/vendor/register"
-                  className="hidden text-sm font-medium text-muted transition-colors hover:text-ink lg:inline"
+                  className="hidden text-sm font-medium text-muted transition-colors hover:text-ink xl:inline"
                 >
                   List your vehicle
                 </Link>
