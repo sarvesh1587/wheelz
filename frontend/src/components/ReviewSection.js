@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { BadgeCheck, ChevronDown, Quote, Star } from "lucide-react";
+import { BadgeCheck, ChevronDown, Star } from "lucide-react";
 import { reviewAPI, vehicleAPI } from "../services/api";
 import { Reveal, SplitText, Eyebrow, EASE } from "./motion";
 
@@ -38,26 +38,32 @@ function Avatar({ name, className = "" }) {
 function ReviewCard({ review }) {
   const v = review.vehicleInfo;
   return (
-    <figure className="group flex h-full flex-col rounded-[24px] border border-line/10 bg-surface p-6 transition-colors duration-500 hover:border-accent/60">
-      <div className="flex items-center justify-between">
-        <Stars value={review.rating} />
-        <Quote size={20} className="text-accent/40 transition-colors group-hover:text-accent" />
+    <figure className="group relative flex h-full flex-col overflow-hidden rounded-[24px] border border-line/10 bg-surface transition-all duration-500 hover:-translate-y-1 hover:border-accent/60">
+      <div className="relative h-28 overflow-hidden bg-raised">
+        {v?.images?.[0] && (
+          <img
+            src={v.images[0]}
+            alt=""
+            className="h-full w-full object-cover transition-transform duration-700 ease-out-expo group-hover:scale-105"
+          />
+        )}
+        <span className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+        {v?.name && (
+          <span className="absolute bottom-2.5 left-3 right-3 truncate font-mono text-[10px] uppercase tracking-[0.14em] text-white/90">
+            {v.name}
+          </span>
+        )}
       </div>
-      <blockquote className="mt-5 line-clamp-4 text-base leading-relaxed text-ink md:text-lg">“{textOf(review)}”</blockquote>
-      <figcaption className="mt-auto flex items-center gap-3 border-t border-line/10 pt-5">
-        <Avatar name={review.user?.name} className="h-10 w-10" />
-        <span className="min-w-0 flex-1">
-          <span className="flex items-center gap-1.5 text-sm font-semibold">
-            <span className="truncate">{review.user?.name || "Wheelz renter"}</span>
-            {review.isVerified && <BadgeCheck size={14} className="shrink-0 text-accent" aria-label="Verified rental" />}
-          </span>
-          <span className="eyebrow block truncate">
-            {v?.name ? `${v.name} · ` : ""}
-            {formatDate(review.createdAt)}
-          </span>
-        </span>
-        {v?.images?.[0] && <img src={v.images[0]} alt="" className="h-10 w-14 shrink-0 rounded-lg object-cover" />}
-      </figcaption>
+      <Avatar name={review.user?.name} className="absolute right-4 top-[92px] h-10 w-10 ring-4 ring-surface" />
+      <div className="flex flex-1 flex-col p-5 pt-4">
+        <Stars value={review.rating} size={13} />
+        <blockquote className="mt-3 line-clamp-5 text-[15px] leading-relaxed text-ink">“{textOf(review)}”</blockquote>
+        <figcaption className="mt-auto flex items-center gap-1.5 pt-4 text-sm">
+          <span className="truncate font-semibold">{review.user?.name || "Wheelz renter"}</span>
+          {review.isVerified && <BadgeCheck size={14} className="shrink-0 text-accent" aria-label="Verified rental" />}
+          <span className="ml-auto shrink-0 text-xs text-muted">{formatDate(review.createdAt)}</span>
+        </figcaption>
+      </div>
     </figure>
   );
 }
@@ -115,23 +121,24 @@ export default function ReviewSection() {
   }
 
   return (
-    <section id="reviews-section" className="py-24 md:py-36">
+    <section id="reviews-section" className="py-20 md:py-28">
       <div className="container-x">
-        <div className="mb-14 grid gap-12 md:mb-16 lg:grid-cols-12 lg:items-end">
+        <div className="mx-auto max-w-6xl">
+        <div className="mb-10 grid gap-8 md:mb-12 lg:grid-cols-12 lg:items-end">
           <div className="lg:col-span-7">
             <Eyebrow index="05" className="mb-6">
               Reviews
             </Eyebrow>
-            <h2 className="display text-5xl md:text-7xl lg:text-8xl">
+            <h2 className="display text-4xl md:text-6xl">
               <SplitText lines={["Said by people", "who drove it."]} inView />
             </h2>
           </div>
 
           {total > 0 && (
-            <Reveal className="rounded-[28px] border border-line/10 bg-surface p-6 lg:col-span-5 md:p-8">
-              <div className="flex items-end gap-8">
+            <Reveal className="rounded-[24px] border border-line/10 bg-surface p-5 lg:col-span-5">
+              <div className="flex items-end gap-6">
                 <div>
-                  <p className="display text-7xl text-accent md:text-8xl">{average.toFixed(1)}</p>
+                  <p className="display text-6xl text-accent">{average.toFixed(1)}</p>
                   <div className="mt-3">
                     <Stars value={Math.round(average)} />
                   </div>
@@ -171,7 +178,7 @@ export default function ReviewSection() {
           </div>
         ) : (
           <>
-            <motion.div layout className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            <motion.div layout className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <AnimatePresence initial={false}>
                 {visible.map((review, i) => (
                   <motion.div
@@ -190,7 +197,7 @@ export default function ReviewSection() {
             </motion.div>
 
             {total > 4 && (
-              <div className="mt-10 flex justify-center">
+              <div className="mt-8 flex justify-center">
                 <button onClick={() => setShowAll((v) => !v)} className="btn-ghost">
                   {showAll ? "Show less" : `View all ${total} reviews`}
                   <ChevronDown size={16} className={`transition-transform duration-300 ${showAll ? "rotate-180" : ""}`} />
@@ -199,6 +206,7 @@ export default function ReviewSection() {
             )}
           </>
         )}
+        </div>
       </div>
     </section>
   );

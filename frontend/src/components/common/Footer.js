@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowUp, ArrowRight, ArrowUpRight, Mail, MapPin, Moon, Phone, Sun } from "lucide-react";
-import toast from "react-hot-toast";
+import { ArrowUp, Mail, MapPin, Moon, Phone, Sun } from "lucide-react";
 import { getLenis } from "../motion/SmoothScroll";
-import { Reveal } from "../motion";
 import { useTheme } from "../../context/ThemeContext";
 import usePlatformStats from "../../hooks/usePlatformStats";
 
@@ -16,47 +14,18 @@ const CONTACT = {
   office: "Ajmera, Pune",
 };
 
-const COLUMNS = [
-  {
-    title: "Rent",
-    links: [
-      { label: "Cars", to: "/vehicles?category=car" },
-      { label: "Bikes", to: "/vehicles?category=bike" },
-      { label: "Electric", to: "/vehicles?fuelType=electric" },
-      { label: "Full fleet", to: "/vehicles" },
-      { label: "Offers", to: "/offers" },
-    ],
-  },
-  {
-    title: "Ride together",
-    links: [
-      { label: "Find a trip", to: "/find-trip" },
-      { label: "Offer a trip", to: "/offer-trip" },
-      { label: "AI trip planner", to: "/trip-planner" },
-    ],
-  },
-  {
-    title: "Your account",
-    links: [
-      { label: "Dashboard", to: "/dashboard" },
-      { label: "Wishlist", to: "/wishlist" },
-      { label: "My trips", to: "/my-trips" },
-      { label: "KYC verification", to: "/kyc" },
-    ],
-  },
-  {
-    title: "Company",
-    links: [
-      { label: "About", to: "/about" },
-      { label: "Contact", to: "/contact" },
-      { label: "List your vehicle", to: "/vendor/register" },
-    ],
-  },
+const LINKS = [
+  { label: "Fleet", to: "/vehicles" },
+  { label: "Find a trip", to: "/find-trip" },
+  { label: "Offer a trip", to: "/offer-trip" },
+  { label: "AI planner", to: "/trip-planner" },
+  { label: "Offers", to: "/offers" },
+  { label: "About", to: "/about" },
+  { label: "Contact", to: "/contact" },
+  { label: "List your vehicle", to: "/vendor/register" },
 ];
 
 export default function Footer() {
-  const [email, setEmail] = useState("");
-  const [isSubscribing, setIsSubscribing] = useState(false);
   const [showBackToTop, setShowBackToTop] = useState(false);
   const theme = useTheme();
   const platform = usePlatformStats();
@@ -67,21 +36,6 @@ export default function Footer() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const handleSubscribe = (e) => {
-    e.preventDefault();
-    if (!email) {
-      toast.error("Please enter your email address");
-      return;
-    }
-    setIsSubscribing(true);
-    // No newsletter endpoint yet; this only confirms locally.
-    setTimeout(() => {
-      toast.success("Subscribed. Watch your inbox for updates.");
-      setEmail("");
-      setIsSubscribing(false);
-    }, 800);
-  };
-
   const scrollToTop = () => {
     const lenis = getLenis();
     if (lenis) lenis.scrollTo(0, { duration: 1.4 });
@@ -90,135 +44,67 @@ export default function Footer() {
 
   return (
     <>
-      <footer className="relative mt-auto overflow-hidden border-t border-line/10 bg-canvas text-ink">
-        <div className="container-x pt-14">
-          <div className="grid gap-10 lg:grid-cols-12">
-            {/* Brand + contact */}
-            <Reveal className="lg:col-span-4">
-              <Link to="/" className="display text-3xl">
-                Wheelz<span className="text-accent">.</span>
-              </Link>
-              <p className="mt-3 max-w-sm text-sm leading-relaxed text-muted">
-                Cars and bikes from verified owners, ridesharing for the trips in between, and an AI planner that
-                works out the cost before you go.
-              </p>
-              <ul className="mt-5 space-y-2 text-sm">
-                <li>
-                  <a href={CONTACT.phoneHref} className="group inline-flex items-center gap-3 text-ink/80 hover:text-ink">
-                    <span className="grid h-8 w-8 place-items-center rounded-full border border-line/15 transition-colors group-hover:border-accent group-hover:text-accent">
-                      <Phone size={14} />
-                    </span>
-                    {CONTACT.phone}
-                  </a>
-                </li>
-                <li>
-                  <a href={`mailto:${CONTACT.email}`} className="group inline-flex items-center gap-3 text-ink/80 hover:text-ink">
-                    <span className="grid h-8 w-8 place-items-center rounded-full border border-line/15 transition-colors group-hover:border-accent group-hover:text-accent">
-                      <Mail size={14} />
-                    </span>
-                    {CONTACT.email}
-                  </a>
-                </li>
-                <li className="inline-flex items-center gap-3 text-ink/80">
-                  <span className="grid h-8 w-8 place-items-center rounded-full border border-line/15">
-                    <MapPin size={14} />
-                  </span>
-                  {CONTACT.office}
-                </li>
-              </ul>
-            </Reveal>
-
-            {/* Link columns */}
-            <div className="grid grid-cols-2 gap-10 sm:grid-cols-4 lg:col-span-8">
-              {COLUMNS.map((col, ci) => (
-                <Reveal key={col.title} delay={ci * 0.06}>
-                  <p className="eyebrow mb-4">{col.title}</p>
-                  <ul className="space-y-2">
-                    {col.links.map((link) => (
-                      <li key={link.label}>
-                        <Link
-                          to={link.to}
-                          className="group inline-flex items-center gap-1 text-sm text-ink/80 transition-colors hover:text-accent"
-                        >
-                          {link.label}
-                          <ArrowUpRight
-                            size={12}
-                            className="-translate-x-1 opacity-0 transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100"
-                          />
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                </Reveal>
+      <footer className="mt-auto border-t border-line/10 bg-canvas text-ink">
+        <div className="container-x">
+          {/* Logo + links */}
+          <div className="flex flex-col gap-5 py-8 md:flex-row md:items-center md:justify-between">
+            <Link to="/" className="display text-2xl">
+              Wheelz<span className="text-accent">.</span>
+            </Link>
+            <nav aria-label="Footer" className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
+              {LINKS.map((link) => (
+                <Link key={link.to} to={link.to} className="text-ink/75 transition-colors hover:text-accent">
+                  {link.label}
+                </Link>
               ))}
-            </div>
+            </nav>
           </div>
 
-          {/* Cities + newsletter */}
-          <div className="mt-10 grid gap-6 border-t border-line/10 pt-6 lg:grid-cols-12 lg:items-center">
-            <div className="lg:col-span-7">
-              <p className="eyebrow mb-3 flex items-center gap-2">
-                <span className="relative flex h-2 w-2">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-60" />
-                  <span className="relative inline-flex h-2 w-2 rounded-full bg-accent" />
-                </span>
-                Where we operate
-              </p>
-              {platform.cities.length ? (
-                <div className="flex flex-wrap gap-2">
-                  {platform.cities.map((city) => (
-                    <Link key={city} to={`/vehicles?city=${encodeURIComponent(city)}`} className="chip hover:!border-accent hover:!text-accent">
-                      <MapPin size={12} /> {city}
+          {/* Contact + cities */}
+          <div className="flex flex-col gap-3 border-t border-line/10 py-5 text-sm text-muted md:flex-row md:items-center md:justify-between">
+            <div className="flex flex-wrap gap-x-6 gap-y-2">
+              <a href={CONTACT.phoneHref} className="inline-flex items-center gap-2 hover:text-ink">
+                <Phone size={13} /> {CONTACT.phone}
+              </a>
+              <a href={`mailto:${CONTACT.email}`} className="inline-flex items-center gap-2 hover:text-ink">
+                <Mail size={13} /> {CONTACT.email}
+              </a>
+              <span className="inline-flex items-center gap-2">
+                <MapPin size={13} /> {CONTACT.office}
+              </span>
+            </div>
+            {platform.cities.length > 0 && (
+              <p className="flex flex-wrap items-center gap-x-1.5 text-xs">
+                <span className="mr-1 h-1.5 w-1.5 rounded-full bg-accent" />
+                Live in{" "}
+                {platform.cities.map((city, i) => (
+                  <React.Fragment key={city}>
+                    <Link to={`/vehicles?city=${encodeURIComponent(city)}`} className="hover:text-accent">
+                      {city}
                     </Link>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-muted">Loading cities…</p>
-              )}
-            </div>
-
-            <div className="lg:col-span-5">
-              <p className="eyebrow mb-3">Newsletter</p>
-              <form
-                onSubmit={handleSubscribe}
-                className="flex items-center gap-2 rounded-full border border-line/15 p-1.5 pl-5 transition-colors focus-within:border-accent"
-              >
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="New cities and offers, monthly"
-                  aria-label="Email address"
-                  className="min-w-0 flex-1 bg-transparent py-2 text-sm outline-none placeholder:text-muted"
-                />
-                <button type="submit" disabled={isSubscribing} aria-label="Subscribe" className="btn-primary group !px-4 !py-2.5">
-                  <ArrowRight size={16} className="transition-transform duration-500 ease-out-expo group-hover:translate-x-0.5" />
-                </button>
-              </form>
-            </div>
+                    {i < platform.cities.length - 1 && <span aria-hidden>·</span>}
+                  </React.Fragment>
+                ))}
+              </p>
+            )}
           </div>
 
           {/* Bottom bar */}
-          <div className="mt-6 flex flex-col gap-3 border-t border-line/10 py-5 text-xs text-muted md:flex-row md:items-center md:justify-between">
+          <div className="flex flex-col gap-3 border-t border-line/10 py-4 text-xs text-muted sm:flex-row sm:items-center sm:justify-between">
             <p>© {new Date().getFullYear()} Wheelz · Made in Pune, India</p>
-            <p className="font-mono uppercase tracking-[0.18em]">Razorpay · UPI · Cards · Netbanking</p>
             <div className="flex items-center gap-4">
               {theme && (
-                <button
-                  onClick={theme.toggle}
-                  className="inline-flex items-center gap-2 rounded-full border border-line/15 px-3 py-1.5 text-ink transition-colors hover:border-accent hover:text-accent"
-                >
-                  {theme.dark ? <Sun size={13} /> : <Moon size={13} />}
+                <button onClick={theme.toggle} className="inline-flex items-center gap-1.5 hover:text-ink">
+                  {theme.dark ? <Sun size={12} /> : <Moon size={12} />}
                   {theme.dark ? "Light mode" : "Dark mode"}
                 </button>
               )}
-              <button onClick={scrollToTop} className="link-underline text-ink">
+              <button onClick={scrollToTop} className="hover:text-ink">
                 Back to top
               </button>
             </div>
           </div>
         </div>
-
       </footer>
 
       <AnimatePresence>
