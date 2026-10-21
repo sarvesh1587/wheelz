@@ -55,6 +55,11 @@ module.exports = {
         pink: signal,
         yellow: signal,
       },
+      // text-accent (and hover:/group-hover: variants) read a darker amber in
+      // light mode so amber text stays readable; fills keep the brand amber.
+      textColor: {
+        accent: token("accent-text"),
+      },
       fontFamily: {
         sans: ['"Inter Tight"', "ui-sans-serif", "system-ui", "sans-serif"],
         display: ['"Archivo"', '"Inter Tight"', "sans-serif"],

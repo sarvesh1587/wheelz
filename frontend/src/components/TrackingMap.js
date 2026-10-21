@@ -173,7 +173,6 @@ export default function TrackingMap({
 
       {/* ETA & Info Bar */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="mt-4 bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700"
       >

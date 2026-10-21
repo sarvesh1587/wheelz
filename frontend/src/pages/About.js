@@ -108,8 +108,8 @@ export default function About() {
 
       <Marquee className="mt-28 border-y border-line/10 py-6">
         {["Cars", "Bikes", "SUVs", "Scooters", "Rideshare", "Trip planner", "Verified owners"].map((w) => (
-          <span key={w} className="display mx-8 flex items-center gap-8 text-5xl text-muted md:text-7xl">
-            {w} <span className="h-3 w-3 rounded-full bg-accent" />
+          <span key={w} className="display-tight flex items-center gap-4 px-4 text-2xl text-muted md:text-4xl">
+            {w} <span className="h-2 w-2 rounded-full bg-accent" />
           </span>
         ))}
       </Marquee>

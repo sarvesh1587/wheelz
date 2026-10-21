@@ -74,7 +74,6 @@ export default function ReferralDashboard() {
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="bg-accent rounded-2xl p-5 text-accent-ink"
         >
@@ -83,7 +82,6 @@ export default function ReferralDashboard() {
           <p className="text-sm opacity-90">Total Referrals</p>
         </motion.div>
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
           className="bg-raised rounded-2xl p-5 text-white"
@@ -93,7 +91,6 @@ export default function ReferralDashboard() {
           <p className="text-sm opacity-90">Total Earned</p>
         </motion.div>
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
           className="bg-raised rounded-2xl p-5 text-white"
@@ -106,7 +103,6 @@ export default function ReferralDashboard() {
 
       {/* Referral Code Section */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
         className="bg-surface rounded-[24px] p-6 border border-line/10"
@@ -143,7 +139,6 @@ export default function ReferralDashboard() {
 
       {/* How It Works */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
         className="bg-surface rounded-[24px] p-6 border border-line/10"

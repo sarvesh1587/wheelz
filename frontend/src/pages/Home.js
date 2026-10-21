@@ -82,10 +82,10 @@ export default function Home() {
       {platform.cities.length > 0 && (
       <section className="border-y border-line/10 py-6 md:py-8">
         <Marquee>
-          {(platform.cities.length < 4 ? [...platform.cities, ...platform.cities, ...platform.cities] : platform.cities).map((city, i) => (
-            <span key={`${city}-${i}`} className="display flex items-center gap-8 pr-8 text-5xl md:text-7xl">
+          {platform.cities.map((city, i) => (
+            <span key={city} className="display-tight flex items-center gap-4 px-4 text-2xl md:text-4xl">
               {city}
-              <span className="inline-block h-3 w-3 rounded-full bg-accent md:h-4 md:w-4" />
+              {i < platform.cities.length - 1 && <span className="inline-block h-2 w-2 rounded-full bg-accent" />}
             </span>
           ))}
         </Marquee>

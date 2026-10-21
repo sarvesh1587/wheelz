@@ -452,7 +452,6 @@ export default function VendorDashboard() {
         {/* Vehicles Tab */}
         {activeTab === "vehicles" && (
           <motion.div
-            initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="space-y-4"
           >
@@ -476,7 +475,6 @@ export default function VendorDashboard() {
               vehicles.map((vehicle, idx) => (
                 <motion.div
                   key={vehicle._id}
-                  initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: idx * 0.05 }}
                   className="bg-surface rounded-[24px] p-5 transition-all border border-line/10"
@@ -562,7 +560,6 @@ export default function VendorDashboard() {
         {/* Bookings Tab */}
         {activeTab === "bookings" && (
           <motion.div
-            initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="space-y-4"
           >
@@ -580,7 +577,6 @@ export default function VendorDashboard() {
               bookings.map((booking, idx) => (
                 <motion.div
                   key={booking._id}
-                  initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: idx * 0.05 }}
                   onClick={() => viewBookingDetails(booking)}

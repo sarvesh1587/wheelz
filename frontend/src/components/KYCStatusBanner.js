@@ -23,7 +23,7 @@ export default function KYCStatusBanner() {
       cta: "Complete KYC",
     },
     pending: {
-      tone: "bg-accent animate-pulse",
+      tone: "bg-accent",
       message:
         "Your KYC is under review. Bookings will be enabled once verified.",
       cta: "View status",

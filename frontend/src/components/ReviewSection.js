@@ -154,13 +154,7 @@ export default function ReviewSection() {
                         <Star size={9} className="fill-current" />
                       </span>
                       <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-line/10">
-                        <motion.span
-                          className="block h-full rounded-full bg-accent"
-                          initial={{ width: 0 }}
-                          whileInView={{ width: `${(count / total) * 100}%` }}
-                          viewport={{ once: true }}
-                          transition={{ duration: 1.2, ease: EASE, delay: (5 - star) * 0.08 }}
-                        />
+                        <span className="block h-full rounded-full bg-accent" style={{ width: `${(count / total) * 100}%` }} />
                       </span>
                       <span className="w-5 text-right">{count}</span>
                     </li>
@@ -184,9 +178,6 @@ export default function ReviewSection() {
                   <motion.div
                     key={review._id}
                     layout
-                    initial={{ opacity: 0, y: 24 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
                     exit={{ opacity: 0, y: 12, transition: { duration: 0.2 } }}
                     transition={{ duration: 0.6, ease: EASE, delay: (i % 4) * 0.06 }}
                   >

@@ -63,7 +63,6 @@ export default function AnimatedHero() {
     <section className="relative pb-6 pt-28 md:pt-36">
       <div className="container-x">
         <motion.div
-          initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 1, delay: 0.2 }}
           className="mb-8 flex items-center justify-between md:mb-12"
@@ -73,7 +72,6 @@ export default function AnimatedHero() {
           </p>
           <p className="eyebrow flex items-center gap-2">
             <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-60" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-accent" />
             </span>
             {platform.ready
@@ -92,7 +90,6 @@ export default function AnimatedHero() {
 
         <div className="mt-10 grid gap-10 md:mt-14 lg:grid-cols-12 lg:items-end">
           <motion.div
-            initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, ease: EASE, delay: 0.7 }}
             className="lg:col-span-6"
@@ -139,7 +136,6 @@ export default function AnimatedHero() {
           </motion.div>
 
           <motion.dl
-            initial="hidden"
             animate="show"
             variants={{ show: { transition: { staggerChildren: 0.08, delayChildren: 0.9 } } }}
             className="grid grid-cols-4 border-t border-line/10 lg:col-span-5 lg:col-start-8"

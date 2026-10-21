@@ -60,7 +60,6 @@ export default function MyTrips() {
           {trips.map((trip, idx) => (
             <motion.article
               key={trip._id}
-              initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.05, duration: 0.6, ease: EASE }}
               className="flex flex-wrap items-center justify-between gap-6 border-b border-line/10 py-8"
