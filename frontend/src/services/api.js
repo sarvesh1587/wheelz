@@ -30,7 +30,7 @@ api.interceptors.response.use(
 
     console.error("API Error:", error.config?.url, error.message);
 
-    // ✅ If 401 and not already retrying, try to refresh
+    // If 401 and not already retrying, try to refresh
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
@@ -69,7 +69,7 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       localStorage.removeItem("wheelz_token");
       localStorage.removeItem("wheelz_user");
-      // ✅ Add delay before redirect to avoid race conditions
+      // Add delay before redirect to avoid race conditions
       setTimeout(() => {
         window.location.href = "/login";
       }, 100);
@@ -108,7 +108,7 @@ export const rideShareAPI = {
   respondToRequest: (requestId, data) =>
     api.put(`/rideshare/request/${requestId}/respond`, data),
 
-  // ✅ These are the ones that were missing/404ing
+  // These are the ones that were missing/404ing
   cancelRequest: (requestId) =>
     api.put(`/rideshare/request/${requestId}/cancel`),
   createPayment: (requestId) => api.post(`/rideshare/request/${requestId}/pay`),
@@ -188,6 +188,7 @@ export const adminAPI = {
   toggleVendorStatus: (id, status) =>
     api.put(`/admin/vendors/${id}/status`, { approved: status }),
   getRevenueBreakdown: () => api.get("/admin/revenue/breakdown"),
+  getReports: (params) => api.get("/admin/reports", { params }),
 };
 
 export const reviewAPI = {

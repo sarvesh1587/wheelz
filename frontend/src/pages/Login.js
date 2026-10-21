@@ -5,6 +5,7 @@ import { authAPI } from "../services/api";
 import { GoogleLogin } from "@react-oauth/google";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import toast from "react-hot-toast";
+import AuthShell from "../components/auth/AuthShell";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -20,7 +21,6 @@ export default function Login() {
     setLoading(true);
     try {
       const res = await authAPI.login(formData);
-      console.log("Login response:", res.data);
 
       if (res.data.token && res.data.user) {
         login(res.data.token, res.data.user);
@@ -50,7 +50,6 @@ export default function Login() {
   //   }
   // };
   const handleGoogleSuccess = async (credentialResponse) => {
-    console.log("Google response:", credentialResponse);
 
     try {
       const res = await authAPI.googleLogin({
@@ -74,22 +73,17 @@ export default function Login() {
 
   return (
     <GoogleOAuthProvider clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID}>
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-950 pt-20">
-        <div className="max-w-md w-full mx-4">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8">
-            <div className="text-center mb-8">
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                Welcome Back
-              </h1>
-              <p className="text-gray-500 dark:text-gray-400 mt-2">
-                Login to your Wheelz account
-              </p>
-            </div>
-
+      <AuthShell
+        eyebrow="Welcome back"
+        title={["Log in."]}
+        subtitle="Pick up where you left off."
+        image="https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=1600&q=80"
+        quote={{ text: "Verified owners, clear prices, keys at the pickup point.", author: "Wheelz" }}
+      >
             {/* Email/Password Form */}
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label className="field-label">
                   Email Address
                 </label>
                 <input
@@ -98,13 +92,13 @@ export default function Login() {
                   value={formData.email}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 focus:ring-2 focus:ring-amber-500"
+                  className="field"
                   placeholder="you@example.com"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label className="field-label">
                   Password
                 </label>
                 <input
@@ -113,7 +107,7 @@ export default function Login() {
                   value={formData.password}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 focus:ring-2 focus:ring-amber-500"
+                  className="field"
                   placeholder="••••••••"
                 />
               </div>
@@ -121,7 +115,7 @@ export default function Login() {
               <div className="flex justify-end">
                 <Link
                   to="/forgot-password"
-                  className="text-sm text-amber-500 hover:underline"
+                  className="link-underline text-sm text-muted hover:text-ink"
                 >
                   Forgot Password?
                 </Link>
@@ -130,24 +124,19 @@ export default function Login() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3 bg-gradient-to-r from-amber-500 to-amber-600 text-white font-semibold rounded-lg hover:shadow-lg transition-all disabled:opacity-50"
+                className="btn-primary w-full !py-4"
               >
-                {loading ? "Logging in..." : "Login"}
+                {loading ? "Logging in…" : "Log in"}
               </button>
             </form>
 
-            <div className="relative my-6">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300 dark:border-gray-600"></div>
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white dark:bg-gray-800 text-gray-500">
-                  OR
-                </span>
-              </div>
+            <div className="my-8 flex items-center gap-4">
+              <span className="h-px flex-1 bg-line/10" />
+              <span className="eyebrow">or</span>
+              <span className="h-px flex-1 bg-line/10" />
             </div>
 
-            {/* ✅ Fixed Google Login Button */}
+            {/* Fixed Google Login Button */}
             <div className="flex justify-center">
               <GoogleLogin
                 onSuccess={handleGoogleSuccess}
@@ -155,20 +144,18 @@ export default function Login() {
                 width="250"
                 size="large"
                 text="continue_with"
-                shape="rectangular"
-                theme="filled_blue"
+                theme="filled_black"
+                shape="pill"
               />
             </div>
 
-            <p className="text-center text-sm text-gray-600 dark:text-gray-400 mt-6">
-              Don't have an account?{" "}
-              <Link to="/register" className="text-amber-500 hover:underline">
-                Sign Up
+            <p className="mt-10 text-sm text-muted">
+              New to Wheelz?{" "}
+              <Link to="/register" className="link-underline font-medium text-ink">
+                Create an account
               </Link>
             </p>
-          </div>
-        </div>
-      </div>
+      </AuthShell>
     </GoogleOAuthProvider>
   );
 }

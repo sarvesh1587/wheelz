@@ -41,7 +41,7 @@ export const initRazorpayPayment = async (options) => {
         contact: options.customerPhone,
       },
       theme: {
-        color: "#f59e0b",
+        color: "#F59E0B",
       },
       modal: {
         ondismiss: () => {

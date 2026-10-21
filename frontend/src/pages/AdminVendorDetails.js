@@ -1,20 +1,20 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { adminAPI, vehicleAPI, bookingAPI } from "../services/api";
+import { adminAPI } from "../services/api";
 import toast from "react-hot-toast";
 import {
-  UserCircleIcon,
-  TruckIcon,
-  CalendarIcon,
-  CurrencyRupeeIcon,
-  BuildingStorefrontIcon,
-  MapPinIcon,
-  PhoneIcon,
-  EnvelopeIcon,
-  CheckCircleIcon,
-  XCircleIcon,
-  ArrowLeftIcon,
-} from "@heroicons/react/24/outline";
+  CircleUser as UserCircleIcon,
+  Truck as TruckIcon,
+  Calendar as CalendarIcon,
+  IndianRupee as CurrencyRupeeIcon,
+  Store as BuildingStorefrontIcon,
+  MapPin as MapPinIcon,
+  Phone as PhoneIcon,
+  Mail as EnvelopeIcon,
+  CheckCircle2 as CheckCircleIcon,
+  XCircle as XCircleIcon,
+  ArrowLeft as ArrowLeftIcon,
+} from "lucide-react";
 import { motion } from "framer-motion";
 
 export default function AdminVendorDetails() {
@@ -32,16 +32,11 @@ export default function AdminVendorDetails() {
   const fetchVendorDetails = async () => {
     try {
       // Fetch vendor details
+      // One call returns the vendor plus only their own vehicles and bookings.
       const vendorRes = await adminAPI.getUserById(id);
       setVendor(vendorRes.data.user);
-
-      // Fetch vendor's vehicles
-      const vehiclesRes = await vehicleAPI.getAll({ vendorId: id });
-      setVehicles(vehiclesRes.data.vehicles || []);
-
-      // Fetch vendor's bookings
-      const bookingsRes = await bookingAPI.getAll({ vendorId: id });
-      setBookings(bookingsRes.data.bookings || []);
+      setVehicles(vendorRes.data.vehicles || []);
+      setBookings(vendorRes.data.bookings || []);
     } catch (error) {
       console.error("Error fetching vendor details:", error);
       toast.error("Failed to load vendor details");
@@ -65,10 +60,10 @@ export default function AdminVendorDetails() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center pt-20">
+      <div className="min-h-screen flex items-center justify-center pt-28">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-500">Loading vendor details...</p>
+          <div className="w-12 h-12 border-4 border-accent border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-muted">Loading vendor details...</p>
         </div>
       </div>
     );
@@ -77,12 +72,12 @@ export default function AdminVendorDetails() {
   if (!vendor) return null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-950 pt-24 pb-12">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen pt-28 pb-12">
+      <div className="container-x">
         {/* Back Button */}
         <button
           onClick={() => navigate("/admin/vendors")}
-          className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-amber-500 mb-6 transition-colors"
+          className="flex items-center gap-2 text-muted hover:text-accent mb-6 transition-colors"
         >
           <ArrowLeftIcon className="w-5 h-5" />
           Back to Vendors
@@ -92,23 +87,24 @@ export default function AdminVendorDetails() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg mb-8"
+          className="bg-surface rounded-[24px] p-6 mb-8 border border-line/10"
         >
           <div className="flex flex-col md:flex-row gap-6 items-start md:items-center">
-            <div className="w-24 h-24 bg-gradient-to-r from-amber-500 to-amber-600 rounded-full flex items-center justify-center text-4xl font-bold text-white">
+            <div className="display grid h-24 w-24 shrink-0 place-items-center rounded-full bg-accent text-4xl text-accent-ink">
               {vendor.name?.[0]?.toUpperCase()}
             </div>
             <div className="flex-1">
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
-                  <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                  <p className="eyebrow mb-3">Vendor profile</p>
+                  <h1 className="display text-4xl md:text-6xl">
                     {vendor.name}
                   </h1>
-                  <p className="text-gray-500 dark:text-gray-400">
+                  <p className="text-muted">
                     {vendor.email}
                   </p>
                   {vendor.businessName && (
-                    <p className="text-sm text-amber-600 dark:text-amber-400 mt-1">
+                    <p className="text-sm text-accent mt-1">
                       {vendor.businessName}
                     </p>
                   )}
@@ -116,10 +112,10 @@ export default function AdminVendorDetails() {
                 <div className="flex gap-3">
                   <button
                     onClick={toggleVendorStatus}
-                    className={`px-4 py-2 rounded-xl font-semibold transition-all ${
+                    className={`${
                       vendor.isVendorApproved
-                        ? "bg-red-500 hover:bg-red-600 text-white"
-                        : "bg-green-500 hover:bg-green-600 text-white"
+                        ? "btn-ghost hover:!border-red-500 hover:!bg-transparent hover:!text-red-500"
+                        : "btn-primary"
                     }`}
                   >
                     {vendor.isVendorApproved
@@ -134,73 +130,73 @@ export default function AdminVendorDetails() {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-md">
+          <div className="bg-surface rounded-xl p-5 border border-line/10">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-500">Total Vehicles</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                <p className="text-sm text-muted">Total Vehicles</p>
+                <p className="display-tight text-2xl text-ink">
                   {vehicles.length}
                 </p>
               </div>
-              <TruckIcon className="w-10 h-10 text-amber-500" />
+              <TruckIcon className="w-10 h-10 text-accent" />
             </div>
           </div>
-          <div className="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-md">
+          <div className="bg-surface rounded-xl p-5 border border-line/10">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-500">Total Bookings</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                <p className="text-sm text-muted">Total Bookings</p>
+                <p className="display-tight text-2xl text-ink">
                   {bookings.length}
                 </p>
               </div>
-              <CalendarIcon className="w-10 h-10 text-amber-500" />
+              <CalendarIcon className="w-10 h-10 text-accent" />
             </div>
           </div>
-          <div className="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-md">
+          <div className="bg-surface rounded-xl p-5 border border-line/10">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-500">Total Revenue</p>
-                <p className="text-2xl font-bold text-green-600">
+                <p className="text-sm text-muted">Total Revenue</p>
+                <p className="display text-2xl">
                   ₹
                   {bookings
                     .reduce((sum, b) => sum + (b.totalAmount || 0), 0)
                     .toLocaleString()}
                 </p>
               </div>
-              <CurrencyRupeeIcon className="w-10 h-10 text-green-500" />
+              <CurrencyRupeeIcon className="w-10 h-10 text-accent" />
             </div>
           </div>
-          <div className="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-md">
+          <div className="bg-surface rounded-xl p-5 border border-line/10">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-500">Status</p>
+                <p className="text-sm text-muted">Status</p>
                 <span
                   className={`inline-block mt-1 px-2 py-0.5 rounded-full text-xs font-semibold ${
                     vendor.isVendorApproved
-                      ? "bg-green-100 text-green-700"
-                      : "bg-yellow-100 text-yellow-700"
+                      ? "bg-raised text-accent"
+                      : "bg-accent/10 text-accent"
                   }`}
                 >
                   {vendor.isVendorApproved ? "Approved" : "Pending Approval"}
                 </span>
               </div>
               {vendor.isVendorApproved ? (
-                <CheckCircleIcon className="w-10 h-10 text-green-500" />
+                <CheckCircleIcon className="w-10 h-10 text-accent" />
               ) : (
-                <XCircleIcon className="w-10 h-10 text-yellow-500" />
+                <XCircleIcon className="w-10 h-10 text-accent" />
               )}
             </div>
           </div>
         </div>
 
         {/* Vendor Vehicles */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg mb-8">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-            <TruckIcon className="w-5 h-5 text-amber-500" />
+        <div className="bg-surface rounded-[24px] p-6 mb-8 border border-line/10">
+          <h2 className="display-tight text-xl text-ink mb-4 flex items-center gap-2">
+            <TruckIcon className="w-5 h-5 text-accent" />
             Vendor's Vehicles ({vehicles.length})
           </h2>
           {vehicles.length === 0 ? (
-            <p className="text-gray-500 text-center py-8">
+            <p className="text-muted text-center py-8">
               No vehicles listed yet
             </p>
           ) : (
@@ -208,28 +204,28 @@ export default function AdminVendorDetails() {
               {vehicles.map((vehicle) => (
                 <div
                   key={vehicle._id}
-                  className="border border-gray-200 dark:border-gray-700 rounded-xl p-4"
+                  className="border border-line/10 rounded-xl p-4"
                 >
                   <img
                     src={vehicle.images?.[0]}
                     alt={vehicle.name}
-                    className="w-full h-32 object-cover rounded-lg mb-3"
+                    className="w-full h-32 object-cover rounded-xl mb-3"
                   />
-                  <h3 className="font-semibold text-gray-900 dark:text-white">
+                  <h3 className="font-semibold text-ink">
                     {vehicle.name}
                   </h3>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-muted">
                     {vehicle.brand} • {vehicle.year}
                   </p>
                   <div className="flex items-center justify-between mt-2">
-                    <span className="text-lg font-bold text-amber-500">
+                    <span className="display text-lg">
                       ₹{vehicle.currentPrice}/day
                     </span>
                     <span
                       className={`text-xs px-2 py-0.5 rounded-full ${
                         vehicle.isAvailable
-                          ? "bg-green-100 text-green-700"
-                          : "bg-red-100 text-red-700"
+                          ? "bg-raised text-accent"
+                          : "bg-accent/10 text-red-500"
                       }`}
                     >
                       {vehicle.isAvailable ? "Available" : "Not Available"}
@@ -242,40 +238,40 @@ export default function AdminVendorDetails() {
         </div>
 
         {/* Recent Bookings */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-            <CalendarIcon className="w-5 h-5 text-amber-500" />
+        <div className="bg-surface rounded-[24px] p-6 border border-line/10">
+          <h2 className="display-tight text-xl text-ink mb-4 flex items-center gap-2">
+            <CalendarIcon className="w-5 h-5 text-accent" />
             Recent Bookings ({bookings.length})
           </h2>
           {bookings.length === 0 ? (
-            <p className="text-gray-500 text-center py-8">No bookings yet</p>
+            <p className="text-muted text-center py-8">No bookings yet</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-gray-50 dark:bg-gray-700/50">
+                <thead className="bg-raised/50">
                   <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-muted">
                       Vehicle
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-muted">
                       Customer
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-muted">
                       Dates
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-muted">
                       Amount
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-muted">
                       Status
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                <tbody className="divide-y divide-line/10">
                   {bookings.slice(0, 10).map((booking) => (
                     <tr
                       key={booking._id}
-                      className="hover:bg-gray-50 dark:hover:bg-gray-700/30"
+                      className="hover:bg-raised"
                     >
                       <td className="px-4 py-3 text-sm">
                         {booking.vehicle?.name}
@@ -294,10 +290,10 @@ export default function AdminVendorDetails() {
                         <span
                           className={`text-xs px-2 py-0.5 rounded-full ${
                             booking.status === "confirmed"
-                              ? "bg-green-100 text-green-700"
+                              ? "bg-raised text-accent"
                               : booking.status === "pending"
-                                ? "bg-yellow-100 text-yellow-700"
-                                : "bg-red-100 text-red-700"
+                                ? "bg-accent/10 text-accent"
+                                : "bg-accent/10 text-red-500"
                           }`}
                         >
                           {booking.status}

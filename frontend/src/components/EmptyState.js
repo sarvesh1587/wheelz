@@ -1,11 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import {
-  HeartIcon,
-  CalendarIcon,
-  TruckIcon,
-  MagnifyingGlassIcon,
-} from "@heroicons/react/24/outline";
+import { Heart, Calendar, Car, Search, ArrowUpRight } from "lucide-react";
 
 export default function EmptyState({
   type,
@@ -15,12 +10,10 @@ export default function EmptyState({
   actionText,
 }) {
   const icons = {
-    wishlist: <HeartIcon className="w-20 h-20 text-gray-300 mx-auto mb-4" />,
-    bookings: <CalendarIcon className="w-20 h-20 text-gray-300 mx-auto mb-4" />,
-    vehicles: <TruckIcon className="w-20 h-20 text-gray-300 mx-auto mb-4" />,
-    search: (
-      <MagnifyingGlassIcon className="w-20 h-20 text-gray-300 mx-auto mb-4" />
-    ),
+    wishlist: Heart,
+    bookings: Calendar,
+    vehicles: Car,
+    search: Search,
   };
 
   const defaultMessages = {
@@ -57,15 +50,15 @@ export default function EmptyState({
     actionText: actionText || defaultMessages[type]?.actionText,
   };
 
+  const Icon = icons[type] || icons.search;
+
   return (
-    <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-2xl shadow-sm">
-      {icons[type] || icons.search}
-      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-        {content.title}
-      </h3>
-      <p className="text-gray-500 dark:text-gray-400 mb-4">{content.message}</p>
-      <Link to={content.actionLink} className="btn-primary inline-block">
-        {content.actionText} →
+    <div className="border-t border-line/10 py-20">
+      <Icon size={22} strokeWidth={1.5} className="mb-6 text-accent" />
+      <h3 className="display-tight text-3xl md:text-5xl">{content.title}</h3>
+      <p className="mt-4 max-w-md text-muted">{content.message}</p>
+      <Link to={content.actionLink} className="btn-primary mt-8">
+        {content.actionText} <ArrowUpRight size={16} />
       </Link>
     </div>
   );

@@ -28,9 +28,9 @@ const UPIQRPayment = ({ bookingId, amount, onSuccess, onCancel }) => {
         <button
           onClick={generateQRCode}
           disabled={loading}
-          className="w-full bg-green-500 hover:bg-green-600 text-white py-3 rounded-xl font-semibold transition"
+          className="w-full bg-ink text-canvas hover:bg-accent hover:text-accent-ink py-3 rounded-xl font-semibold transition"
         >
-          {loading ? "Generating..." : "📱 Generate QR Code for UPI Payment"}
+          {loading ? "Generating..." : "Generate QR Code for UPI Payment"}
         </button>
         <button onClick={onCancel} className="w-full btn-secondary">
           Cancel
@@ -41,7 +41,7 @@ const UPIQRPayment = ({ bookingId, amount, onSuccess, onCancel }) => {
 
   return (
     <div className="text-center space-y-4">
-      <div className="bg-white p-4 rounded-xl inline-block mx-auto">
+      <div className="bg-surface p-4 rounded-xl inline-block mx-auto border border-line/10">
         <img
           src={qrCode.qrImageUrl}
           alt="UPI QR Code"
@@ -49,11 +49,11 @@ const UPIQRPayment = ({ bookingId, amount, onSuccess, onCancel }) => {
         />
       </div>
 
-      <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded-lg">
-        <p className="text-sm font-medium text-green-700 dark:text-green-400">
+      <div className="bg-raised p-3 rounded-xl">
+        <p className="text-sm font-medium text-accent">
           Amount: ₹{amount.toLocaleString()}
         </p>
-        <p className="text-xs text-gray-500 mt-1">
+        <p className="text-xs text-muted mt-1">
           Scan with Google Pay, PhonePe, Paytm, or any UPI app
         </p>
       </div>
@@ -64,7 +64,7 @@ const UPIQRPayment = ({ bookingId, amount, onSuccess, onCancel }) => {
         </button>
         <button
           onClick={() => window.open(qrCode.shortUrl, "_blank")}
-          className="flex-1 bg-blue-500 hover:bg-blue-600 text-white rounded-xl py-2 transition"
+          className="flex-1 bg-ink text-canvas hover:bg-accent hover:text-accent-ink rounded-xl py-2 transition"
         >
           Pay with UPI App
         </button>
@@ -75,7 +75,7 @@ const UPIQRPayment = ({ bookingId, amount, onSuccess, onCancel }) => {
           setQrCode(null);
           generateQRCode();
         }}
-        className="text-xs text-amber-500 hover:underline"
+        className="text-xs text-accent hover:underline"
       >
         Regenerate QR Code
       </button>

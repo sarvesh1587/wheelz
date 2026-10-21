@@ -2,20 +2,10 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import { vehicleAPI, aiAPI } from "../services/api";
 import VehicleCard from "../components/vehicle/VehicleCard";
-import { SparklesIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { Sparkles, X, ArrowRight } from "lucide-react";
+import { SplitText, Eyebrow } from "../components/motion";
+import usePlatformStats from "../hooks/usePlatformStats";
 
-const CITIES = [
-  "All Cities",
-  "Mumbai",
-  "Delhi",
-  "Bangalore",
-  "Hyderabad",
-  "Chennai",
-  "Pune",
-  "Jaipur",
-  "Kolkata",
-  "Kota",
-];
 const FUEL_TYPES = ["All", "petrol", "diesel", "electric", "hybrid"];
 const SORT_OPTIONS = [
   { value: "", label: "Most Recent" },
@@ -26,6 +16,8 @@ const SORT_OPTIONS = [
 ];
 
 export default function Vehicles() {
+  const platform = usePlatformStats();
+  const CITIES = ["All Cities", ...platform.cities];
   const [searchParams, setSearchParams] = useSearchParams();
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -54,8 +46,6 @@ export default function Vehicles() {
         if (v && v !== "") params[k] = v;
       });
       params.limit = 12;
-
-      console.log("Fetching vehicles with params:", params); // Debug log
 
       const res = await vehicleAPI.getAll(params);
       setVehicles(res.data.vehicles);
@@ -88,7 +78,8 @@ export default function Vehicles() {
   }, [searchParams]);
 
   const updateFilter = (key, value) => {
-    const next = { ...filters, [key]: value, page: 1 };
+    // Changing any filter returns to page 1; changing the page keeps the filters.
+    const next = { ...filters, page: 1, [key]: value };
     setFilters(next);
     const params = {};
     Object.entries(next).forEach(([k, v]) => {
@@ -144,94 +135,72 @@ export default function Vehicles() {
     filters.maxPrice,
   ].filter(Boolean).length;
 
-  // Get title based on category filter
-  const getTitle = () => {
-    if (filters.category === "car") return "🚗 Cars";
-    if (filters.category === "bike") return "🏍️ Bikes";
-    return "All Vehicles";
-  };
+  const title =
+    filters.category === "car" ? "Cars" : filters.category === "bike" ? "Bikes" : "The fleet";
+
+  const field =
+    "rounded-full border border-line/15 bg-transparent px-4 py-2.5 text-sm text-ink outline-none transition-colors hover:border-ink focus:border-ink [&>option]:bg-surface";
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8 pt-24">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-1">
-          {getTitle()}
-        </h1>
-        <p className="text-gray-500 dark:text-gray-400">
-          {loading
-            ? "Searching..."
-            : `${total} vehicle${total !== 1 ? "s" : ""} found`}
-        </p>
-      </div>
+    <div className="container-x pb-24 pt-28 md:pt-36">
+      <header className="mb-10 flex flex-col gap-6 md:mb-14 md:flex-row md:items-end md:justify-between">
+        <div>
+          <Eyebrow className="mb-6">
+            {loading ? "Searching…" : `${total} vehicle${total !== 1 ? "s" : ""} available`}
+          </Eyebrow>
+          <h1 className="display text-6xl md:text-8xl lg:text-9xl">
+            <SplitText key={title} lines={[title + "."]} />
+          </h1>
+        </div>
 
-      {/* AI Smart Search Bar */}
-      <form onSubmit={handleAISearch} className="flex gap-2 mb-6">
-        <div className="flex-1 flex items-center gap-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4">
-          <SparklesIcon className="w-5 h-5 text-amber-500 flex-shrink-0" />
+        <form
+          onSubmit={handleAISearch}
+          className="flex w-full items-center gap-2 rounded-full border border-line/15 p-1.5 pl-5 transition-colors focus-within:border-ink md:max-w-md"
+        >
+          <Sparkles size={16} className="shrink-0 text-accent" />
           <input
             type="text"
             value={nlQuery}
             onChange={(e) => setNlQuery(e.target.value)}
-            placeholder='AI Search: "electric car under 2000 in Mumbai"'
-            className="flex-1 py-3 bg-transparent outline-none text-gray-900 dark:text-white text-sm placeholder-gray-400"
+            placeholder={`Electric car under ₹2000${platform.cities[0] ? ` in ${platform.cities[0]}` : ""}`}
+            aria-label="Describe the vehicle you need"
+            className="min-w-0 flex-1 bg-transparent py-2.5 text-sm outline-none placeholder:text-muted"
           />
           {nlQuery && (
-            <button type="button" onClick={() => setNlQuery("")}>
-              <XMarkIcon className="w-4 h-4 text-gray-400" />
+            <button type="button" onClick={() => setNlQuery("")} aria-label="Clear search" className="text-muted hover:text-ink">
+              <X size={16} />
             </button>
           )}
-        </div>
-        <button
-          type="submit"
-          disabled={aiSearching}
-          className="px-5 py-3 bg-amber-500 hover:bg-amber-400 text-gray-900 font-semibold rounded-xl transition-colors disabled:opacity-70 text-sm"
-        >
-          {aiSearching ? "..." : "Search"}
-        </button>
-      </form>
+          <button type="submit" disabled={aiSearching} className="btn-primary !px-4 !py-2.5" aria-label="Search">
+            {aiSearching ? (
+              <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+            ) : (
+              <ArrowRight size={16} />
+            )}
+          </button>
+        </form>
+      </header>
 
-      {/* Filter Bar */}
-      <div className="flex flex-wrap items-center gap-3 mb-8">
-        {/* Category Buttons */}
-        <div className="flex bg-gray-100 dark:bg-gray-800 rounded-xl p-1">
-          <button
-            onClick={() => updateFilter("category", "")}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              filters.category === ""
-                ? "bg-amber-500 text-white shadow-sm"
-                : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
-            }`}
-          >
-            All
-          </button>
-          <button
-            onClick={() => updateFilter("category", "car")}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              filters.category === "car"
-                ? "bg-amber-500 text-white shadow-sm"
-                : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
-            }`}
-          >
-            🚗 Cars
-          </button>
-          <button
-            onClick={() => updateFilter("category", "bike")}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              filters.category === "bike"
-                ? "bg-amber-500 text-white shadow-sm"
-                : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
-            }`}
-          >
-            🏍️ Bikes
-          </button>
+      <div className="-mx-5 mb-10 flex flex-wrap items-center gap-2 border-y border-line/10 px-5 py-3 sm:-mx-8 sm:px-8 lg:-mx-12 lg:px-12">
+        <div className="flex rounded-full border border-line/15 p-1">
+          {[
+            ["", "All"],
+            ["car", "Cars"],
+            ["bike", "Bikes"],
+          ].map(([value, label]) => (
+            <button
+              key={label}
+              onClick={() => updateFilter("category", value)}
+              className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+                filters.category === value ? "bg-ink text-canvas" : "text-muted hover:text-ink"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
         </div>
 
-        {/* City Filter */}
-        <select
-          value={filters.city}
-          onChange={(e) => updateFilter("city", e.target.value)}
-          className="px-3 py-2.5 text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl outline-none text-gray-700 dark:text-gray-300"
-        >
+        <select value={filters.city} onChange={(e) => updateFilter("city", e.target.value)} className={field} aria-label="City">
           {CITIES.map((c) => (
             <option key={c} value={c === "All Cities" ? "" : c}>
               {c}
@@ -239,120 +208,76 @@ export default function Vehicles() {
           ))}
         </select>
 
-        {/* Fuel Type Filter */}
-        <select
-          value={filters.fuelType}
-          onChange={(e) => updateFilter("fuelType", e.target.value)}
-          className="px-3 py-2.5 text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl outline-none text-gray-700 dark:text-gray-300"
-        >
+        <select value={filters.fuelType} onChange={(e) => updateFilter("fuelType", e.target.value)} className={field} aria-label="Fuel type">
           {FUEL_TYPES.map((f) => (
             <option key={f} value={f === "All" ? "" : f}>
-              {f === "All"
-                ? "All Fuels"
-                : f.charAt(0).toUpperCase() + f.slice(1)}
+              {f === "All" ? "All fuels" : f.charAt(0).toUpperCase() + f.slice(1)}
             </option>
           ))}
         </select>
 
-        {/* Price Range */}
         <div className="flex items-center gap-1">
-          <input
-            type="number"
-            placeholder="Min ₹"
-            value={filters.minPrice}
-            onChange={(e) => updateFilter("minPrice", e.target.value)}
-            className="w-24 px-3 py-2.5 text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl outline-none text-gray-700 dark:text-gray-300"
-          />
-          <span className="text-gray-400">-</span>
-          <input
-            type="number"
-            placeholder="Max ₹"
-            value={filters.maxPrice}
-            onChange={(e) => updateFilter("maxPrice", e.target.value)}
-            className="w-24 px-3 py-2.5 text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl outline-none text-gray-700 dark:text-gray-300"
-          />
+          <input type="number" placeholder="Min ₹" value={filters.minPrice} onChange={(e) => updateFilter("minPrice", e.target.value)} className={`${field} w-28`} aria-label="Minimum price" />
+          <span className="text-muted">–</span>
+          <input type="number" placeholder="Max ₹" value={filters.maxPrice} onChange={(e) => updateFilter("maxPrice", e.target.value)} className={`${field} w-28`} aria-label="Maximum price" />
         </div>
 
-        {/* Sort */}
-        <select
-          value={filters.sort}
-          onChange={(e) => updateFilter("sort", e.target.value)}
-          className="px-3 py-2.5 text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl outline-none text-gray-700 dark:text-gray-300 ml-auto"
-        >
+        {activeFilterCount > 0 && (
+          <button onClick={clearFilters} className="chip">
+            <X size={14} /> Clear {activeFilterCount}
+          </button>
+        )}
+
+        <select value={filters.sort} onChange={(e) => updateFilter("sort", e.target.value)} className={`${field} ml-auto`} aria-label="Sort by">
           {SORT_OPTIONS.map((o) => (
             <option key={o.value} value={o.value}>
               {o.label}
             </option>
           ))}
         </select>
-
-        {/* Clear Filters */}
-        {activeFilterCount > 0 && (
-          <button
-            onClick={clearFilters}
-            className="flex items-center gap-1 px-3 py-2.5 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-colors"
-          >
-            <XMarkIcon className="w-4 h-4" />
-            Clear ({activeFilterCount})
-          </button>
-        )}
       </div>
 
-      {/* Vehicles Grid */}
       {loading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {[...Array(12)].map((_, i) => (
-            <div
-              key={i}
-              className="rounded-2xl overflow-hidden bg-white dark:bg-gray-800"
-            >
-              <div className="shimmer h-48" />
-              <div className="p-4 space-y-2">
-                <div className="shimmer h-4 rounded w-3/4" />
-                <div className="shimmer h-3 rounded w-1/2" />
-                <div className="shimmer h-6 rounded w-1/3 mt-4" />
-              </div>
+        <div className="grid grid-cols-1 gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {[...Array(8)].map((_, i) => (
+            <div key={i}>
+              <div className="shimmer aspect-[4/5] rounded-[20px]" />
+              <div className="shimmer mt-4 h-5 w-2/3 rounded" />
+              <div className="shimmer mt-2 h-3 w-1/3 rounded" />
             </div>
           ))}
         </div>
       ) : vehicles.length === 0 ? (
-        <div className="text-center py-20">
-          <p className="text-6xl mb-4">🔍</p>
-          <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-            No vehicles found
-          </h3>
-          <p className="text-gray-500 mb-4">
-            Try adjusting your filters or search differently
-          </p>
-          <button onClick={clearFilters} className="btn-primary">
-            Clear Filters
+        <div className="border-t border-line/10 py-24">
+          <h3 className="display-tight text-4xl md:text-6xl">Nothing matches that.</h3>
+          <p className="mt-4 max-w-md text-muted">Try a different city, widen the price range or describe what you need in plain words.</p>
+          <button onClick={clearFilters} className="btn-ghost mt-8">
+            Clear filters
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {vehicles.map((v) => (
-            <VehicleCard key={v._id} vehicle={v} />
+        <div className="grid grid-cols-1 gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {vehicles.map((v, i) => (
+            <VehicleCard key={v._id} vehicle={v} index={i} />
           ))}
         </div>
       )}
 
-      {/* Pagination */}
       {pages > 1 && (
-        <div className="flex items-center justify-center gap-2 mt-10">
+        <nav className="mt-20 flex items-center justify-center gap-2" aria-label="Pagination">
           {[...Array(Math.min(pages, 5))].map((_, i) => (
             <button
               key={i}
               onClick={() => updateFilter("page", i + 1)}
-              className={`w-10 h-10 rounded-xl text-sm font-medium transition-colors ${
-                filters.page === i + 1
-                  ? "bg-amber-500 text-white"
-                  : "bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-amber-400"
+              aria-current={filters.page === i + 1 ? "page" : undefined}
+              className={`grid h-11 w-11 place-items-center rounded-full font-mono text-sm transition-colors ${
+                filters.page === i + 1 ? "bg-ink text-canvas" : "border border-line/15 text-muted hover:border-ink hover:text-ink"
               }`}
             >
-              {i + 1}
+              {String(i + 1).padStart(2, "0")}
             </button>
           ))}
-        </div>
+        </nav>
       )}
     </div>
   );

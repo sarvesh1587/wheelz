@@ -3,13 +3,14 @@ import { useNavigate } from "react-router-dom";
 import { vehicleAPI } from "../services/api";
 import LoadingSpinner from "../components/common/LoadingSpinner";
 import {
-  PlusIcon,
-  PencilIcon,
-  TrashIcon,
-  MagnifyingGlassIcon,
-  CheckCircleIcon,
-  XCircleIcon,
-} from "@heroicons/react/24/outline";
+  Plus as PlusIcon,
+  Pencil as PencilIcon,
+  Trash2 as TrashIcon,
+  Search as MagnifyingGlassIcon,
+  CheckCircle2 as CheckCircleIcon,
+  XCircle as XCircleIcon,
+} from "lucide-react";
+import { PageHeader } from "../components/ui";
 import toast from "react-hot-toast";
 
 export default function AdminVehicles() {
@@ -78,50 +79,44 @@ export default function AdminVehicles() {
   if (loading) return <LoadingSpinner />;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8 pt-24">
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            Manage Vehicles
-          </h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">
-            Add, edit, or remove vehicles from inventory
-          </p>
-        </div>
-        <button
-          onClick={() => navigate("/admin/vehicles/add")}
-          className="btn-primary flex items-center gap-2"
-        >
-          <PlusIcon className="w-5 h-5" />
-          Add Vehicle
-        </button>
-      </div>
+    <div className="container-x pb-24 pt-28 md:pt-32">
+      <PageHeader
+        index="01"
+        eyebrow="Admin"
+        title={["Vehicles."]}
+        lede="Add, edit, or remove vehicles from inventory."
+        actions={
+          <button onClick={() => navigate("/admin/vehicles/add")} className="btn-primary">
+            <PlusIcon className="h-4 w-4" /> Add vehicle
+          </button>
+        }
+      />
 
       {/* Search Bar */}
       <div className="mb-6">
         <div className="relative max-w-md">
-          <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+          <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted" />
           <input
             type="text"
             placeholder="Search vehicles..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
+            className="w-full pl-10 pr-4 py-2 rounded-xl border border-line/10 bg-surface"
           />
         </div>
       </div>
 
       {/* Vehicles Grid */}
       {filteredVehicles.length === 0 ? (
-        <div className="text-center py-20 bg-white dark:bg-gray-800 rounded-2xl">
-          <p className="text-gray-500">No vehicles found</p>
+        <div className="text-center py-20 bg-surface rounded-[24px] border border-line/10">
+          <p className="text-muted">No vehicles found</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredVehicles.map((vehicle) => (
             <div
               key={vehicle._id}
-              className="bg-white dark:bg-gray-800 rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100 dark:border-gray-700"
+              className="bg-surface rounded-[24px] overflow-hidden transition-all duration-300 border border-line/10"
             >
               {/* Image */}
               <div className="relative h-48 overflow-hidden">
@@ -135,9 +130,9 @@ export default function AdminVehicles() {
                 />
                 <div className="absolute top-3 left-3">
                   <span
-                    className={`px-2 py-1 rounded-lg text-xs font-semibold ${
+                    className={`px-2 py-1 rounded-xl text-xs font-semibold ${
                       vehicle.isAvailable
-                        ? "bg-green-500 text-white"
+                        ? "bg-ink text-canvas"
                         : "bg-red-500 text-white"
                     }`}
                   >
@@ -150,32 +145,32 @@ export default function AdminVehicles() {
               <div className="p-4">
                 <div className="flex items-start justify-between mb-2">
                   <div>
-                    <h3 className="font-bold text-lg text-gray-900 dark:text-white">
+                    <h3 className="display-tight text-lg text-ink">
                       {vehicle.name}
                     </h3>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-muted">
                       {vehicle.brand} {vehicle.model} • {vehicle.year}
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-2xl font-bold text-amber-500">
+                    <p className="display text-2xl">
                       ₹{vehicle.basePrice.toLocaleString()}
                     </p>
-                    <p className="text-xs text-gray-500">/day</p>
+                    <p className="text-xs text-muted">/day</p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 text-sm text-gray-500 mb-4">
-                  <span>📍 {vehicle.city}</span>
+                <div className="flex items-center gap-2 text-sm text-muted mb-4">
+                  <span>{vehicle.city}</span>
                   <span>•</span>
-                  <span>⭐ {vehicle.averageRating?.toFixed(1) || 0}</span>
+                  <span>{vehicle.averageRating?.toFixed(1) || 0}</span>
                 </div>
 
                 {/* Admin Action Buttons */}
                 <div className="grid grid-cols-3 gap-2">
                   <button
                     onClick={() => handleEditVehicle(vehicle._id)}
-                    className="flex items-center justify-center gap-1 px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition text-sm font-medium"
+                    className="flex items-center justify-center gap-1 px-3 py-2 bg-ink text-canvas hover:bg-accent hover:text-accent-ink rounded-xl transition text-sm font-medium"
                   >
                     <PencilIcon className="w-4 h-4" />
                     Edit
@@ -183,7 +178,7 @@ export default function AdminVehicles() {
 
                   <button
                     onClick={() => handleDeleteVehicle(vehicle._id)}
-                    className="flex items-center justify-center gap-1 px-3 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition text-sm font-medium"
+                    className="flex items-center justify-center gap-1 px-3 py-2 bg-red-500 hover:bg-red-600 text-white rounded-xl transition text-sm font-medium"
                   >
                     <TrashIcon className="w-4 h-4" />
                     Delete
@@ -193,10 +188,10 @@ export default function AdminVehicles() {
                     onClick={() =>
                       handleToggleAvailability(vehicle._id, vehicle.isAvailable)
                     }
-                    className={`flex items-center justify-center gap-1 px-3 py-2 rounded-lg transition text-sm font-medium ${
+                    className={`flex items-center justify-center gap-1 px-3 py-2 rounded-xl transition text-sm font-medium ${
                       vehicle.isAvailable
-                        ? "bg-yellow-500 hover:bg-yellow-600 text-white"
-                        : "bg-green-500 hover:bg-green-600 text-white"
+                        ? "bg-accent hover:bg-ink hover:text-canvas text-accent-ink"
+                        : "bg-ink text-canvas hover:bg-accent hover:text-accent-ink"
                     }`}
                   >
                     {vehicle.isAvailable ? (

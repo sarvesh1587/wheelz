@@ -1,18 +1,22 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom"; // ✅ Add this
+import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { useAuth } from "../context/AuthContext";
+import { AlertTriangle, ArrowUpRight, Check, ShieldCheck, Upload } from "lucide-react";
+import { PageHeader, Panel, StatusPill, Notice, Empty, Spinner, PageLoader } from "../components/ui";
 
 const API =
   process.env.REACT_APP_API_URL || "https://wheelz-ldq2.onrender.com/api";
 
 const FileUploadBox = ({ label, name, onChange, file }) => (
-  <div className="flex flex-col gap-1">
-    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-      {label}
-    </label>
-    <label className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-4 flex flex-col items-center justify-center cursor-pointer hover:border-amber-500 transition-colors bg-gray-50 dark:bg-gray-800">
+  <div className="flex flex-col gap-2">
+    <span className="field-label">{label}</span>
+    <label
+      className={`group flex aspect-[16/10] cursor-pointer flex-col items-center justify-center rounded-[20px] border border-dashed p-4 text-center transition-colors ${
+        file ? "border-accent bg-accent/5" : "border-line/25 hover:border-ink"
+      }`}
+    >
       <input
         type="file"
         name={name}
@@ -21,59 +25,41 @@ const FileUploadBox = ({ label, name, onChange, file }) => (
         onChange={onChange}
       />
       {file ? (
-        <div className="text-center">
-          <span className="text-green-500 text-2xl">✅</span>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 truncate max-w-[180px]">
-            {file.name}
-          </p>
-        </div>
+        <>
+          <span className="mb-3 grid h-9 w-9 place-items-center rounded-full bg-accent text-accent-ink">
+            <Check size={16} strokeWidth={2.5} />
+          </span>
+          <p className="max-w-[180px] truncate text-sm">{file.name}</p>
+          <p className="mt-1 text-xs text-muted">Click to replace</p>
+        </>
       ) : (
-        <div className="text-center">
-          <span className="text-3xl">📄</span>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            Click to upload
-          </p>
-          <p className="text-xs text-gray-400 mt-0.5">
+        <>
+          <Upload size={20} strokeWidth={1.5} className="mb-3 text-muted transition-colors group-hover:text-ink" />
+          <p className="text-sm">Click to upload</p>
+          <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.14em] text-muted">
             JPG, PNG or PDF · Max 5MB
           </p>
-        </div>
+        </>
       )}
     </label>
   </div>
 );
 
+const STATUS_LABELS = {
+  not_submitted: { tone: "neutral", label: "Not submitted" },
+  pending: { tone: "pending", label: "Under review" },
+  verified: { tone: "positive", label: "Verified" },
+  rejected: { tone: "negative", label: "Rejected" },
+};
+
 const StatusBadge = ({ status }) => {
-  const config = {
-    not_submitted: {
-      color: "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300",
-      label: "Not Submitted",
-    },
-    pending: {
-      color:
-        "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",
-      label: "⏳ Under Review",
-    },
-    verified: {
-      color:
-        "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
-      label: "✅ Verified",
-    },
-    rejected: {
-      color: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
-      label: "❌ Rejected",
-    },
-  };
-  const { color, label } = config[status] || config.not_submitted;
-  return (
-    <span className={`px-3 py-1 rounded-full text-sm font-semibold ${color}`}>
-      {label}
-    </span>
-  );
+  const { tone, label } = STATUS_LABELS[status] || STATUS_LABELS.not_submitted;
+  return <StatusPill tone={tone}>{label}</StatusPill>;
 };
 
 export default function KYCUpload() {
-  const { user } = useAuth(); // ✅ Now this will work
-  const navigate = useNavigate(); // ✅ Add navigate
+  const { user } = useAuth(); // Now this will work
+  const navigate = useNavigate(); // Add navigate
   const [kycStatus, setKycStatus] = useState(null);
   const [rejectionReason, setRejectionReason] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -181,7 +167,7 @@ export default function KYCUpload() {
         aadhaarBack: null,
       });
 
-      // ✅ Redirect to home after 2 seconds
+      // Redirect to home after 2 seconds
       setTimeout(() => {
         navigate("/");
       }, 2000);
@@ -194,78 +180,55 @@ export default function KYCUpload() {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen pt-20">
-        <div className="animate-spin w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full" />
-      </div>
-    );
+    return <PageLoader label="Checking KYC" />;
   }
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-10 pt-24">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-          KYC Verification
-        </h1>
-        <p className="text-gray-500 dark:text-gray-400 mt-1">
-          Verify your identity to unlock vehicle bookings
-        </p>
-        <div className="mt-3 flex items-center gap-2">
-          <span className="text-sm text-gray-600 dark:text-gray-400">
-            Status:
+    <div className="container-x pb-24 pt-28 md:pt-32">
+      <PageHeader
+        index="01"
+        eyebrow="Identity"
+        title={["KYC", "verification."]}
+        lede="Verify your identity to unlock vehicle bookings."
+        actions={
+          <span className="flex items-center gap-3 text-sm text-muted">
+            Status <StatusBadge status={kycStatus || "not_submitted"} />
           </span>
-          <StatusBadge status={kycStatus || "not_submitted"} />
-        </div>
-      </div>
+        }
+      />
 
-      {kycStatus === "verified" && (
-        <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-2xl p-6 text-center">
-          <div className="text-5xl mb-3">🎉</div>
-          <h2 className="text-lg font-semibold text-green-700 dark:text-green-400">
-            You're Verified!
-          </h2>
-          <p className="text-green-600 dark:text-green-500 mt-1">
+      <div className="max-w-3xl">
+        {kycStatus === "verified" && (
+          <Empty
+            title="You're verified."
+            action={
+              <Link to="/vehicles" className="btn-primary">
+                Book a ride <ArrowUpRight size={16} />
+              </Link>
+            }
+          >
             Your KYC is complete. You can now book any vehicle on Wheelz.
-          </p>
-        </div>
-      )}
+          </Empty>
+        )}
 
-      {kycStatus === "pending" && (
-        <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-2xl p-6 text-center">
-          <div className="text-5xl mb-3">⏳</div>
-          <h2 className="text-lg font-semibold text-yellow-700 dark:text-yellow-400">
-            Under Review
-          </h2>
-          <p className="text-yellow-600 dark:text-yellow-500 mt-1">
-            Your documents are being reviewed. This usually takes up to 24
-            hours.
-          </p>
-        </div>
-      )}
+        {kycStatus === "pending" && (
+          <Empty title="Under review.">
+            Your documents are being reviewed. This usually takes up to 24 hours.
+          </Empty>
+        )}
 
-      {kycStatus === "rejected" && (
-        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-2xl p-4 mb-6">
-          <p className="text-red-700 dark:text-red-400 font-medium">
-            ❌ KYC Rejected
-          </p>
-          <p className="text-red-600 dark:text-red-500 text-sm mt-1">
+        {kycStatus === "rejected" && (
+          <Notice tone="negative" icon={AlertTriangle} title="KYC rejected" className="mb-10">
             Reason: {rejectionReason}. Please re-upload correct documents.
-          </p>
-        </div>
-      )}
+          </Notice>
+        )}
 
-      {(kycStatus === "not_submitted" ||
-        kycStatus === "rejected" ||
-        !kycStatus) && (
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-6 space-y-4">
-            <h2 className="font-semibold text-gray-800 dark:text-white flex items-center gap-2">
-              🪪 Driving License
-            </h2>
-            <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                License Number
-              </label>
+        {(kycStatus === "not_submitted" ||
+          kycStatus === "rejected" ||
+          !kycStatus) && (
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <Panel index="01" title="Driving license">
+              <label className="field-label">License number</label>
               <input
                 type="text"
                 name="licenseNumber"
@@ -273,33 +236,26 @@ export default function KYCUpload() {
                 onChange={handleInputChange}
                 placeholder="e.g. MH0120200012345"
                 required
-                className="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                className="field font-mono uppercase"
               />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <FileUploadBox
-                label="Front Side"
-                name="drivingLicenseFront"
-                onChange={handleFileChange}
-                file={files.drivingLicenseFront}
-              />
-              <FileUploadBox
-                label="Back Side"
-                name="drivingLicenseBack"
-                onChange={handleFileChange}
-                file={files.drivingLicenseBack}
-              />
-            </div>
-          </div>
+              <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <FileUploadBox
+                  label="Front side"
+                  name="drivingLicenseFront"
+                  onChange={handleFileChange}
+                  file={files.drivingLicenseFront}
+                />
+                <FileUploadBox
+                  label="Back side"
+                  name="drivingLicenseBack"
+                  onChange={handleFileChange}
+                  file={files.drivingLicenseBack}
+                />
+              </div>
+            </Panel>
 
-          <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-6 space-y-4">
-            <h2 className="font-semibold text-gray-800 dark:text-white flex items-center gap-2">
-              📋 Aadhaar Card
-            </h2>
-            <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Aadhaar Number
-              </label>
+            <Panel index="02" title="Aadhaar card">
+              <label className="field-label">Aadhaar number</label>
               <input
                 type="text"
                 name="aadhaarNumber"
@@ -308,46 +264,44 @@ export default function KYCUpload() {
                 placeholder="12-digit Aadhaar number"
                 maxLength={12}
                 required
-                className="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                className="field font-mono"
               />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <FileUploadBox
-                label="Front Side"
-                name="aadhaarFront"
-                onChange={handleFileChange}
-                file={files.aadhaarFront}
-              />
-              <FileUploadBox
-                label="Back Side"
-                name="aadhaarBack"
-                onChange={handleFileChange}
-                file={files.aadhaarBack}
-              />
-            </div>
-          </div>
+              <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <FileUploadBox
+                  label="Front side"
+                  name="aadhaarFront"
+                  onChange={handleFileChange}
+                  file={files.aadhaarFront}
+                />
+                <FileUploadBox
+                  label="Back side"
+                  name="aadhaarBack"
+                  onChange={handleFileChange}
+                  file={files.aadhaarBack}
+                />
+              </div>
+            </Panel>
 
-          <p className="text-xs text-gray-400 dark:text-gray-500 text-center">
-            🔒 Your documents are securely stored and only used for identity
-            verification.
-          </p>
-
-          <button
-            type="submit"
-            disabled={submitting}
-            className="w-full py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 disabled:opacity-50 text-white font-semibold rounded-xl transition-all flex items-center justify-center gap-2"
-          >
-            {submitting ? (
-              <>
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                Submitting...
-              </>
-            ) : (
-              "Submit KYC Documents"
-            )}
-          </button>
-        </form>
-      )}
+            <div className="flex flex-col gap-4 pt-4 sm:flex-row sm:items-center sm:justify-between">
+              <p className="flex items-center gap-2 text-xs text-muted">
+                <ShieldCheck size={14} className="text-accent" />
+                Your documents are securely stored and only used for identity verification.
+              </p>
+              <button type="submit" disabled={submitting} className="btn-primary !py-4">
+                {submitting ? (
+                  <>
+                    <Spinner /> Submitting…
+                  </>
+                ) : (
+                  <>
+                    Submit KYC documents <ArrowUpRight size={16} />
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
+        )}
+      </div>
     </div>
   );
 }

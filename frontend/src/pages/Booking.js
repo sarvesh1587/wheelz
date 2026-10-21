@@ -1,20 +1,25 @@
 // frontend/src/pages/Booking.jsx - WITH HOURLY RENTAL SUPPORT
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { vehicleAPI, bookingAPI, promoAPI } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import LoadingSpinner from "../components/common/LoadingSpinner";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import toast from "react-hot-toast";
-import {
-  CalendarIcon,
-  ShieldCheckIcon,
-  MapPinIcon,
-  UserGroupIcon,
-  SparklesIcon,
-  TicketIcon,
-} from "@heroicons/react/24/outline";
+import { ArrowLeft, ArrowUpRight, Check, MapPin, Ticket, X } from "lucide-react";
+import { Magnetic } from "../components/motion";
+import { PageHeader, Panel, Row, Segmented, Spinner, Notice } from "../components/ui";
+
+const EXTRAS = [
+  { key: "insurance", label: "Zero Dep Insurance", price: 200, description: "Full coverage" },
+  { key: "gps", label: "GPS Navigation", price: 100, description: "Never get lost" },
+  { key: "childSeat", label: "Child Seat", price: 150, description: "Safe for kids" },
+  { key: "driver", label: "Professional Driver", price: 500, description: "Experienced driver" },
+];
+
+const dateField =
+  "w-full rounded-none border-0 border-b border-line/20 bg-transparent px-0 py-3 text-base text-ink outline-none transition-colors placeholder:text-muted/70 focus:border-ink";
 
 export default function Booking() {
   const { id } = useParams();
@@ -142,7 +147,7 @@ export default function Booking() {
         setAppliedPromo(res.data.promo);
         setPromoDiscount(res.data.promo.discountAmount);
         toast.success(
-          `🎉 Promo applied! You save ₹${res.data.promo.discountAmount}`,
+          `Promo applied! You save ₹${res.data.promo.discountAmount}`,
         );
       }
     } catch (error) {
@@ -200,7 +205,7 @@ export default function Booking() {
     try {
       await Promise.race([bookingAPI.create(bookingData), timeoutPromise]);
       toast.dismiss(toastId);
-      toast.success("Booking confirmed! 🎉");
+      toast.success("Booking confirmed!");
       setTimeout(() => navigate("/dashboard"), 1500);
     } catch (err) {
       console.error("Booking error:", err);
@@ -221,225 +226,155 @@ export default function Booking() {
   if (loading) return <LoadingSpinner />;
   if (!vehicle) return null;
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-950 py-8 pt-24">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400 bg-clip-text text-transparent">
-            Complete Your Booking
-          </h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-2">
-            Fill in the details to rent your dream ride
-          </p>
-        </div>
+  const canConfirm = !(
+    creatingBooking ||
+    !startDate ||
+    (rentalType === "daily" && !endDate) ||
+    (availability && !availability.isAvailable)
+  );
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* ── Left Column ── */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Vehicle Summary Card */}
-            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg border border-gray-100 dark:border-gray-700">
-              <div className="flex gap-4">
-                <img
-                  src={vehicle.images?.[0]}
-                  alt={vehicle.name}
-                  className="w-24 h-24 rounded-xl object-cover"
-                />
-                <div className="flex-1">
-                  <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-                    {vehicle.name}
-                  </h2>
-                  <p className="text-gray-500 text-sm">
-                    {vehicle.brand} • {vehicle.year} • {vehicle.city}
-                  </p>
-                  <div className="flex items-center gap-2 mt-2">
-                    <span className="text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-2 py-0.5 rounded-full">
-                      {vehicle.isAvailable ? "Available" : "Booked"}
-                    </span>
-                    <span className="text-xs bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 px-2 py-0.5 rounded-full">
-                      ₹{pricePerDay}/day • ₹{hourlyRate}/hr
-                    </span>
-                  </div>
+  return (
+    <div className="container-x pb-24 pt-28 md:pt-32">
+      <Link
+        to={`/vehicles/${id}`}
+        className="link-underline mb-8 inline-flex items-center gap-2 text-sm text-muted hover:text-ink"
+      >
+        <ArrowLeft size={14} /> Back to vehicle
+      </Link>
+
+      <PageHeader
+        index="01"
+        eyebrow="Checkout"
+        title={["Complete", "your booking."]}
+        lede="Pick your dates, add what you need, and lock it in."
+      />
+
+      <div className="grid gap-10 lg:grid-cols-12">
+        <div className="space-y-6 lg:col-span-7">
+          <Panel>
+            <div className="flex gap-5">
+              <img
+                src={vehicle.images?.[0]}
+                alt={vehicle.name}
+                className="h-24 w-32 shrink-0 rounded-2xl bg-raised object-cover"
+              />
+              <div className="min-w-0 flex-1">
+                <p className="eyebrow mb-2">
+                  {vehicle.brand} · {vehicle.year}
+                </p>
+                <h2 className="display-tight text-2xl md:text-3xl">{vehicle.name}</h2>
+                <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-muted">
+                  <span className="flex items-center gap-1.5">
+                    <MapPin size={14} /> {vehicle.city}
+                  </span>
+                  <span className="flex items-center gap-2">
+                    <span className={`h-2 w-2 rounded-full ${vehicle.isAvailable ? "bg-emerald-400" : "bg-line/30"}`} />
+                    {vehicle.isAvailable ? "Available" : "Booked"}
+                  </span>
+                  <span className="font-mono text-xs">
+                    ₹{pricePerDay}/day · ₹{hourlyRate}/hr
+                  </span>
                 </div>
               </div>
             </div>
+          </Panel>
 
-            {/* Date Selection Card */}
-            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg border border-gray-100 dark:border-gray-700">
-              <h3 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                <CalendarIcon className="w-5 h-5 text-amber-500" />
-                Select Rental Type & Dates
-              </h3>
+          <Panel index="02" title="Rental type & dates">
+            <Segmented
+              value={rentalType}
+              onChange={setRentalType}
+              options={[
+                { value: "daily", label: "Daily" },
+                { value: "hourly", label: "Hourly" },
+              ]}
+              className="mb-8"
+            />
 
-              {/* ── Rental Type Toggle ── */}
-              <div className="flex gap-2 mb-5">
-                {[
-                  { key: "daily", label: "📅 Daily Rental" },
-                  { key: "hourly", label: "⏱️ Hourly Rental" },
-                ].map(({ key, label }) => (
-                  <button
-                    key={key}
-                    type="button"
-                    onClick={() => setRentalType(key)}
-                    className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all ${
-                      rentalType === key
-                        ? "bg-amber-500 text-white shadow-md shadow-amber-500/30"
-                        : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-amber-50 dark:hover:bg-gray-600"
-                    }`}
-                  >
-                    {label}
-                  </button>
-                ))}
+            {rentalType === "hourly" && (
+              <div className="mb-8">
+                <p className="field-label mb-3">Duration</p>
+                <div className="flex flex-wrap gap-2">
+                  {[3, 4, 5, 6, 8, 10, 12].map((h) => (
+                    <button
+                      key={h}
+                      type="button"
+                      onClick={() => setSelectedHours(h)}
+                      aria-pressed={selectedHours === h}
+                      className={`grid h-11 min-w-[3.5rem] place-items-center rounded-full px-4 font-mono text-sm transition-colors ${
+                        selectedHours === h
+                          ? "bg-ink text-canvas"
+                          : "border border-line/15 text-muted hover:border-ink hover:text-ink"
+                      }`}
+                    >
+                      {h}h
+                    </button>
+                  ))}
+                </div>
+                <p className="mt-3 text-xs text-muted">
+                  ₹{hourlyRate}/hr (daily rate ÷ 4) · Minimum 3 hours
+                </p>
+              </div>
+            )}
+
+            <div className={`grid grid-cols-1 gap-8 ${rentalType === "daily" ? "md:grid-cols-2" : ""}`}>
+              <div>
+                <label className="field-label">Pickup date</label>
+                <DatePicker
+                  selected={startDate}
+                  onChange={setStartDate}
+                  selectsStart
+                  startDate={startDate}
+                  endDate={rentalType === "daily" ? endDate : null}
+                  minDate={new Date()}
+                  className={dateField}
+                  dateFormat="dd/MM/yyyy"
+                  placeholderText="Select pickup date"
+                />
               </div>
 
-              {/* ── Hourly Duration Picker ── */}
-              {rentalType === "hourly" && (
-                <div className="mb-5 p-4 bg-amber-50 dark:bg-amber-900/10 rounded-xl border border-amber-200 dark:border-amber-800/30">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                    Select Duration
-                  </label>
-                  <div className="flex flex-wrap gap-2">
-                    {[3, 4, 5, 6, 8, 10, 12].map((h) => (
-                      <button
-                        key={h}
-                        type="button"
-                        onClick={() => setSelectedHours(h)}
-                        className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
-                          selectedHours === h
-                            ? "bg-amber-500 text-white shadow-sm"
-                            : "bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-600 hover:border-amber-400"
-                        }`}
-                      >
-                        {h}h
-                      </button>
-                    ))}
-                  </div>
-                  <p className="text-xs text-amber-600 dark:text-amber-400 mt-2">
-                    ₹{hourlyRate}/hr (daily rate ÷ 4) • Minimum 3 hours
-                  </p>
-                </div>
-              )}
-
-              {/* ── Date Pickers ── */}
-              <div
-                className={`grid grid-cols-1 ${rentalType === "daily" ? "md:grid-cols-2" : ""} gap-4`}
-              >
+              {rentalType === "daily" && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    {rentalType === "hourly" ? "Pickup Date" : "Pickup Date"}
-                  </label>
+                  <label className="field-label">Return date</label>
                   <DatePicker
-                    selected={startDate}
-                    onChange={setStartDate}
-                    selectsStart
+                    selected={endDate}
+                    onChange={setEndDate}
+                    selectsEnd
                     startDate={startDate}
-                    endDate={rentalType === "daily" ? endDate : null}
-                    minDate={new Date()}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-amber-500"
+                    endDate={endDate}
+                    minDate={startDate || new Date()}
+                    className={dateField}
                     dateFormat="dd/MM/yyyy"
-                    placeholderText="Select pickup date"
+                    placeholderText="Select return date"
                   />
                 </div>
-
-                {rentalType === "daily" && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Return Date
-                    </label>
-                    <DatePicker
-                      selected={endDate}
-                      onChange={setEndDate}
-                      selectsEnd
-                      startDate={startDate}
-                      endDate={endDate}
-                      minDate={startDate || new Date()}
-                      className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-amber-500"
-                      dateFormat="dd/MM/yyyy"
-                      placeholderText="Select return date"
-                    />
-                  </div>
-                )}
-              </div>
-
-              {checkingAvailability && (
-                <div className="mt-4 flex items-center justify-center gap-2 text-amber-500">
-                  <div className="w-4 h-4 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
-                  <span className="text-sm">Checking availability...</span>
-                </div>
-              )}
-
-              {availability && availability.isAvailable === false && (
-                <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/20 rounded-lg text-red-600 dark:text-red-400 text-sm text-center">
-                  ⚠️ Vehicle not available for selected dates
-                </div>
-              )}
-
-              {availability && availability.isAvailable === true && (
-                <div className="mt-4 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg text-green-600 dark:text-green-400 text-sm text-center">
-                  ✅ Vehicle available! You can proceed.
-                </div>
               )}
             </div>
 
-            {/* Extras Card */}
-            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg border border-gray-100 dark:border-gray-700">
-              <h3 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                <SparklesIcon className="w-5 h-5 text-amber-500" />
-                Add Extras
-              </h3>
-              <div className="space-y-3">
-                {[
-                  {
-                    key: "insurance",
-                    label: "Zero Dep Insurance",
-                    price: 200,
-                    description: "Full coverage",
-                  },
-                  {
-                    key: "gps",
-                    label: "GPS Navigation",
-                    price: 100,
-                    description: "Never get lost",
-                  },
-                  {
-                    key: "childSeat",
-                    label: "Child Seat",
-                    price: 150,
-                    description: "Safe for kids",
-                  },
-                  {
-                    key: "driver",
-                    label: "Professional Driver",
-                    price: 500,
-                    description: "Experienced driver",
-                  },
-                ].map((extra) => (
-                  <label
-                    key={extra.key}
-                    className={`flex items-center justify-between p-4 rounded-xl cursor-pointer transition-all duration-200 ${
-                      extras[extra.key]
-                        ? "bg-amber-50 dark:bg-amber-900/20 border-2 border-amber-500"
-                        : "bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 hover:border-amber-300"
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div>
-                        <div className="font-medium text-sm text-gray-900 dark:text-white">
-                          {extra.label}
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          {extra.description}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="text-right">
-                        <div className="font-bold text-amber-600 dark:text-amber-400">
-                          +₹{extra.price}
-                        </div>
-                        <div className="text-xs text-gray-400">
-                          {rentalType === "hourly" ? "/booking" : "/day"}
-                        </div>
-                      </div>
+            {checkingAvailability && (
+              <p className="mt-6 flex items-center gap-2 text-sm text-muted">
+                <Spinner /> Checking availability…
+              </p>
+            )}
+
+            {availability && availability.isAvailable === false && (
+              <Notice tone="negative" className="mt-6">
+                Vehicle not available for selected dates
+              </Notice>
+            )}
+
+            {availability && availability.isAvailable === true && (
+              <Notice tone="positive" className="mt-6">
+                Vehicle available. You can proceed.
+              </Notice>
+            )}
+          </Panel>
+
+          <Panel index="03" title="Extras">
+            <ul className="border-t border-line/10">
+              {EXTRAS.map((extra) => (
+                <li key={extra.key}>
+                  <label className="group flex cursor-pointer items-center justify-between gap-4 border-b border-line/10 py-5">
+                    <span className="flex items-center gap-4">
                       <input
                         type="checkbox"
                         checked={extras[extra.key]}
@@ -449,207 +384,155 @@ export default function Booking() {
                             [extra.key]: e.target.checked,
                           })
                         }
-                        className="w-5 h-5 rounded border-gray-300 text-amber-500 focus:ring-amber-500"
+                        className="peer sr-only"
                       />
-                    </div>
+                      <span
+                        className={`grid h-6 w-6 shrink-0 place-items-center rounded-full border transition-colors peer-focus-visible:ring-2 peer-focus-visible:ring-accent ${
+                          extras[extra.key]
+                            ? "border-accent bg-accent text-accent-ink"
+                            : "border-line/25 group-hover:border-ink"
+                        }`}
+                      >
+                        {extras[extra.key] && <Check size={13} strokeWidth={3} />}
+                      </span>
+                      <span>
+                        <span className="block font-medium">{extra.label}</span>
+                        <span className="block text-xs text-muted">{extra.description}</span>
+                      </span>
+                    </span>
+                    <span className="text-right">
+                      <span className="block font-mono text-sm">+₹{extra.price}</span>
+                      <span className="block text-xs text-muted">
+                        {rentalType === "hourly" ? "per booking" : "per day"}
+                      </span>
+                    </span>
                   </label>
-                ))}
+                </li>
+              ))}
+            </ul>
+          </Panel>
+        </div>
+
+        <aside className="lg:col-span-5">
+          <div className="sticky top-28 rounded-[24px] border border-line/10 bg-surface p-6 md:p-8">
+            <p className="eyebrow mb-4">Price summary</p>
+
+            <div>
+              {rentalType === "daily" ? (
+                <>
+                  <Row label="Rental days">
+                    {totalDays} {totalDays === 1 ? "day" : "days"}
+                  </Row>
+                  <Row label="Price per day">₹{pricePerDay.toLocaleString()}</Row>
+                  <Row label="Subtotal">₹{subtotal.toLocaleString()}</Row>
+                </>
+              ) : (
+                <>
+                  <Row label="Duration">{selectedHours} hours</Row>
+                  <Row label="Hourly rate">₹{hourlyRate}/hr</Row>
+                  <Row label={`₹${hourlyRate} × ${selectedHours} hrs`}>₹{subtotal.toLocaleString()}</Row>
+                </>
+              )}
+
+              {extrasPerDay > 0 && (
+                <Row label={`Extras${rentalType === "daily" ? ` (${totalDays} days)` : ""}`}>
+                  +₹{extrasTotal.toLocaleString()}
+                </Row>
+              )}
+
+              {promoDiscount > 0 && (
+                <Row label="Promo discount">
+                  <span className="text-accent">-₹{promoDiscount.toLocaleString()}</span>
+                </Row>
+              )}
+            </div>
+
+            <div className="mt-6">
+              <label className="field-label flex items-center gap-2">
+                <Ticket size={12} /> Promo code
+              </label>
+              <div className="flex items-end gap-3">
+                <input
+                  type="text"
+                  value={promoCode}
+                  onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                  placeholder="Enter code"
+                  disabled={!!appliedPromo}
+                  className="field flex-1 font-mono uppercase disabled:opacity-60"
+                />
+                {appliedPromo ? (
+                  <button
+                    onClick={removePromo}
+                    aria-label="Remove promo code"
+                    className="grid h-10 w-10 place-items-center rounded-full border border-line/15 transition-colors hover:border-ink"
+                  >
+                    <X size={14} />
+                  </button>
+                ) : (
+                  <button
+                    onClick={applyPromoCode}
+                    disabled={!promoCode || applyingPromo}
+                    className="btn-ghost !px-5 !py-2.5"
+                  >
+                    {applyingPromo ? <Spinner /> : "Apply"}
+                  </button>
+                )}
+              </div>
+
+              {appliedPromo && (
+                <p className="mt-3 flex items-center justify-between text-xs">
+                  <span className="flex items-center gap-1.5 text-muted">
+                    <Check size={12} className="text-accent" /> {appliedPromo.code} applied
+                  </span>
+                  <span className="font-mono text-accent">-₹{promoDiscount.toLocaleString()}</span>
+                </p>
+              )}
+
+              {!appliedPromo && (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {["WELCOME50", "FLAT100", "FESTIVAL200"].map((code) => (
+                    <button key={code} onClick={() => setPromoCode(code)} className="chip font-mono !text-[11px]">
+                      {code}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="mt-8 flex items-end justify-between border-t border-line/10 pt-6">
+              <span className="eyebrow">Total</span>
+              <div className="text-right">
+                {promoDiscount > 0 && (
+                  <span className="block text-sm text-muted line-through">
+                    ₹{(subtotal + extrasTotal).toLocaleString()}
+                  </span>
+                )}
+                <span className="display text-5xl">₹{total.toLocaleString()}</span>
+                <p className="mt-1 text-xs text-muted">incl. all taxes</p>
               </div>
             </div>
-          </div>
 
-          {/* ── Right Column: Price Summary ── */}
-          <div className="lg:col-span-1">
-            <div className="sticky top-24 bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg border border-gray-100 dark:border-gray-700">
-              <h3 className="font-semibold text-lg text-gray-900 dark:text-white mb-4">
-                Price Summary
-              </h3>
-
-              <div className="space-y-3 text-sm">
-                {/* ── Daily vs Hourly breakdown ── */}
-                {rentalType === "daily" ? (
-                  <>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600 dark:text-gray-400">
-                        Rental Days
-                      </span>
-                      <span className="font-medium">
-                        {totalDays} {totalDays === 1 ? "day" : "days"}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600 dark:text-gray-400">
-                        Price per day
-                      </span>
-                      <span className="font-medium">
-                        ₹{pricePerDay.toLocaleString()}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600 dark:text-gray-400">
-                        Subtotal
-                      </span>
-                      <span className="font-medium">
-                        ₹{subtotal.toLocaleString()}
-                      </span>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600 dark:text-gray-400">
-                        Duration
-                      </span>
-                      <span className="font-medium">{selectedHours} hours</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600 dark:text-gray-400">
-                        Hourly rate
-                      </span>
-                      <span className="font-medium">₹{hourlyRate}/hr</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600 dark:text-gray-400">
-                        ₹{hourlyRate} × {selectedHours} hrs
-                      </span>
-                      <span className="font-medium">
-                        ₹{subtotal.toLocaleString()}
-                      </span>
-                    </div>
-                  </>
-                )}
-
-                {extrasPerDay > 0 && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">
-                      Extras
-                      {rentalType === "daily" ? ` (${totalDays} days)` : ""}
-                    </span>
-                    <span className="font-medium text-amber-600">
-                      +₹{extrasTotal.toLocaleString()}
-                    </span>
-                  </div>
-                )}
-
-                {/* ── Promo Code Section ── */}
-                <div className="border-t border-gray-200 dark:border-gray-700 pt-3 mt-3">
-                  <label className="text-xs font-medium text-gray-500 mb-2 flex items-center gap-1">
-                    <TicketIcon className="w-3.5 h-3.5" /> Promo Code
-                  </label>
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={promoCode}
-                      onChange={(e) =>
-                        setPromoCode(e.target.value.toUpperCase())
-                      }
-                      placeholder="Enter code"
-                      disabled={!!appliedPromo}
-                      className="flex-1 px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 uppercase focus:outline-none focus:ring-1 focus:ring-amber-500 disabled:opacity-50"
-                    />
-                    {appliedPromo ? (
-                      <button
-                        onClick={removePromo}
-                        className="px-3 py-2 text-xs bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
-                      >
-                        ✕
-                      </button>
-                    ) : (
-                      <button
-                        onClick={applyPromoCode}
-                        disabled={!promoCode || applyingPromo}
-                        className="px-3 py-2 text-xs bg-amber-500 text-white rounded-lg hover:bg-amber-600 disabled:opacity-50 transition-colors"
-                      >
-                        {applyingPromo ? "..." : "Apply"}
-                      </button>
-                    )}
-                  </div>
-
-                  {appliedPromo && (
-                    <div className="mt-2 flex justify-between items-center bg-green-50 dark:bg-green-900/20 p-2 rounded-lg">
-                      <span className="text-xs text-green-700 dark:text-green-400">
-                        ✅ {appliedPromo.code} applied
-                      </span>
-                      <span className="text-xs font-bold text-green-700 dark:text-green-400">
-                        -₹{promoDiscount.toLocaleString()}
-                      </span>
-                    </div>
-                  )}
-
-                  {!appliedPromo && (
-                    <div className="flex flex-wrap gap-1 mt-2">
-                      {["WELCOME50", "FLAT100", "FESTIVAL200"].map((code) => (
-                        <button
-                          key={code}
-                          onClick={() => setPromoCode(code)}
-                          className="text-[10px] bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 px-2 py-1 rounded-full hover:bg-amber-200 transition-colors"
-                        >
-                          {code}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {promoDiscount > 0 && (
-                  <div className="flex justify-between text-sm">
-                    <span className="text-green-600 dark:text-green-400">
-                      Promo Discount
-                    </span>
-                    <span className="font-medium text-green-600 dark:text-green-400">
-                      -₹{promoDiscount.toLocaleString()}
-                    </span>
-                  </div>
-                )}
-
-                {/* ── Total ── */}
-                <div className="border-t border-gray-200 dark:border-gray-700 pt-3 mt-3">
-                  <div className="flex justify-between items-center">
-                    <span className="font-bold text-gray-900 dark:text-white">
-                      Total
-                    </span>
-                    <div className="text-right">
-                      {promoDiscount > 0 && (
-                        <span className="text-xs text-gray-400 line-through block">
-                          ₹{(subtotal + extrasTotal).toLocaleString()}
-                        </span>
-                      )}
-                      <span className="text-2xl font-bold text-amber-500">
-                        ₹{total.toLocaleString()}
-                      </span>
-                      <p className="text-xs text-gray-500">incl. all taxes</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* ── Confirm Button ── */}
+            <Magnetic strength={0.15} className="mt-8 w-full">
               <button
                 onClick={handleCreateBooking}
-                disabled={
-                  creatingBooking ||
-                  !startDate ||
-                  (rentalType === "daily" && !endDate) ||
-                  (availability && !availability.isAvailable)
-                }
-                className="w-full bg-gradient-to-r from-amber-500 to-amber-600 text-white py-3 rounded-xl font-semibold mt-6 disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg transition-all"
+                disabled={!canConfirm}
+                className="btn-primary w-full !py-4 text-base disabled:cursor-not-allowed"
               >
                 {creatingBooking ? (
-                  <div className="flex items-center justify-center gap-2">
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    Creating Booking...
-                  </div>
+                  <>
+                    <Spinner /> Creating booking…
+                  </>
                 ) : (
-                  `Confirm Booking • ₹${total.toLocaleString()}`
+                  <>
+                    Confirm booking · ₹{total.toLocaleString()} <ArrowUpRight size={18} />
+                  </>
                 )}
               </button>
+            </Magnetic>
 
-              <p className="text-xs text-center text-gray-500 mt-4">
-                If it takes too long, check your dashboard
-              </p>
-            </div>
+            <p className="mt-4 text-center text-xs text-muted">If it takes too long, check your dashboard</p>
           </div>
-        </div>
+        </aside>
       </div>
     </div>
   );

@@ -9,13 +9,13 @@ import { promoAPI } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import toast from "react-hot-toast";
 import {
-  UserGroupIcon,
-  CurrencyRupeeIcon,
-  ClipboardDocumentIcon,
-  ShareIcon,
-  GiftIcon,
-  ArrowTrendingUpIcon,
-} from "@heroicons/react/24/outline";
+  Users as UserGroupIcon,
+  IndianRupee as CurrencyRupeeIcon,
+  Clipboard as ClipboardDocumentIcon,
+  Share2 as ShareIcon,
+  Gift as GiftIcon,
+  TrendingUp as ArrowTrendingUpIcon,
+} from "lucide-react";
 
 export default function ReferralDashboard() {
   const { user } = useAuth();
@@ -59,13 +59,13 @@ export default function ReferralDashboard() {
 
   const shareOnWhatsApp = () => {
     const link = `https://wheelz-sand.vercel.app/register?ref=${referralCode}`;
-    const text = `🚗 Join Wheelz - India's smartest vehicle rental & ridesharing platform!\n\nUse my referral code *${referralCode}* and get ₹100 FREE!\n\n👉 ${link}`;
+    const text = `Join Wheelz - India's smartest vehicle rental & ridesharing platform!\n\nUse my referral code *${referralCode}* and get ₹100 FREE!\n\n${link}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
   };
 
   if (loading) {
     return (
-      <div className="animate-pulse bg-white dark:bg-gray-800 rounded-2xl p-6 h-64" />
+      <div className="animate-pulse bg-surface rounded-[24px] p-6 h-64 border border-line/10" />
     );
   }
 
@@ -76,7 +76,7 @@ export default function ReferralDashboard() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-gradient-to-br from-amber-500 to-amber-600 rounded-2xl p-5 text-white"
+          className="bg-accent rounded-2xl p-5 text-accent-ink"
         >
           <UserGroupIcon className="w-8 h-8 mb-2 opacity-80" />
           <p className="text-3xl font-bold">{stats?.totalReferrals || 0}</p>
@@ -86,7 +86,7 @@ export default function ReferralDashboard() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-5 text-white"
+          className="bg-raised rounded-2xl p-5 text-white"
         >
           <CurrencyRupeeIcon className="w-8 h-8 mb-2 opacity-80" />
           <p className="text-3xl font-bold">₹{stats?.totalEarned || 0}</p>
@@ -96,7 +96,7 @@ export default function ReferralDashboard() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-5 text-white"
+          className="bg-raised rounded-2xl p-5 text-white"
         >
           <ArrowTrendingUpIcon className="w-8 h-8 mb-2 opacity-80" />
           <p className="text-3xl font-bold">{stats?.pendingReferrals || 0}</p>
@@ -109,24 +109,24 @@ export default function ReferralDashboard() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
-        className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 dark:border-gray-700"
+        className="bg-surface rounded-[24px] p-6 border border-line/10"
       >
-        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
-          <GiftIcon className="w-5 h-5 text-amber-500" /> Your Referral Code
+        <h3 className="display-tight text-lg text-ink mb-2 flex items-center gap-2">
+          <GiftIcon className="w-5 h-5 text-accent" /> Your Referral Code
         </h3>
-        <p className="text-sm text-gray-500 mb-4">
+        <p className="text-sm text-muted mb-4">
           Share this code with friends. Both get ₹100 on their first booking!
         </p>
 
         <div className="flex items-center gap-3 mb-4">
-          <div className="flex-1 bg-gray-50 dark:bg-gray-700 rounded-xl px-4 py-3 border-2 border-dashed border-amber-300 dark:border-amber-600">
-            <p className="text-2xl font-bold text-amber-500 tracking-wider text-center">
+          <div className="flex-1 bg-raised/50 rounded-xl px-4 py-3 border-2 border-dashed border-accent">
+            <p className="display text-2xl tracking-wider text-center">
               {referralCode || "GENERATING..."}
             </p>
           </div>
           <button
             onClick={copyToClipboard}
-            className="px-4 py-3 bg-amber-500 hover:bg-amber-600 text-white rounded-xl transition-colors flex items-center gap-2"
+            className="px-4 py-3 bg-accent hover:bg-ink hover:text-canvas text-accent-ink rounded-xl transition-colors flex items-center gap-2"
           >
             <ClipboardDocumentIcon className="w-5 h-5" />
             {copied ? "Copied!" : "Copy"}
@@ -135,7 +135,7 @@ export default function ReferralDashboard() {
 
         <button
           onClick={shareOnWhatsApp}
-          className="w-full py-3 bg-green-500 hover:bg-green-600 text-white rounded-xl font-medium flex items-center justify-center gap-2 transition-colors"
+          className="w-full py-3 bg-ink text-canvas hover:bg-accent hover:text-accent-ink rounded-xl font-medium flex items-center justify-center gap-2 transition-colors"
         >
           <ShareIcon className="w-5 h-5" /> Share on WhatsApp
         </button>
@@ -146,32 +146,32 @@ export default function ReferralDashboard() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
-        className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 dark:border-gray-700"
+        className="bg-surface rounded-[24px] p-6 border border-line/10"
       >
-        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
+        <h3 className="display-tight text-lg text-ink mb-4">
           How It Works
         </h3>
         <div className="grid grid-cols-3 gap-4 text-center">
           <div>
-            <div className="w-12 h-12 bg-amber-100 dark:bg-amber-900/30 rounded-full flex items-center justify-center mx-auto mb-2 text-2xl">
-              🔗
+            <div className="w-12 h-12 bg-accent/10 rounded-full flex items-center justify-center mx-auto mb-2 text-2xl">
+
             </div>
             <p className="text-sm font-medium">Share Link</p>
-            <p className="text-xs text-gray-500">Send to friends</p>
+            <p className="text-xs text-muted">Send to friends</p>
           </div>
           <div>
-            <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-2 text-2xl">
-              👤
+            <div className="w-12 h-12 bg-raised rounded-full flex items-center justify-center mx-auto mb-2 text-2xl">
+
             </div>
             <p className="text-sm font-medium">Friend Joins</p>
-            <p className="text-xs text-gray-500">Uses your code</p>
+            <p className="text-xs text-muted">Uses your code</p>
           </div>
           <div>
-            <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center mx-auto mb-2 text-2xl">
-              💰
+            <div className="w-12 h-12 bg-raised rounded-full flex items-center justify-center mx-auto mb-2 text-2xl">
+
             </div>
             <p className="text-sm font-medium">Both Earn ₹100</p>
-            <p className="text-xs text-gray-500">After first booking</p>
+            <p className="text-xs text-muted">After first booking</p>
           </div>
         </div>
       </motion.div>

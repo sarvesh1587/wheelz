@@ -3,12 +3,10 @@ import { useParams, Link } from "react-router-dom";
 import { bookingAPI } from "../services/api";
 import LoadingSpinner from "../components/common/LoadingSpinner";
 import PaymentReceipt from "../components/PaymentReceipt";
-import {
-  CheckCircleIcon,
-  CalendarIcon,
-  CurrencyRupeeIcon,
-  MapPinIcon,
-} from "@heroicons/react/24/outline";
+import { ArrowUpRight, Check, Download } from "lucide-react";
+import { motion } from "framer-motion";
+import { SplitText, Magnetic, Reveal, EASE } from "../components/motion";
+import { Empty } from "../components/ui";
 
 export default function BookingSuccess() {
   const { id } = useParams();
@@ -26,94 +24,75 @@ export default function BookingSuccess() {
 
   if (loading) return <LoadingSpinner />;
   if (!booking)
-    return <div className="text-center py-20">Booking not found</div>;
+    return (
+      <div className="container-x pt-28">
+        <Empty
+          title="Booking not found."
+          action={
+            <Link to="/dashboard" className="btn-ghost">
+              Go to dashboard
+            </Link>
+          }
+        />
+      </div>
+    );
+
+  const details = [
+    ["Pickup", new Date(booking.startDate).toLocaleDateString()],
+    ["Return", new Date(booking.endDate).toLocaleDateString()],
+    ["Location", booking.pickupLocation],
+    ["Total", `₹${booking.finalAmount.toLocaleString()}`],
+  ];
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-20 bg-gradient-to-br from-green-50 to-emerald-100 dark:from-gray-900 dark:to-gray-800">
-      <div className="max-w-2xl w-full bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 text-center animate-fade-in">
-        <div className="w-20 h-20 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
-          <CheckCircleIcon className="w-10 h-10 text-green-500" />
+    <div className="container-x flex min-h-screen flex-col justify-center pb-20 pt-28">
+      <motion.span
+        initial={{ scale: 0, rotate: -90 }}
+        animate={{ scale: 1, rotate: 0 }}
+        transition={{ duration: 0.9, ease: EASE }}
+        className="mb-8 grid h-14 w-14 place-items-center rounded-full bg-accent text-accent-ink"
+      >
+        <Check size={26} strokeWidth={2.5} />
+      </motion.span>
+
+      <p className="eyebrow mb-6">Booking confirmed</p>
+      <h1 className="display text-6xl md:text-8xl lg:text-9xl">
+        <SplitText lines={["You're", "all set."]} lineClassName="[&:last-child]:text-muted" delay={0.15} />
+      </h1>
+      <p className="mt-6 max-w-lg text-muted">
+        Your booking has been confirmed. A confirmation email has been sent to your inbox.
+      </p>
+
+      <Reveal delay={0.3} className="mt-14 grid gap-px overflow-hidden rounded-[24px] border border-line/10 bg-line/10 md:grid-cols-5">
+        <div className="bg-surface p-6 md:col-span-1">
+          <p className="eyebrow">Reference</p>
+          <p className="mt-3 break-all font-mono text-lg">{booking.bookingRef}</p>
         </div>
-
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-          Booking Confirmed! 🎉
-        </h1>
-        <p className="text-gray-500 dark:text-gray-400 mb-6">
-          Your booking has been confirmed. A confirmation email has been sent to
-          your inbox.
-        </p>
-
-        <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4 mb-6">
-          <p className="text-xs text-gray-500 uppercase tracking-wide">
-            Booking Reference
-          </p>
-          <p className="text-xl font-mono font-bold text-gray-900 dark:text-white">
-            {booking.bookingRef}
-          </p>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4 text-left mb-8">
-          <div className="flex items-center gap-3">
-            <CalendarIcon className="w-5 h-5 text-amber-500" />
-            <div>
-              <p className="text-xs text-gray-500">Pickup Date</p>
-              <p className="font-medium">
-                {new Date(booking.startDate).toLocaleDateString()}
-              </p>
-            </div>
+        {details.map(([label, value]) => (
+          <div key={label} className="bg-surface p-6">
+            <p className="eyebrow">{label}</p>
+            <p className={`mt-3 ${label === "Total" ? "display text-3xl" : "display-tight text-xl"}`}>{value}</p>
           </div>
-          <div className="flex items-center gap-3">
-            <CalendarIcon className="w-5 h-5 text-amber-500" />
-            <div>
-              <p className="text-xs text-gray-500">Return Date</p>
-              <p className="font-medium">
-                {new Date(booking.endDate).toLocaleDateString()}
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <MapPinIcon className="w-5 h-5 text-amber-500" />
-            <div>
-              <p className="text-xs text-gray-500">Pickup Location</p>
-              <p className="font-medium">{booking.pickupLocation}</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <CurrencyRupeeIcon className="w-5 h-5 text-amber-500" />
-            <div>
-              <p className="text-xs text-gray-500">Total Amount</p>
-              <p className="font-medium text-lg text-amber-500">
-                ₹{booking.finalAmount.toLocaleString()}
-              </p>
-            </div>
-          </div>
-        </div>
+        ))}
+      </Reveal>
 
-        <div className="flex flex-col sm:flex-row gap-3">
-          <Link to="/dashboard" className="btn-primary flex-1 text-center">
-            View My Bookings
+      <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:items-center">
+        <Magnetic>
+          <Link to="/dashboard" className="btn-primary">
+            View my bookings <ArrowUpRight size={16} />
           </Link>
-          <button
-            onClick={() => setShowReceipt(true)}
-            className="btn-secondary flex-1 text-center"
-          >
-            📄 Download Receipt
-          </button>
-        </div>
-
-        <div className="mt-3">
-          <Link
-            to="/vehicles"
-            className="text-amber-500 hover:underline text-sm"
-          >
-            Browse More Vehicles →
-          </Link>
-        </div>
-
-        <p className="text-xs text-gray-400 mt-6">
-          Need help? Contact our 24/7 support at support@wheelz.com
-        </p>
+        </Magnetic>
+        <button onClick={() => setShowReceipt(true)} className="btn-ghost">
+          <Download size={16} /> Download receipt
+        </button>
+        <Link to="/vehicles" className="link-underline text-sm text-muted hover:text-ink sm:ml-4">
+          Browse more vehicles
+        </Link>
       </div>
+
+      <p className="mt-12 border-t border-line/10 pt-6 text-xs text-muted">
+        Need help? Write to support@wheelz.com
+      </p>
 
       {/* Payment Receipt Modal */}
       {showReceipt && (

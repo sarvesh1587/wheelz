@@ -4,11 +4,13 @@ import { useAuth } from "../context/AuthContext";
 import { bookingAPI, vehicleAPI } from "../services/api";
 import LoadingSpinner from "../components/common/LoadingSpinner";
 import {
-  CalendarIcon,
-  CurrencyRupeeIcon,
-  UserIcon,
-  PhoneIcon,
-} from "@heroicons/react/24/outline";
+  Calendar as CalendarIcon,
+  IndianRupee as CurrencyRupeeIcon,
+  User as UserIcon,
+  Phone as PhoneIcon,
+  ArrowUpRight,
+} from "lucide-react";
+import { PageHeader, StatusPill } from "../components/ui";
 
 export default function VendorBookings() {
   const { user } = useAuth();
@@ -45,61 +47,49 @@ export default function VendorBookings() {
   if (loading) return <LoadingSpinner />;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8 pt-24">
-      <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
-        My Bookings
-      </h1>
+    <div className="container-x pb-24 pt-28 md:pt-32">
+      <PageHeader index="01" eyebrow="Vendor" title={["Bookings."]} />
 
       {bookings.length === 0 ? (
-        <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-2xl">
-          <p className="text-gray-500">No bookings yet</p>
+        <div className="text-center py-12 bg-surface rounded-[24px] border border-line/10">
+          <p className="text-muted">No bookings yet</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {bookings.map((booking) => (
             <div
               key={booking._id}
-              className="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-sm border"
+              className="bg-surface rounded-[24px] p-6 border border-line/10"
             >
               <div className="flex justify-between items-start mb-3">
                 <div>
-                  <h3 className="font-semibold">{booking.vehicle?.name}</h3>
-                  <p className="text-sm text-gray-500">{booking.bookingRef}</p>
+                  <h3 className="display-tight text-xl">{booking.vehicle?.name}</h3>
+                  <p className="text-sm text-muted">{booking.bookingRef}</p>
                 </div>
-                <span
-                  className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    booking.status === "confirmed"
-                      ? "bg-green-100 text-green-700"
-                      : booking.status === "completed"
-                        ? "bg-blue-100 text-blue-700"
-                        : "bg-yellow-100 text-yellow-700"
-                  }`}
-                >
-                  {booking.status}
-                </span>
+                <StatusPill status={booking.status} />
               </div>
 
               <div className="space-y-2 text-sm">
                 <div className="flex items-center gap-2">
-                  <UserIcon className="w-4 h-4 text-gray-400" />
+                  <UserIcon className="w-4 h-4 text-muted" />
                   <span>
                     {booking.customerDetails?.name || booking.user?.name}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <PhoneIcon className="w-4 h-4 text-gray-400" />
+                  <PhoneIcon className="w-4 h-4 text-muted" />
                   <span>{booking.customerDetails?.phone || "N/A"}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <CalendarIcon className="w-4 h-4 text-gray-400" />
+                  <CalendarIcon className="w-4 h-4 text-muted" />
                   <span>
                     {new Date(booking.startDate).toLocaleDateString()} -{" "}
                     {new Date(booking.endDate).toLocaleDateString()}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <CurrencyRupeeIcon className="w-4 h-4 text-gray-400" />
-                  <span className="font-semibold text-amber-500">
+                  <CurrencyRupeeIcon className="w-4 h-4 text-muted" />
+                  <span className="font-mono text-ink">
                     ₹{booking.finalAmount}
                   </span>
                 </div>
@@ -107,9 +97,9 @@ export default function VendorBookings() {
 
               <Link
                 to={`/bookings/${booking._id}`}
-                className="mt-3 inline-block text-amber-500 text-sm hover:underline"
+                className="link-underline mt-5 inline-flex items-center gap-1 text-sm"
               >
-                View Details →
+                View details <ArrowUpRight size={14} />
               </Link>
             </div>
           ))}

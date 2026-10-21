@@ -4,9 +4,12 @@ import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { authAPI } from "../services/api";
 import toast from "react-hot-toast";
+import AuthShell from "../components/auth/AuthShell";
+import usePlatformStats, { joinCities } from "../hooks/usePlatformStats";
 import { useGoogleReCaptcha } from "@google-recaptcha/react"; // ADD THIS
 
 export default function Register() {
+  const platform = usePlatformStats();
   const navigate = useNavigate();
   const { login } = useAuth();
   const googleReCaptcha = useGoogleReCaptcha(); // ADD THIS
@@ -90,21 +93,16 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-950 pt-20">
-      <div className="max-w-md w-full mx-4">
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8">
-          <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-              Create Account
-            </h1>
-            <p className="text-gray-500 dark:text-gray-400 mt-2">
-              Join Wheelz for seamless vehicle rentals
-            </p>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
+    <AuthShell
+      eyebrow="Join Wheelz"
+      title={["Create", "your account."]}
+      subtitle={platform.cities.length ? `Rent cars and bikes from verified owners in ${joinCities(platform.cities)}.` : "Rent cars and bikes from verified owners."}
+      image="https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=1600&q=80"
+      quote={{ text: "Cars and bikes from verified owners. Book in minutes, pay securely.", author: "Wheelz" }}
+    >
+          <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label className="field-label">
                 Full Name
               </label>
               <input
@@ -113,13 +111,13 @@ export default function Register() {
                 value={formData.name}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 focus:ring-2 focus:ring-amber-500"
+                className="field"
                 placeholder="Enter your full name"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label className="field-label">
                 Email Address
               </label>
               <input
@@ -128,13 +126,13 @@ export default function Register() {
                 value={formData.email}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 focus:ring-2 focus:ring-amber-500"
+                className="field"
                 placeholder="you@example.com"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label className="field-label">
                 Phone Number
               </label>
               <input
@@ -143,13 +141,13 @@ export default function Register() {
                 value={formData.phone}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 focus:ring-2 focus:ring-amber-500"
+                className="field"
                 placeholder="9876543210"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label className="field-label">
                 Password
               </label>
               <input
@@ -158,13 +156,13 @@ export default function Register() {
                 value={formData.password}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 focus:ring-2 focus:ring-amber-500"
+                className="field"
                 placeholder="••••••••"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label className="field-label">
                 Confirm Password
               </label>
               <input
@@ -173,33 +171,30 @@ export default function Register() {
                 value={formData.confirmPassword}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 focus:ring-2 focus:ring-amber-500"
+                className="field"
                 placeholder="••••••••"
               />
             </div>
 
-            {/* ADD THIS: Hidden reCAPTCHA badge (required by Google) */}
-            <div className="text-xs text-gray-400 text-center mt-2">
+            <div className="eyebrow">
               Protected by reCAPTCHA
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-gradient-to-r from-amber-500 to-amber-600 text-white font-semibold rounded-lg hover:shadow-lg transition-all disabled:opacity-50"
+              className="btn-primary w-full !py-4"
             >
-              {loading ? "Creating account..." : "Sign Up"}
+              {loading ? "Creating account..." : "Create account"}
             </button>
           </form>
 
-          <p className="text-center text-sm text-gray-600 dark:text-gray-400 mt-6">
+          <p className="mt-10 text-sm text-muted">
             Already have an account?{" "}
-            <Link to="/login" className="text-amber-500 hover:underline">
-              Login
+            <Link to="/login" className="link-underline font-medium text-ink">
+              Log in
             </Link>
           </p>
-        </div>
-      </div>
-    </div>
+    </AuthShell>
   );
 }

@@ -10,7 +10,7 @@ export function StarRating({ rating, count, size = "sm" }) {
         {stars.map((s) => (
           <svg
             key={s}
-            className={`${sizeClass} ${s <= Math.round(rating) ? "text-amber-400" : "text-gray-300 dark:text-gray-600"}`}
+            className={`${sizeClass} ${s <= Math.round(rating) ? "text-accent" : "text-muted"}`}
             fill="currentColor"
             viewBox="0 0 20 20"
           >
@@ -19,7 +19,7 @@ export function StarRating({ rating, count, size = "sm" }) {
         ))}
       </div>
       {count !== undefined && (
-        <span className="text-xs text-gray-500">({count})</span>
+        <span className="text-xs text-muted">({count})</span>
       )}
     </div>
   );

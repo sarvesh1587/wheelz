@@ -2,7 +2,14 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { authAPI } from "../services/api";
 import toast from "react-hot-toast";
-import { EnvelopeIcon } from "@heroicons/react/24/outline";
+import { ArrowLeft, Mail } from "lucide-react";
+import AuthShell from "../components/auth/AuthShell";
+import { Spinner } from "../components/ui";
+
+const SHELL = {
+  image: "https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=1600&q=80",
+  quote: { text: "Reset your password and get back on the road.", author: "Wheelz" },
+};
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
@@ -30,83 +37,56 @@ export default function ForgotPassword() {
 
   if (sent) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-4 py-20 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-950 dark:to-gray-900">
-        <div className="max-w-md w-full bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 text-center">
-          <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-            <EnvelopeIcon className="w-8 h-8 text-green-500" />
-          </div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-            Check Your Email
-          </h2>
-          <p className="text-gray-500 dark:text-gray-400 mb-4">
-            We've sent a password reset link to <strong>{email}</strong>
+      <AuthShell
+        eyebrow="Check your inbox"
+        title={["Link sent."]}
+        subtitle="The link expires in 10 minutes."
+        {...SHELL}
+      >
+        <div className="flex items-start gap-4 border-y border-line/10 py-6">
+          <Mail size={18} className="mt-0.5 shrink-0 text-accent" />
+          <p className="text-muted">
+            We've sent a password reset link to <strong className="text-ink">{email}</strong>
           </p>
-          <p className="text-sm text-gray-400 mb-6">
-            The link expires in 10 minutes.
-          </p>
-          <Link to="/login" className="text-amber-500 hover:underline">
-            Back to Login
-          </Link>
         </div>
-      </div>
+        <Link to="/login" className="btn-ghost mt-10">
+          <ArrowLeft size={16} /> Back to login
+        </Link>
+      </AuthShell>
     );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-20 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-950 dark:to-gray-900">
-      <div className="max-w-md w-full bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8">
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-amber-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <span className="text-2xl font-bold text-gray-900">W</span>
-          </div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Forgot Password?
-          </h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">
-            Enter your email and we'll send you a reset link
-          </p>
+    <AuthShell
+      eyebrow="Account recovery"
+      title={["Forgot", "password?"]}
+      subtitle="Enter your email and we'll send you a reset link."
+      {...SHELL}
+    >
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div>
+          <label className="field-label">Email address</label>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="field"
+            placeholder="you@example.com"
+            required
+          />
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Email Address
-            </label>
-            <div className="relative">
-              <EnvelopeIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="input-field pl-10"
-                placeholder="you@example.com"
-                required
-              />
-            </div>
-          </div>
+        <button type="submit" disabled={loading} className="btn-primary w-full !py-4">
+          {loading ? <Spinner /> : "Send reset link"}
+        </button>
+      </form>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="btn-primary w-full flex items-center justify-center gap-2"
-          >
-            {loading ? (
-              <div className="w-5 h-5 border-2 border-gray-900 border-t-transparent rounded-full animate-spin" />
-            ) : (
-              "Send Reset Link"
-            )}
-          </button>
-        </form>
-
-        <p className="text-center text-gray-600 dark:text-gray-400 mt-6">
-          <Link
-            to="/login"
-            className="text-amber-500 font-semibold hover:underline"
-          >
-            Back to Login
-          </Link>
-        </p>
-      </div>
-    </div>
+      <p className="mt-10 text-sm text-muted">
+        Remembered it?{" "}
+        <Link to="/login" className="link-underline font-medium text-ink">
+          Back to login
+        </Link>
+      </p>
+    </AuthShell>
   );
 }

@@ -1,10 +1,14 @@
 import React, { useState } from "react";
-import {
-  PhoneIcon,
-  EnvelopeIcon,
-  MapPinIcon,
-} from "@heroicons/react/24/outline";
+import { ArrowUpRight } from "lucide-react";
 import toast from "react-hot-toast";
+import { Reveal } from "../components/motion";
+import { PageHeader, Spinner } from "../components/ui";
+
+const CHANNELS = [
+  { label: "Phone", value: "+91 6307800255", href: "tel:+916307800255", note: "Mon-Sat, 9AM-9PM" },
+  { label: "Email", value: "hm2300439@gmail.com", href: "mailto:hm2300439@gmail.com", note: "We usually reply within a day" },
+  { label: "Office", value: "Ajmera, Pune", note: "Visit by appointment" },
+];
 
 export default function Contact() {
   const [formData, setFormData] = useState({
@@ -26,43 +30,75 @@ export default function Contact() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-20 sm:px-6 lg:px-8 pt-24">
-      <div className="text-center mb-12">
-        <h1 className="text-4xl font-bold text-gray-900 dark:text-white">
-          Contact Us
-        </h1>
-        <p className="text-gray-500 dark:text-gray-400 mt-2">
-          We'd love to hear from you
-        </p>
-      </div>
+    <div className="container-x pb-24 pt-28 md:pt-32">
+      <PageHeader index="01" eyebrow="Contact" title={["Say hello."]} lede="We'd love to hear from you." />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-        <div className="text-center p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm">
-          <PhoneIcon className="w-12 h-12 text-amber-500 mx-auto mb-4" />
-          <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
-            Phone
-          </h3>
-          <p className="text-gray-600 dark:text-gray-400">+91 6307800255</p>
-          <p className="text-gray-500 text-sm">Mon-Sat, 9AM-9PM</p>
+      <div className="grid gap-16 lg:grid-cols-12">
+        <div className="border-t border-line/10 lg:col-span-6">
+          {CHANNELS.map((c, i) => (
+            <Reveal key={c.label} delay={i * 0.06} className="grid grid-cols-3 gap-4 border-b border-line/10 py-8">
+              <p className="eyebrow pt-2">{c.label}</p>
+              <div className="col-span-2">
+                {c.href ? (
+                  <a href={c.href} className="display-tight link-underline break-all text-2xl md:text-3xl">
+                    {c.value}
+                  </a>
+                ) : (
+                  <p className="display-tight text-2xl md:text-3xl">{c.value}</p>
+                )}
+                <p className="mt-2 text-sm text-muted">{c.note}</p>
+              </div>
+            </Reveal>
+          ))}
         </div>
-        <div className="text-center p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm">
-          <EnvelopeIcon className="w-12 h-12 text-amber-500 mx-auto mb-4" />
-          <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
-            Email
-          </h3>
-          <p className="text-gray-600 dark:text-gray-400">
-            hm2300439@gmail.com
-          </p>
-          <p className="text-gray-500 text-sm">24/7 Response</p>
-        </div>
-        <div className="text-center p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm">
-          <MapPinIcon className="w-12 h-12 text-amber-500 mx-auto mb-4" />
-          <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
-            Office
-          </h3>
-          <p className="text-gray-600 dark:text-gray-400">Ajmera,pune</p>
-          <p className="text-gray-500 text-sm">Visit by appointment</p>
-        </div>
+
+        <Reveal as="form" delay={0.1} onSubmit={handleSubmit} className="space-y-8 lg:col-span-6">
+          <p className="eyebrow flex items-center gap-3"><span className="text-accent">(02)</span> Write to us</p>
+          <div>
+            <label className="field-label">Name</label>
+            <input
+              type="text"
+              required
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              className="field"
+              placeholder="Your name"
+            />
+          </div>
+          <div>
+            <label className="field-label">Email</label>
+            <input
+              type="email"
+              required
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              className="field"
+              placeholder="you@example.com"
+            />
+          </div>
+          <div>
+            <label className="field-label">Message</label>
+            <textarea
+              rows={4}
+              required
+              value={formData.message}
+              onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+              className="field resize-none"
+              placeholder="How can we help?"
+            />
+          </div>
+          <button type="submit" disabled={loading} className="btn-primary">
+            {loading ? (
+              <>
+                <Spinner /> Sending…
+              </>
+            ) : (
+              <>
+                Send message <ArrowUpRight size={16} />
+              </>
+            )}
+          </button>
+        </Reveal>
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-import React, { Suspense, lazy, useState, useEffect } from "react";
+import React, { Suspense, lazy, useState, useCallback } from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -7,12 +7,14 @@ import {
 } from "react-router-dom";
 import AIChatbot from "./components/AIChatbot";
 import { Toaster } from "react-hot-toast";
+import { AnimatePresence } from "framer-motion";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { ThemeProvider } from "./context/ThemeContext";
 import Navbar from "./components/common/Navbar";
 import Footer from "./components/common/Footer";
 import LoadingSpinner from "./components/common/LoadingSpinner";
-import LoadingScreen from "./components/common/LoadingScreen"; // ✅ Import at top
+import LoadingScreen, { RouteProgress } from "./components/common/LoadingScreen";
+import SmoothScroll from "./components/motion/SmoothScroll";
 
 // Pages
 import About from "./pages/About";
@@ -96,10 +98,11 @@ const PublicRoute = ({ children }) => {
 
 function AppRoutes() {
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 transition-colors duration-300 flex flex-col">
+    <div className="grain min-h-screen bg-canvas text-ink transition-colors duration-500 flex flex-col">
+      <SmoothScroll />
       <Navbar />
       <main className="flex-grow">
-        <Suspense fallback={<LoadingSpinner />}>
+        <Suspense fallback={<RouteProgress />}>
           <Routes>
             {/* Public Routes */}
             <Route path="/" element={<Home />} />
@@ -335,24 +338,39 @@ function AppRoutes() {
       </main>
       <Footer />
       <AIChatbot />
-      <Toaster position="top-right" />
+      <Toaster
+        position="bottom-center"
+        toastOptions={{
+          className:
+            "!rounded-full !bg-ink !text-canvas !text-sm !font-medium !px-5 !shadow-none",
+        }}
+      />
     </div>
   );
 }
 
-// ✅ FIXED App component
-export default function App() {
-  const [appLoading, setAppLoading] = useState(true);
+const INTRO_KEY = "wheelz_intro_seen";
 
-  useEffect(() => {
-    const timer = setTimeout(() => setAppLoading(false), 2500);
-    return () => clearTimeout(timer);
+export default function App() {
+  // The intro plays once per browser session so navigation stays instant.
+  const [appLoading, setAppLoading] = useState(
+    () => !sessionStorage.getItem(INTRO_KEY),
+  );
+
+  const finishIntro = useCallback(() => {
+    sessionStorage.setItem(INTRO_KEY, "1");
+    setAppLoading(false);
   }, []);
 
   return (
     <ThemeProvider>
       <AuthProvider>
-        <Router>{appLoading ? <LoadingScreen /> : <AppRoutes />}</Router>
+        <Router>
+          <AppRoutes />
+          <AnimatePresence>
+            {appLoading && <LoadingScreen key="intro" onDone={finishIntro} />}
+          </AnimatePresence>
+        </Router>
       </AuthProvider>
     </ThemeProvider>
   );

@@ -1,7 +1,10 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { vehicleAPI } from "../services/api";
-import { PhotoIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import {
+  Image as PhotoIcon,
+  X as XMarkIcon,
+} from "lucide-react";
 import toast from "react-hot-toast";
 
 export default function AddVehicle() {
@@ -113,13 +116,13 @@ export default function AddVehicle() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8 sm:px-6 lg:px-8 pt-24">
-      <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+    <div className="max-w-4xl mx-auto px-4 py-8 sm:px-6 lg:px-8 pt-28">
+      <h1 className="display-tight text-2xl text-ink mb-6">
         Add New Vehicle
       </h1>
       <form
         onSubmit={handleSubmit}
-        className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm space-y-4"
+        className="bg-surface rounded-[24px] p-6 space-y-4 border border-line/10"
       >
         <div className="grid grid-cols-2 gap-4">
           <input
@@ -274,7 +277,7 @@ export default function AddVehicle() {
                   <img
                     src={img}
                     alt={`Vehicle ${index + 1}`}
-                    className="w-full h-24 object-cover rounded-lg"
+                    className="w-full h-24 object-cover rounded-xl"
                   />
                   <button
                     type="button"
@@ -298,7 +301,7 @@ export default function AddVehicle() {
               className="hidden"
             />
           </label>
-          <p className="text-xs text-gray-500 mt-2">
+          <p className="text-xs text-muted mt-2">
             Max 5MB per image. First image will be the main display.
           </p>
         </div>

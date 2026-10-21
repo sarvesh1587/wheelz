@@ -321,7 +321,7 @@
 //         extras: extras,
 //       });
 
-//       toast.success("Booking confirmed! 🎉");
+//       toast.success("Booking confirmed!");
 //       onClose();
 //       setTimeout(() => {
 //         window.location.href = "/dashboard";
