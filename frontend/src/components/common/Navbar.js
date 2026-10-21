@@ -273,18 +273,10 @@ export default function Navbar() {
             transition={{ duration: 0.9, ease: EASE }}
             className="fixed inset-0 z-[60] flex flex-col overflow-hidden bg-canvas px-5 pb-8 pt-24 md:hidden"
           >
-            {/* Slow-drifting amber glow */}
-            <motion.div
+            {/* Amber glow */}
+            <div
               aria-hidden
               className="pointer-events-none absolute -bottom-32 -right-24 h-[420px] w-[420px] rounded-full bg-accent/25 blur-[90px]"
-              initial={{ scale: 0.4, opacity: 0 }}
-              animate={{ scale: [1, 1.15, 1], opacity: 1, x: [0, -30, 0], y: [0, -20, 0] }}
-              transition={{
-                opacity: { duration: 0.8, delay: 0.2 },
-                scale: { duration: 8, repeat: Infinity, ease: "easeInOut" },
-                x: { duration: 10, repeat: Infinity, ease: "easeInOut" },
-                y: { duration: 9, repeat: Infinity, ease: "easeInOut" },
-              }}
             />
 
             {/* Oversized wordmark rising from the bottom edge */}
@@ -374,7 +366,6 @@ export default function Navbar() {
                         >
                           {active ? (
                             <span className="relative flex h-2 w-2">
-                              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-70" />
                               <span className="relative inline-flex h-2 w-2 rounded-full bg-accent" />
                             </span>
                           ) : (

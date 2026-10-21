@@ -31,7 +31,6 @@ export default function AuthShell({ eyebrow, title, subtitle, image, quote, chil
           </h1>
           {subtitle && <p className="mt-4 text-muted">{subtitle}</p>}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.9, ease: EASE, delay: 0.5 }}
             className="mt-10"

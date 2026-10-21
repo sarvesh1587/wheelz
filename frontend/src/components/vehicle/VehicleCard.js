@@ -50,9 +50,6 @@ export default function VehicleCard({ vehicle, compact = false, index = 0 }) {
 
   return (
     <motion.article
-      initial={{ opacity: 0, y: 32 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-8% 0px" }}
       transition={{ duration: 0.9, ease: EASE, delay: (index % 4) * 0.07 }}
     >
       <Link to={`/vehicles/${vehicle._id}`} className="group block">

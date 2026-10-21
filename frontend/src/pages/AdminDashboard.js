@@ -222,7 +222,6 @@ export default function AdminDashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           {/* Revenue Chart */}
           <motion.div
-            initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             className="bg-surface rounded-[24px] p-6 border border-line/10"
           >
@@ -249,7 +248,6 @@ export default function AdminDashboard() {
 
           {/* Vehicle Distribution Chart */}
           <motion.div
-            initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             className="bg-surface rounded-[24px] p-6 border border-line/10"
           >
@@ -308,7 +306,6 @@ export default function AdminDashboard() {
         {/* KYC Verification Tab */}
         {/* {activeTab === "kyc" && (
           <motion.div
-            initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="space-y-4"
           >
@@ -422,7 +419,6 @@ export default function AdminDashboard() {
         {/* KYC Verification Tab with Image Previews */}
         {activeTab === "kyc" && (
           <motion.div
-            initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="space-y-4"
           >

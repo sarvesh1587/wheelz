@@ -412,19 +412,19 @@ export default function Dashboard() {
       </div>
 
       {activeTab === "bookings" && (
-        <motion.div variants={containerVariants} initial="hidden" animate="visible" className="border-t border-line/10">
+        <motion.div variants={containerVariants} className="border-t border-line/10">
           {bookings.length === 0 ? <EmptyState title="No bookings yet." description="Start your first adventure with Wheelz." action="Browse vehicles" onAction={() => navigate("/vehicles")} /> : bookings.map((booking) => (<BookingCard key={booking._id} booking={booking} user={user} onViewDetails={viewBookingDetails} onProcessPayment={processPayment} onCancelBooking={cancelBooking} processingPayment={processingPayment} setReceiptBooking={setReceiptBooking} setShowReceipt={setShowReceipt} />))}
         </motion.div>
       )}
 
       {activeTab === "wishlist" && (
-        <motion.div variants={containerVariants} initial="hidden" animate="visible" className="grid grid-cols-1 gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
+        <motion.div variants={containerVariants} className="grid grid-cols-1 gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
           {wishlist.length === 0 ? <div className="col-span-full"><EmptyState title="Nothing saved yet." description="Save your favourite vehicles here." action="Explore vehicles" onAction={() => navigate("/vehicles")} /></div> : wishlist.map((item) => (<WishlistCard key={item._id} item={item} navigate={navigate} />))}
         </motion.div>
       )}
 
       {activeTab === "profile" && (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid gap-10 lg:grid-cols-12">
+        <motion.div animate={{ opacity: 1 }} className="grid gap-10 lg:grid-cols-12">
           <div className="flex items-center gap-6 lg:col-span-5">
             <span className="display grid h-24 w-24 shrink-0 place-items-center rounded-full bg-accent text-4xl text-accent-ink">{user?.name?.[0]?.toUpperCase()}</span>
             <div className="min-w-0">
@@ -444,13 +444,13 @@ export default function Dashboard() {
       )}
 
       {activeTab === "mytrips" && (
-        <motion.div variants={containerVariants} initial="hidden" animate="visible" className="border-t border-line/10">
+        <motion.div variants={containerVariants} className="border-t border-line/10">
           {myTrips.length === 0 ? <EmptyState title="No trips offered." description="Share your journey and split costs." action="Offer a trip" onAction={() => navigate("/offer-trip")} /> : myTrips.map((trip) => (<TripCard key={trip._id} trip={trip} navigate={navigate} onCancel={cancelTrip} cancellingTrip={cancellingTrip} isSharing={sharingTrips[trip._id] || false} startSharingLocation={startSharingLocation} stopSharingLocation={() => stopSharingLocation(trip._id)} onViewPassengers={async (trip) => { try { const res = await rideShareAPI.getTripRequests(trip._id); const requests = res.data.requests || []; if (requests.length > 0) viewPassengerDetails(requests[0]); else toast.error("No passenger requests found"); } catch (error) { toast.error("Failed to load passenger details"); } }} />))}
         </motion.div>
       )}
 
       {activeTab === "myrides" && (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+        <motion.div animate={{ opacity: 1 }}>
           <Segmented
             value={rideFilter}
             onChange={setRideFilter}
@@ -462,7 +462,7 @@ export default function Dashboard() {
             ]}
           />
           {myRides.length === 0 ? <EmptyState title="No rides found." description="Find a trip and request a seat." action="Find a trip" onAction={() => navigate("/find-trip")} /> : (
-            <motion.div variants={containerVariants} initial="hidden" animate="visible" className="border-t border-line/10">
+            <motion.div variants={containerVariants} className="border-t border-line/10">
               {visibleRides.map((ride) => {
                 const trip = ride.trip;
                 const statusBadge = getRideStatusBadge(ride.status, ride.paymentStatus);

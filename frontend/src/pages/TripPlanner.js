@@ -325,7 +325,6 @@ export default function TripPlanner() {
         {result && (
           <motion.section
             id="trip-results"
-            initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.9, ease: EASE }}
             className="mt-24"
@@ -375,7 +374,6 @@ function VehiclePlanCard({ plan, isTop, tripParams, onBook }) {
 
   return (
     <motion.article
-      initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.7, ease: EASE }}
       className={`relative overflow-hidden rounded-[24px] border bg-surface ${isTop ? "border-accent" : "border-line/10"}`}

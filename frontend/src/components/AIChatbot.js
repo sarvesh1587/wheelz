@@ -110,7 +110,6 @@ export default function AIChatbot() {
         className="group fixed bottom-6 right-6 z-50 flex items-center gap-2.5 rounded-full bg-ink py-3 pl-4 pr-5 text-sm font-medium text-canvas shadow-2xl shadow-black/30 transition-transform duration-500 ease-out-expo hover:-translate-y-0.5"
       >
         <span className="relative flex h-2 w-2">
-          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-70" />
           <span className="relative inline-flex h-2 w-2 rounded-full bg-accent" />
         </span>
         <span className="hidden sm:inline">Ask Wheelz AI</span>

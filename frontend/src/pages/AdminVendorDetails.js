@@ -85,7 +85,6 @@ export default function AdminVendorDetails() {
 
         {/* Vendor Profile Header */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="bg-surface rounded-[24px] p-6 mb-8 border border-line/10"
         >

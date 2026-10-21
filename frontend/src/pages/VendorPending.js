@@ -14,7 +14,7 @@ export default function VendorPending() {
   return (
     <div className="container-x flex min-h-screen flex-col justify-center pb-16 pt-28">
       <p className="eyebrow mb-6 flex items-center gap-3">
-        <span className="h-2 w-2 animate-pulse rounded-full bg-accent" /> Application submitted
+        <span className="h-2 w-2 rounded-full bg-accent" /> Application submitted
       </p>
       <h1 className="display text-6xl md:text-8xl lg:text-9xl">
         <SplitText lines={["Under", "review."]} lineClassName="[&:last-child]:text-muted" />

@@ -8,26 +8,12 @@ import {
 
 export const EASE = [0.16, 1, 0.3, 1];
 
-// Fades and lifts content into place the first time it scrolls into view.
-export function Reveal({
-  children,
-  as = "div",
-  delay = 0,
-  y = 28,
-  className = "",
-  ...rest
-}) {
-  const reduce = useReducedMotion();
-  const Tag = motion[as];
+// Plain wrapper. It used to fade content in on scroll; that put motion on
+// every section, so content now renders in place. Kept so callers don't change.
+export function Reveal({ children, as = "div", delay, y, className = "", ...rest }) {
+  const Tag = as;
   return (
-    <Tag
-      initial={reduce ? false : { opacity: 0, y }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-10% 0px" }}
-      transition={{ duration: 0.9, ease: EASE, delay }}
-      className={className}
-      {...rest}
-    >
+    <Tag className={className} {...rest}>
       {children}
     </Tag>
   );
@@ -44,6 +30,18 @@ export function SplitText({
   inView = false,
 }) {
   const reduce = useReducedMotion();
+  // Section headings (inView) stay still; only the main page heading animates.
+  if (inView || reduce) {
+    return (
+      <span className={`block ${className}`}>
+        {lines.map((line, li) => (
+          <span key={li} className={`block ${lineClassName}`}>
+            {line}
+          </span>
+        ))}
+      </span>
+    );
+  }
   let index = 0;
   const trigger = inView
     ? { whileInView: "show", viewport: { once: true, margin: "-10% 0px" } }
@@ -122,22 +120,10 @@ export function Magnetic({ children, strength = 0.35, className = "" }) {
   );
 }
 
-// Infinite horizontal ticker. Content is duplicated so the loop is seamless.
-export function Marquee({ children, className = "", reverse = false }) {
-  return (
-    <div className={`relative flex overflow-hidden ${className}`}>
-      {[0, 1].map((copy) => (
-        <div
-          key={copy}
-          aria-hidden={copy === 1}
-          className="flex shrink-0 animate-marquee items-center"
-          style={{ animationDirection: reverse ? "reverse" : "normal" }}
-        >
-          {children}
-        </div>
-      ))}
-    </div>
-  );
+// Static row of items. It used to scroll forever with no pause control,
+// which fails the auto-moving-content rule, so items now sit in place.
+export function Marquee({ children, className = "" }) {
+  return <div className={`flex flex-wrap items-center justify-center gap-y-2 ${className}`}>{children}</div>;
 }
 
 // Small numbered section label, e.g. "(02) Featured fleet".

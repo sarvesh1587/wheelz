@@ -82,7 +82,6 @@ export default function TripRequests() {
           {requests.map((req, idx) => (
             <motion.article
               key={req._id}
-              initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.05, duration: 0.6, ease: EASE }}
               className="grid gap-6 border-b border-line/10 py-8 lg:grid-cols-12 lg:items-center"
