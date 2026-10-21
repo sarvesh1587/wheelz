@@ -181,7 +181,7 @@ export default function Vehicles() {
         </form>
       </header>
 
-      <div className="sticky top-16 z-30 -mx-5 mb-10 flex flex-wrap items-center gap-2 border-y border-line/10 bg-canvas/85 px-5 py-3 backdrop-blur-xl sm:-mx-8 sm:px-8 md:top-20 lg:-mx-12 lg:px-12">
+      <div className="-mx-5 mb-10 flex flex-wrap items-center gap-2 border-y border-line/10 px-5 py-3 sm:-mx-8 sm:px-8 lg:-mx-12 lg:px-12">
         <div className="flex rounded-full border border-line/15 p-1">
           {[
             ["", "All"],

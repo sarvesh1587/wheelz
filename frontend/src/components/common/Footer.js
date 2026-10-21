@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ArrowUp, ArrowRight, ArrowUpRight, Mail, MapPin, Moon, Phone, Sun } from "lucide-react";
 import toast from "react-hot-toast";
 import { getLenis } from "../motion/SmoothScroll";
-import { Reveal, Magnetic, SplitText, EASE } from "../motion";
+import { Reveal } from "../motion";
 import { useTheme } from "../../context/ThemeContext";
 import usePlatformStats from "../../hooks/usePlatformStats";
 
@@ -91,59 +91,21 @@ export default function Footer() {
   return (
     <>
       <footer className="relative mt-auto overflow-hidden border-t border-line/10 bg-canvas text-ink">
-        {/* CTA band */}
-        <div className="container-x pt-20">
-          <Reveal className="relative overflow-hidden rounded-[32px] bg-accent p-8 text-accent-ink md:p-14">
-            <div
-              aria-hidden
-              className="pointer-events-none absolute -right-24 -top-24 h-80 w-80 rounded-full border-[40px] border-accent-ink/10"
-            />
-            <div className="relative grid gap-10 lg:grid-cols-12 lg:items-end">
-              <div className="lg:col-span-8">
-                <p className="mb-6 font-mono text-[11px] uppercase tracking-[0.18em] opacity-70">
-                  {platform.ready
-                    ? `${platform.vehicles} vehicles live in ${platform.cities.length} ${platform.cities.length === 1 ? "city" : "cities"}`
-                    : "Book in minutes"}
-                </p>
-                <h2 className="display text-5xl md:text-7xl">
-                  <SplitText inView lines={["Ready when", "you are."]} />
-                </h2>
-              </div>
-              <div className="flex flex-wrap gap-3 lg:col-span-4 lg:justify-end">
-                <Magnetic>
-                  <Link
-                    to="/vehicles"
-                    className="btn bg-accent-ink text-accent transition-colors hover:bg-canvas hover:text-ink"
-                  >
-                    Browse the fleet <ArrowUpRight size={16} />
-                  </Link>
-                </Magnetic>
-                <Link
-                  to="/vendor/register"
-                  className="btn border border-accent-ink/30 text-accent-ink hover:border-accent-ink hover:bg-accent-ink hover:text-accent"
-                >
-                  List your vehicle
-                </Link>
-              </div>
-            </div>
-          </Reveal>
-        </div>
-
-        <div className="container-x pt-20">
-          <div className="grid gap-14 lg:grid-cols-12">
+        <div className="container-x pt-14">
+          <div className="grid gap-10 lg:grid-cols-12">
             {/* Brand + contact */}
             <Reveal className="lg:col-span-4">
-              <Link to="/" className="display text-4xl">
+              <Link to="/" className="display text-3xl">
                 Wheelz<span className="text-accent">.</span>
               </Link>
-              <p className="mt-5 max-w-sm text-sm leading-relaxed text-muted">
+              <p className="mt-3 max-w-sm text-sm leading-relaxed text-muted">
                 Cars and bikes from verified owners, ridesharing for the trips in between, and an AI planner that
                 works out the cost before you go.
               </p>
-              <ul className="mt-8 space-y-3 text-sm">
+              <ul className="mt-5 space-y-2 text-sm">
                 <li>
                   <a href={CONTACT.phoneHref} className="group inline-flex items-center gap-3 text-ink/80 hover:text-ink">
-                    <span className="grid h-9 w-9 place-items-center rounded-full border border-line/15 transition-colors group-hover:border-accent group-hover:text-accent">
+                    <span className="grid h-8 w-8 place-items-center rounded-full border border-line/15 transition-colors group-hover:border-accent group-hover:text-accent">
                       <Phone size={14} />
                     </span>
                     {CONTACT.phone}
@@ -151,14 +113,14 @@ export default function Footer() {
                 </li>
                 <li>
                   <a href={`mailto:${CONTACT.email}`} className="group inline-flex items-center gap-3 text-ink/80 hover:text-ink">
-                    <span className="grid h-9 w-9 place-items-center rounded-full border border-line/15 transition-colors group-hover:border-accent group-hover:text-accent">
+                    <span className="grid h-8 w-8 place-items-center rounded-full border border-line/15 transition-colors group-hover:border-accent group-hover:text-accent">
                       <Mail size={14} />
                     </span>
                     {CONTACT.email}
                   </a>
                 </li>
                 <li className="inline-flex items-center gap-3 text-ink/80">
-                  <span className="grid h-9 w-9 place-items-center rounded-full border border-line/15">
+                  <span className="grid h-8 w-8 place-items-center rounded-full border border-line/15">
                     <MapPin size={14} />
                   </span>
                   {CONTACT.office}
@@ -170,8 +132,8 @@ export default function Footer() {
             <div className="grid grid-cols-2 gap-10 sm:grid-cols-4 lg:col-span-8">
               {COLUMNS.map((col, ci) => (
                 <Reveal key={col.title} delay={ci * 0.06}>
-                  <p className="eyebrow mb-5">{col.title}</p>
-                  <ul className="space-y-3">
+                  <p className="eyebrow mb-4">{col.title}</p>
+                  <ul className="space-y-2">
                     {col.links.map((link) => (
                       <li key={link.label}>
                         <Link
@@ -193,9 +155,9 @@ export default function Footer() {
           </div>
 
           {/* Cities + newsletter */}
-          <div className="mt-16 grid gap-10 border-t border-line/10 pt-10 lg:grid-cols-12">
+          <div className="mt-10 grid gap-6 border-t border-line/10 pt-6 lg:grid-cols-12 lg:items-center">
             <div className="lg:col-span-7">
-              <p className="eyebrow mb-5 flex items-center gap-2">
+              <p className="eyebrow mb-3 flex items-center gap-2">
                 <span className="relative flex h-2 w-2">
                   <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-60" />
                   <span className="relative inline-flex h-2 w-2 rounded-full bg-accent" />
@@ -216,7 +178,7 @@ export default function Footer() {
             </div>
 
             <div className="lg:col-span-5">
-              <p className="eyebrow mb-5">Newsletter</p>
+              <p className="eyebrow mb-3">Newsletter</p>
               <form
                 onSubmit={handleSubscribe}
                 className="flex items-center gap-2 rounded-full border border-line/15 p-1.5 pl-5 transition-colors focus-within:border-accent"
@@ -237,7 +199,7 @@ export default function Footer() {
           </div>
 
           {/* Bottom bar */}
-          <div className="mt-14 flex flex-col gap-4 border-t border-line/10 py-6 text-xs text-muted md:flex-row md:items-center md:justify-between">
+          <div className="mt-6 flex flex-col gap-3 border-t border-line/10 py-5 text-xs text-muted md:flex-row md:items-center md:justify-between">
             <p>© {new Date().getFullYear()} Wheelz · Made in Pune, India</p>
             <p className="font-mono uppercase tracking-[0.18em]">Razorpay · UPI · Cards · Netbanking</p>
             <div className="flex items-center gap-4">
@@ -257,17 +219,6 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* Oversized wordmark, cropped by the page edge */}
-        <motion.p
-          aria-hidden
-          initial={{ y: "40%" }}
-          whileInView={{ y: "18%" }}
-          viewport={{ once: true }}
-          transition={{ duration: 1.4, ease: EASE }}
-          className="display pointer-events-none select-none whitespace-nowrap text-center text-[25vw] leading-[0.75] text-ink/[0.06]"
-        >
-          Wheelz<span className="text-accent/30">.</span>
-        </motion.p>
       </footer>
 
       <AnimatePresence>
