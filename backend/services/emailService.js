@@ -49,7 +49,10 @@ async function sendViaGmail(mail) {
 // Never throws: a failed email must not fail the request that triggered it.
 const sendEmail = async ({ to, subject, html, text, attachments }) => {
   const recipients = [].concat(to || []).filter(Boolean);
-  if (!recipients.length) return null;
+  if (!recipients.length) {
+    console.warn(`⚠️ Email skipped (no recipient): "${subject}"`);
+    return null;
+  }
   if (!gmail && !smtp) {
     console.warn(`⚠️ Email skipped (not configured): "${subject}"`);
     return null;
