@@ -9,6 +9,16 @@ const fs = require("fs");
 require("dotenv").config();
 
 const app = express();
+// Render puts a proxy in front of the app. Trust its X-Forwarded-For so
+// req.ip is the visitor, not the proxy; otherwise every user shares one
+// rate-limit bucket (10 logins per 15 minutes for the whole site).
+app.set("trust proxy", Number(process.env.TRUST_PROXY_HOPS) || 1);
+
+// TEMP: shows the caller's own IP as Express sees it, to confirm the hop
+// count above. Remove once checked.
+app.get("/api/_whoami", (req, res) =>
+  res.json({ ip: req.ip, xff: req.headers["x-forwarded-for"] || null }),
+);
 
 // ─── Security Middleware ────────────────────────────────────────────────────
 app.use(helmet());
