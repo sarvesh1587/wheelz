@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { ArrowUpRight, Clock, MapPin } from "lucide-react";
 import usePlatformStats from "../../hooks/usePlatformStats";
 import { EASE } from "../motion";
@@ -21,24 +21,28 @@ function fromPrices(fleet, city) {
 }
 
 function EscapeCard({ e, city, prices, big, index }) {
+  const [loaded, setLoaded] = useState(false);
+  // Small cards don't need the 1280px photo.
+  const src = big ? e.img : e.img.replace("/1280px-", "/960px-");
   const priceLine = [prices.car && `Cars from ${inr(prices.car)}`, prices.bike && `Bikes from ${inr(prices.bike)}`].filter(Boolean).join(" · ");
   return (
     <motion.div
       initial={{ opacity: 0, y: 24 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -12 }}
       transition={{ duration: 0.5, ease: EASE, delay: index * 0.07 }}
       className={`relative min-w-[78%] snap-start sm:min-w-[46%] lg:min-w-0 ${big ? "lg:row-span-2" : ""}`}
     >
       <Link
         to={`/vehicles?city=${encodeURIComponent(city)}`}
-        className={`group relative block h-[340px] overflow-hidden rounded-[24px] bg-raised ${big ? "lg:h-full" : "lg:h-[250px]"}`}
+        className={`group relative block h-[340px] overflow-hidden rounded-[24px] bg-raised shimmer ${big ? "lg:h-full" : "lg:h-[250px]"}`}
       >
         <img
-          src={e.img}
+          src={src}
           alt={e.name}
           loading="lazy"
-          className="absolute inset-0 h-full w-full object-cover transition-transform duration-[1200ms] ease-out group-hover:scale-105"
+          decoding="async"
+          onLoad={() => setLoaded(true)}
+          className={`absolute inset-0 h-full w-full object-cover transition-[transform,opacity] duration-[1200ms] ease-out group-hover:scale-105 ${loaded ? "opacity-100" : "opacity-0"}`}
         />
         <span className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/10" />
 
@@ -50,7 +54,7 @@ function EscapeCard({ e, city, prices, big, index }) {
         </span>
 
         <span className="absolute inset-x-5 bottom-5 text-white">
-          <span className={`display-tight block ${big ? "text-4xl md:text-5xl" : "text-3xl"}`}>{e.name}</span>
+          <span className={`display-tight block ${big ? "text-[1.7rem] sm:text-4xl lg:text-[2.1rem] 2xl:text-5xl" : "text-[1.7rem] sm:text-3xl"}`}>{e.name}</span>
           <span className="mt-1 block text-sm text-white/75">{e.tagline}</span>
           {priceLine && (
             <span className="mt-3 inline-block rounded-full bg-accent px-3 py-1 text-xs font-medium text-accent-ink">
@@ -128,12 +132,11 @@ export default function WeekendEscapes() {
         </div>
       </div>
 
-      <div className="no-scrollbar -mx-5 mt-8 flex snap-x snap-mandatory scroll-px-5 gap-4 overflow-x-auto px-5 pb-2 sm:-mx-8 sm:scroll-px-8 sm:px-8 lg:mx-0 lg:grid lg:grid-cols-2 lg:grid-rows-2 lg:overflow-visible lg:px-0 lg:pb-0">
-        <AnimatePresence mode="wait" initial={false}>
-          {escapes.map((e, i) => (
-            <EscapeCard key={`${active}-${e.name}`} e={e} city={active} prices={prices} big={i === 0} index={i} />
-          ))}
-        </AnimatePresence>
+      {/* Keyed by city so a switch remounts the cards and replays their entrance. */}
+      <div key={active} className="no-scrollbar -mx-5 mt-8 flex snap-x snap-mandatory scroll-px-5 gap-4 overflow-x-auto px-5 pb-2 sm:-mx-8 sm:scroll-px-8 sm:px-8 lg:mx-0 lg:grid lg:grid-cols-3 lg:grid-rows-2 lg:overflow-visible lg:px-0 lg:pb-0">
+        {escapes.map((e, i) => (
+          <EscapeCard key={e.name} e={e} city={active} prices={prices} big={i === 0} index={i} />
+        ))}
       </div>
     </section>
   );
