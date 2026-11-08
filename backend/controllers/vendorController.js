@@ -1,79 +1,75 @@
 const User = require("../models/User");
 const Vehicle = require("../models/Vehicle");
-const sendEmail = require("../services/emailService");
+const notify = require("../services/notify");
 const { createNotification } = require("../utils/notificationHelper");
 
-// Vendor Registration
+// Vendor registration from /vendor/register. Creates a vendor account that
+// waits for admin approval, then emails the applicant and the admins.
 exports.registerVendor = async (req, res) => {
   try {
-    const {
-      name,
-      email,
-      password,
-      phone,
-      businessName,
-      gstNumber,
-      businessAddress,
-      panNumber,
-      bankAccountNumber,
-      ifscCode,
-      accountHolderName,
-    } = req.body;
+    const { vendorType, name, email, password, phone, individualDetails = {}, businessDetails = {}, bankDetails = {} } = req.body;
 
-    // Check if user already exists
-    const existingUser = await User.findOne({ email });
+    if (!["individual", "business"].includes(vendorType))
+      return res.status(400).json({ success: false, message: "Choose individual or business" });
+    if (!name || !email || !password || !phone)
+      return res.status(400).json({ success: false, message: "Name, email, phone and password are required" });
+    if (String(password).length < 6)
+      return res.status(400).json({ success: false, message: "Password must be at least 6 characters" });
+    if (vendorType === "business" && !businessDetails.businessName)
+      return res.status(400).json({ success: false, message: "Business name is required" });
+    if (!bankDetails.accountNumber || !bankDetails.ifscCode)
+      return res.status(400).json({ success: false, message: "Bank account and IFSC are required" });
+
+    const existingUser = await User.findOne({ email: String(email).toLowerCase().trim() });
     if (existingUser) {
       return res.status(400).json({
         success: false,
-        message: "User already exists with this email",
+        message: "An account with this email already exists",
       });
     }
 
-    // Create vendor user
+    const pick = (obj, keys) => Object.fromEntries(keys.map((k) => [k, String(obj[k] || "").trim()]));
     const vendor = await User.create({
       name,
       email,
       password,
       phone,
       role: "vendor",
-      isVendorApproved: false, // Need admin approval
-      vendorDetails: {
-        businessName,
-        gstNumber,
-        businessAddress,
-        panNumber,
-        phoneNumber: phone,
-        bankAccountNumber,
-        ifscCode,
-        accountHolderName,
+      vendorType,
+      isVendorApproved: false,
+      individualDetails: vendorType === "individual" ? pick(individualDetails, ["aadharNumber", "panNumber", "address"]) : undefined,
+      businessDetails:
+        vendorType === "business"
+          ? pick(businessDetails, ["businessName", "gstNumber", "panNumber", "businessAddress", "website"])
+          : undefined,
+      bankDetails: {
+        ...pick(bankDetails, ["accountHolderName", "accountNumber", "bankName"]),
+        ifscCode: String(bankDetails.ifscCode).toUpperCase().trim(),
       },
-      vendorSince: new Date(),
     });
 
-    // Send notification to admin
-    const admins = await User.find({ role: "admin" });
-    for (const admin of admins) {
-      await sendEmail({
-        to: admin.email,
-        subject: "New Vendor Registration - Pending Approval",
-        html: `
-          <h2>New Vendor Registration</h2>
-          <p><strong>Business Name:</strong> ${businessName}</p>
-          <p><strong>Email:</strong> ${email}</p>
-          <p><strong>Phone:</strong> ${phone}</p>
-          <p><strong>GST Number:</strong> ${gstNumber}</p>
-          <p><strong>PAN Number:</strong> ${panNumber}</p>
-          <a href="${process.env.FRONTEND_URL}/admin/vendors/${vendor._id}/approve">Click here to approve</a>
-        `,
-      });
-    }
+    const admins = await User.find({ role: "admin" }).select("_id");
+    await Promise.all(
+      admins.map((a) =>
+        createNotification(
+          a._id,
+          "New vendor request",
+          `${vendor.businessDetails?.businessName || vendor.name} wants to list vehicles`,
+          "vendor",
+          "/admin/vendors",
+        ),
+      ),
+    );
+    notify.vendorApplied(vendor);
 
     res.status(201).json({
       success: true,
-      message: "Vendor registration submitted for approval",
-      vendor,
+      message: "Registration submitted. We'll email you once you're approved.",
+      vendor: { _id: vendor._id, name: vendor.name, email: vendor.email, isVendorApproved: false },
     });
   } catch (error) {
+    if (error.code === 11000)
+      return res.status(400).json({ success: false, message: "An account with this email already exists" });
     console.error("Vendor registration error:", error);
     res.status(500).json({ success: false, message: error.message });
   }
@@ -96,16 +92,7 @@ exports.approveVendor = async (req, res) => {
         .json({ success: false, message: "Vendor not found" });
     }
 
-    // Send approval email to vendor
-    await sendEmail({
-      to: vendor.email,
-      subject: "Your Wheelz Vendor Account is Approved!",
-      html: `
-        <h2>Congratulations! Your vendor account is approved.</h2>
-        <p>You can now start adding your vehicles to our platform.</p>
-        <a href="${process.env.FRONTEND_URL}/vendor/dashboard">Go to Vendor Dashboard</a>
-      `,
-    });
+    notify.vendorStatusChanged(vendor, true);
 
     res.json({ success: true, message: "Vendor approved successfully" });
   } catch (error) {
@@ -261,10 +248,3 @@ exports.getVendorStats = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
-await createNotification(
-  adminId,
-  "New Vendor Registration",
-  `${businessName} has registered as a vendor`,
-  "vendor",
-  "/admin/vendors",
-);

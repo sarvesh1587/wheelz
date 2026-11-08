@@ -5,6 +5,7 @@ const User = require("../models/User");
 const Vehicle = require("../models/Vehicle");
 const { Booking } = require("../models/Booking");
 const { toPublicImages } = require("../utils/vehicleImages");
+const notify = require("../services/notify");
 
 // Get dashboard stats
 router.get("/dashboard", protect, authorize("admin"), async (req, res) => {
@@ -87,9 +88,11 @@ router.put(
           .json({ success: false, message: "User is not a vendor" });
       }
 
+      const wasApproved = vendor.isVendorApproved;
       vendor.isVendorApproved = true;
       vendor.isActive = true;
       await vendor.save();
+      if (!wasApproved) notify.vendorStatusChanged(vendor, true);
 
       res.json({
         success: true,
@@ -210,12 +213,14 @@ router.put("/vendors/:id/status", protect, authorize("admin"), async (req, res) 
       return res.status(404).json({ success: false, message: "Vendor not found" });
     }
     const approved = Boolean(req.body.approved);
+    const changed = Boolean(vendor.isVendorApproved) !== approved;
     vendor.isVendorApproved = approved;
     if (approved) {
       vendor.isActive = true;
       if (!vendor.vendorSince) vendor.vendorSince = new Date();
     }
     await vendor.save();
+    if (changed) notify.vendorStatusChanged(vendor, approved);
     res.json({
       success: true,
       message: `${vendor.name} ${approved ? "approved" : "set to pending"}`,

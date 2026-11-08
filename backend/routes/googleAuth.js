@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
+const notify = require("../services/notify");
 
 router.post("/google-login", async (req, res) => {
   try {
@@ -48,6 +49,7 @@ router.post("/google-login", async (req, res) => {
         isActive: true,
       });
       console.log(`✅ New user created: ${email}`);
+      notify.welcome(user);
     } else {
       console.log(`✅ Existing user: ${email}`);
       if (!user.googleId) {

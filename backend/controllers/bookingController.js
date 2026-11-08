@@ -1,7 +1,7 @@
 const { Booking } = require("../models/Booking");
 const Vehicle = require("../models/Vehicle");
 const User = require("../models/User");
-const sendEmail = require("../services/emailService");
+const notify = require("../services/notify");
 
 const calcDays = (start, end) =>
   Math.max(
@@ -90,12 +90,7 @@ exports.createBooking = async (req, res) => {
         : {},
     });
 
-    // Booking confirmation email
-    sendEmail({
-      to: req.user.email,
-      subject: `🚗 Booking Confirmed - ${booking.bookingRef}`,
-      html: `<h1>Booking Confirmed!</h1><p>Vehicle: ${vehicle.name}</p><p>Dates: ${new Date(startDate).toLocaleDateString()} - ${new Date(endDate || startDate).toLocaleDateString()}</p><p>Amount: ₹${finalAmount.toLocaleString()}</p><p>Ref: ${booking.bookingRef}</p>`,
-    }).catch((err) => console.log("Booking email failed:", err.message));
+    notify.bookingCreated(booking);
 
     res
       .status(201)
@@ -129,27 +124,29 @@ exports.cancelBooking = async (req, res) => {
   const booking = await Booking.findById(req.params.id);
   if (!booking)
     return res.status(404).json({ success: false, message: "Not found" });
+  if (!booking.user.equals(req.user._id) && req.user.role !== "admin")
+    return res.status(403).json({ success: false, message: "Not your booking" });
+  if (booking.status === "cancelled")
+    return res.json({ success: true, message: "Booking already cancelled" });
   booking.status = "cancelled";
   booking.cancelledAt = new Date();
   await booking.save();
+  notify.bookingCancelled(booking);
   res.json({ success: true, message: "Booking cancelled" });
 };
 
+// Admin only: mark a booking paid outside Razorpay (cash at pickup and so on).
 exports.processPayment = async (req, res) => {
   const booking = await Booking.findById(req.params.id);
   if (!booking)
     return res.status(404).json({ success: false, message: "Not found" });
+  if (booking.paymentStatus === "paid")
+    return res.json({ success: true, message: "Already paid", booking });
   booking.paymentStatus = "paid";
   booking.status = "confirmed";
   booking.paidAt = new Date();
   await booking.save();
-
-  sendEmail({
-    to: req.user.email,
-    subject: `💰 Payment Received - ${booking.bookingRef}`,
-    html: `<h1>Payment Confirmed!</h1><p>Amount: ₹${booking.finalAmount.toLocaleString()}</p><p>Ref: ${booking.bookingRef}</p>`,
-  }).catch(() => {});
-
+  notify.paymentSucceeded(booking, { method: req.body?.method || "Marked paid by admin" });
   res.json({ success: true, message: "Payment processed", booking });
 };
 

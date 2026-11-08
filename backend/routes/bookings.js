@@ -21,7 +21,7 @@ bookingRouter.get("/", getBookings);
 bookingRouter.get("/my-stats", getMyStats);
 bookingRouter.get("/:id", getBooking);
 bookingRouter.put("/:id/cancel", cancelBooking);
-bookingRouter.put("/:id/payment", processPayment);
+bookingRouter.put("/:id/payment", authorize("admin"), processPayment);
 
 // Vendor route
 bookingRouter.get(

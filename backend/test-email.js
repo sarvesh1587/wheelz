@@ -1,17 +1,14 @@
+// Sends one test email using the configured transport.
+//   node test-email.js someone@example.com
 require("dotenv").config();
-const { sendEmail } = require("./services/emailService");
+const sendEmail = require("./services/emailService");
 
-async function testEmail() {
-  try {
-    await sendEmail({
-      to: "your_test_email@gmail.com", // Change to your email
-      subject: "Test Email from Wheelz",
-      html: "<h1>✅ Test Successful!</h1><p>Your email service is working!</p>",
-    });
-    console.log("✅ Email sent successfully!");
-  } catch (err) {
-    console.error("❌ Email failed:", err.message);
-  }
-}
-
-testEmail();
+const to = process.argv[2] || process.env.ADMIN_EMAIL || "hm2300439@gmail.com";
+sendEmail({
+  to,
+  subject: "Test email from Wheelz",
+  html: "<h1>It works.</h1><p>Your Wheelz email service is sending mail.</p>",
+}).then((info) => {
+  console.log(info ? `Sent to ${to}` : "Not sent, see the log above.");
+  process.exit(info ? 0 : 1);
+});

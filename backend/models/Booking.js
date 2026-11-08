@@ -62,6 +62,10 @@ const BookingSchema = new mongoose.Schema(
       default: "mock",
     },
     stripePaymentIntentId: String,
+    razorpayOrderId: String,
+    razorpayPaymentId: String,
+    rentalType: { type: String, enum: ["daily", "hourly"], default: "daily" },
+    hours: Number,
     paidAt: Date,
 
     fraudFlags: [String],
