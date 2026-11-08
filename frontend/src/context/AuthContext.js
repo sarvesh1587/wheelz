@@ -12,37 +12,38 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     checkAuth();
   }, []);
+  // Trust the saved session right away so the app never waits on the API
+  // (a cold backend can take close to a minute), then refresh it quietly.
   const checkAuth = async () => {
     const token = localStorage.getItem("wheelz_token");
     const savedUser = localStorage.getItem("wheelz_user");
 
+    if (!token || !savedUser) {
+      setLoading(false);
+      return;
+    }
 
-    if (token && savedUser) {
-      try {
-        const userData = JSON.parse(savedUser);
-
-        // Optional: Verify token with backend
-        try {
-          const response = await authAPI.getMe();
-          if (response.data?.user) {
-            setUser(response.data.user);
-            localStorage.setItem(
-              "wheelz_user",
-              JSON.stringify(response.data.user),
-            );
-          } else {
-            setUser(userData);
-          }
-        } catch (err) {
-          setUser(userData);
-        }
-      } catch (error) {
-        console.error("Error parsing user data:", error);
-        localStorage.removeItem("wheelz_token");
-        localStorage.removeItem("wheelz_user");
-      }
+    try {
+      setUser(JSON.parse(savedUser));
+    } catch (error) {
+      console.error("Error parsing user data:", error);
+      localStorage.removeItem("wheelz_token");
+      localStorage.removeItem("wheelz_user");
+      setLoading(false);
+      return;
     }
     setLoading(false);
+
+    try {
+      const response = await authAPI.getMe();
+      if (response.data?.user) {
+        setUser(response.data.user);
+        localStorage.setItem("wheelz_user", JSON.stringify(response.data.user));
+      }
+    } catch (err) {
+      // An expired token is handled by the API interceptor; otherwise keep
+      // the saved user.
+    }
   };
   const login = (token, userData) => {
     localStorage.setItem("wheelz_token", token);

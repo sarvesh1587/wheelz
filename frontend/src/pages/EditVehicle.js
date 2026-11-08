@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { vehicleAPI } from "../services/api";
+import compressImage from "../utils/compressImage";
 import LoadingSpinner from "../components/common/LoadingSpinner";
 import {
   Image as PhotoIcon,
@@ -88,7 +89,7 @@ export default function EditVehicle() {
       toast.error("Failed to read image");
       setUploadingImage(false);
     };
-    reader.readAsDataURL(file);
+    reader.readAsDataURL(await compressImage(file));
   };
 
   const removeImage = (indexToRemove) => {

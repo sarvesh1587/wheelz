@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import { vehicleAPI, aiAPI } from "../services/api";
 import VehicleCard from "../components/vehicle/VehicleCard";
+import { VehicleGridSkeleton } from "../components/common/Skeleton";
 import { Sparkles, X, ArrowRight } from "lucide-react";
 import { SplitText, Eyebrow } from "../components/motion";
 import usePlatformStats from "../hooks/usePlatformStats";
@@ -238,15 +239,10 @@ export default function Vehicles() {
       </div>
 
       {loading ? (
-        <div className="grid grid-cols-1 gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {[...Array(8)].map((_, i) => (
-            <div key={i}>
-              <div className="shimmer aspect-[4/5] rounded-[20px]" />
-              <div className="shimmer mt-4 h-5 w-2/3 rounded" />
-              <div className="shimmer mt-2 h-3 w-1/3 rounded" />
-            </div>
-          ))}
-        </div>
+        <VehicleGridSkeleton
+          count={8}
+          className="grid grid-cols-1 gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+        />
       ) : vehicles.length === 0 ? (
         <div className="border-t border-line/10 py-24">
           <h3 className="display-tight text-4xl md:text-6xl">Nothing matches that.</h3>

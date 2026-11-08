@@ -149,6 +149,35 @@
   }
 }
 
+/* Skeleton extras: a dashed road scrolling under a small car outline. */
+.skeleton-road {
+  background-image: linear-gradient(90deg, rgb(var(--line) / 0.18) 50%, transparent 50%);
+  background-size: 18px 1px;
+  animation: road 0.9s linear infinite;
+}
+.skeleton-car {
+  animation: skeleton-drive 3.2s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+.skeleton-wheel {
+  transform-box: view-box;
+  animation: skeleton-spin 0.6s linear infinite;
+}
+.skeleton-rise {
+  animation: skeleton-rise 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes skeleton-drive {
+  0% { left: -20%; }
+  50% { left: calc(50% - 32px); }
+  100% { left: 110%; }
+}
+@keyframes skeleton-spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes skeleton-rise {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: none; }
+}
+
 @keyframes shimmer {
   from {
     background-position: 100% 0;

@@ -9,6 +9,7 @@ const {
   checkAvailability,
   getCategoryStats,
   getVendorVehicles, // ✅ Make sure this is imported
+  getVehicleImage,
 } = require("../controllers/vehicleController");
 const { protect, authorize, optionalAuth } = require("../middleware/auth");
 
@@ -17,6 +18,7 @@ router.get("/", optionalAuth, getVehicles);
 router.get("/stats/categories", getCategoryStats);
 router.get("/:id", optionalAuth, getVehicle);
 router.get("/:id/availability", checkAvailability);
+router.get("/:id/images/:index", getVehicleImage);
 
 // ✅ ADD THIS ROUTE
 router.get(

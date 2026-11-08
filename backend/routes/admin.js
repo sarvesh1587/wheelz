@@ -4,6 +4,7 @@ const { protect, authorize } = require("../middleware/auth");
 const User = require("../models/User");
 const Vehicle = require("../models/Vehicle");
 const { Booking } = require("../models/Booking");
+const { toPublicImages } = require("../utils/vehicleImages");
 
 // Get dashboard stats
 router.get("/dashboard", protect, authorize("admin"), async (req, res) => {
@@ -178,6 +179,10 @@ router.get("/users/:id", protect, authorize("admin"), async (req, res) => {
           .limit(50)
           .populate("vehicle", "name images")
           .lean();
+
+    // Lean docs skip the schema's toJSON, so swap inline photos for URLs here.
+    vehicles.forEach((v) => (v.images = toPublicImages(v._id, v.images)));
+    bookings.forEach((b) => b.vehicle && (b.vehicle.images = toPublicImages(b.vehicle._id, b.vehicle.images)));
 
     const paid = bookings.filter((b) => b.paymentStatus === "paid");
     res.json({
