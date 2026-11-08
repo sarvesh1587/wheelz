@@ -15,8 +15,8 @@ services:
         generateValue: true
       - key: ANTHROPIC_API_KEY
         sync: false
-      - key: FRONTEND_URL
-        value: https://wheelz.vercel.app
+      - key: SITE_URL
+        value: https://wheelz-sand.vercel.app
       - key: EMAIL_FROM
         value: hm2300439@gmail.com
       - key: ADMIN_EMAIL

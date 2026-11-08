@@ -4,6 +4,7 @@ const { OAuth2Client } = require("google-auth-library");
 const User = require("../models/User");
 const sendEmail = require("../services/emailService");
 const notify = require("../services/notify");
+const { siteUrl } = require("../utils/siteUrl");
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const sendTokenResponse = (user, statusCode, res) => {
@@ -178,7 +179,7 @@ exports.forgotPassword = async (req, res) => {
         });
     const resetToken = user.createPasswordResetToken();
     await user.save({ validateBeforeSave: false });
-    const resetURL = `${process.env.FRONTEND_URL || "https://wheelz-sand.vercel.app"}/reset-password/${resetToken}`;
+    const resetURL = `${siteUrl()}/reset-password/${resetToken}`;
 
     sendEmail({
       to: user.email,

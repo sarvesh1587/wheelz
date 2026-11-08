@@ -1,7 +1,7 @@
 // Transactional email templates. Inline styles only: most mail clients strip
 // <style> blocks. Every value that came from a user goes through esc().
 
-const APP_URL = () => process.env.FRONTEND_URL || "https://wheelz-sand.vercel.app";
+const { siteUrl: APP_URL } = require("../../utils/siteUrl");
 
 const esc = (v) =>
   String(v ?? "")
@@ -109,7 +109,7 @@ exports.welcome = (user) => ({
 });
 
 exports.bookingCreated = (b) => ({
-  subject: `Booking received · ${b.bookingRef}`,
+  subject: `Booking received - ${b.bookingRef}`,
   html: layout({
     preheader: `We're holding ${b.vehicle?.name || "your vehicle"} for you. Complete payment to confirm.`,
     title: "Booking received.",
@@ -123,7 +123,7 @@ exports.paymentReceipt = (b, payment = {}) => {
   const extras = Math.max(0, (b.totalAmount || 0) - (b.pricePerDay || 0) * (b.totalDays || 0));
   const isHourly = b.rentalType === "hourly";
   return {
-    subject: `Payment successful · Receipt ${b.bookingRef}`,
+    subject: `Payment successful - Receipt ${b.bookingRef}`,
     html: layout({
       preheader: `${inr(b.finalAmount)} paid for ${b.vehicle?.name || "your booking"}.`,
       title: "Payment successful.",
@@ -154,7 +154,7 @@ exports.paymentReceipt = (b, payment = {}) => {
 };
 
 exports.rideConfirmed = (b, vendor) => ({
-  subject: `Your ride is confirmed · ${b.vehicle?.name || b.bookingRef}`,
+  subject: `Your ride is confirmed - ${b.vehicle?.name || b.bookingRef}`,
   html: layout({
     preheader: `${b.vehicle?.name || "Your vehicle"} is reserved for ${date(b.startDate)}.`,
     title: "Your ride is confirmed.",
@@ -171,7 +171,7 @@ exports.rideConfirmed = (b, vendor) => ({
 });
 
 exports.bookingCancelled = (b) => ({
-  subject: `Booking cancelled · ${b.bookingRef}`,
+  subject: `Booking cancelled - ${b.bookingRef}`,
   html: layout({
     preheader: `Booking ${b.bookingRef} has been cancelled.`,
     title: "Booking cancelled.",
@@ -186,7 +186,7 @@ exports.bookingCancelled = (b) => ({
 // ── Vendor ──────────────────────────────────────────────────────────────────
 
 exports.vendorNewBooking = (b, vendor) => ({
-  subject: `New booking request · ${b.vehicle?.name || b.bookingRef}`,
+  subject: `New booking request - ${b.vehicle?.name || b.bookingRef}`,
   html: layout({
     preheader: `${b.customerDetails?.name || "A customer"} booked ${b.vehicle?.name || "your vehicle"}.`,
     title: "New booking request.",
@@ -197,7 +197,7 @@ exports.vendorNewBooking = (b, vendor) => ({
 });
 
 exports.vendorBookingPaid = (b, vendor) => ({
-  subject: `Booking confirmed and paid · ${b.bookingRef}`,
+  subject: `Booking confirmed and paid - ${b.bookingRef}`,
   html: layout({
     preheader: `Get ${b.vehicle?.name || "your vehicle"} ready for ${date(b.startDate)}.`,
     title: "Booking confirmed.",
@@ -215,7 +215,7 @@ exports.vendorBookingPaid = (b, vendor) => ({
 });
 
 exports.vendorBookingCancelled = (b, vendor) => ({
-  subject: `Booking cancelled · ${b.bookingRef}`,
+  subject: `Booking cancelled - ${b.bookingRef}`,
   html: layout({
     preheader: `${b.vehicle?.name || "Your vehicle"} is free again for these dates.`,
     title: "A booking was cancelled.",
@@ -262,7 +262,7 @@ exports.vendorRevoked = (vendor) => ({
 // ── Admin ───────────────────────────────────────────────────────────────────
 
 exports.adminVendorRequest = (vendor) => ({
-  subject: `New vendor request · ${vendor.businessDetails?.businessName || vendor.name}`,
+  subject: `New vendor request - ${vendor.businessDetails?.businessName || vendor.name}`,
   html: layout({
     preheader: `${vendor.name} wants to list vehicles on Wheelz.`,
     title: "New vendor request.",
@@ -281,7 +281,7 @@ exports.adminVendorRequest = (vendor) => ({
 });
 
 exports.adminPayment = (b, payment = {}) => ({
-  subject: `Payment received ${inr(b.finalAmount)} · ${b.bookingRef}`,
+  subject: `Payment received Rs. ${Number(b.finalAmount || 0).toLocaleString("en-IN")} - ${b.bookingRef}`,
   html: layout({
     preheader: `${b.customerDetails?.name || "A customer"} paid for ${b.vehicle?.name || "a booking"}.`,
     title: `${inr(b.finalAmount)} received.`,

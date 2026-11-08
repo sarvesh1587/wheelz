@@ -36,6 +36,27 @@ if (gmail) console.log(`📧 Email: Gmail API as ${FROM_ADDRESS}`);
 else if (smtp) console.log(`📧 Email: SMTP as ${FROM_ADDRESS}`);
 else console.warn("⚠️ Email: not configured, emails will be skipped");
 
+// Plain-text copy of an HTML email. Mail with a text part is less likely to
+// be flagged as spam, and it is what text-only clients show.
+function htmlToText(html) {
+  return html
+    .replace(/<head[\s\S]*?<\/head>/gi, "")
+    .replace(/<span style="display:none[\s\S]*?<\/span>/gi, "")
+    .replace(/<a [^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/gi, (_, href, label) => `${label.replace(/<[^>]+>/g, "").trim()}: ${href}`)
+    .replace(/<\/td>\s*<td[^>]*>/gi, ": ")
+    .replace(/<(br|\/p|\/tr|\/h1|\/h2)[^>]*>/gi, "\n")
+    .replace(/<[^>]+>/g, "")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/[ \t]+/g, " ")
+    .replace(/ *\n */g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
 async function sendViaGmail(mail) {
   const raw = await new MailComposer(mail).compile().build();
   const res = await gmail.request({
@@ -57,7 +78,15 @@ const sendEmail = async ({ to, subject, html, text, attachments }) => {
     console.warn(`⚠️ Email skipped (not configured): "${subject}"`);
     return null;
   }
-  const mail = { from: FROM, to: recipients.join(", "), subject, html, text, attachments };
+  const mail = {
+    from: FROM,
+    replyTo: FROM_ADDRESS,
+    to: recipients.join(", "),
+    subject,
+    html,
+    text: text || (html ? htmlToText(html) : undefined),
+    attachments,
+  };
   try {
     const info = gmail ? await sendViaGmail(mail) : await smtp.sendMail(mail);
     console.log(`✅ Email sent: "${subject}" → ${mail.to}`);
