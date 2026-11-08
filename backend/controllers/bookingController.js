@@ -2,6 +2,7 @@ const { Booking } = require("../models/Booking");
 const Vehicle = require("../models/Vehicle");
 const User = require("../models/User");
 const notify = require("../services/notify");
+const { ensurePickupCode } = require("./handoverController");
 const { settle } = require("../utils/earnings");
 const { rentalRange, findConflict } = require("../utils/availability");
 
@@ -149,12 +150,19 @@ exports.getBookings = async (req, res) => {
   res.json({ success: true, bookings, total });
 };
 
+// The customer, the vehicle's owner and admins can see a booking.
 exports.getBooking = async (req, res) => {
   const booking = await Booking.findById(req.params.id)
     .populate("vehicle")
     .populate("user", "name email phone");
   if (!booking)
     return res.status(404).json({ success: false, message: "Not found" });
+  const uid = String(req.user._id);
+  const allowed =
+    req.user.role === "admin" ||
+    String(booking.user?._id || booking.user) === uid ||
+    String(booking.vehicle?.vendor || "") === uid;
+  if (!allowed) return res.status(403).json({ success: false, message: "You can't view this booking" });
   res.json({ success: true, booking });
 };
 
@@ -166,6 +174,8 @@ exports.cancelBooking = async (req, res) => {
     return res.status(403).json({ success: false, message: "Not your booking" });
   if (booking.status === "cancelled")
     return res.json({ success: true, message: "Booking already cancelled" });
+  if (["active", "completed"].includes(booking.status))
+    return res.status(400).json({ success: false, message: `A ${booking.status === "active" ? "started" : "finished"} ride can't be cancelled` });
   booking.status = "cancelled";
   booking.cancelledAt = new Date();
   await booking.save();
@@ -185,6 +195,7 @@ exports.processPayment = async (req, res) => {
   booking.paidAt = new Date();
   await booking.save();
   await settle(booking).catch((err) => console.error("❌ Earnings split failed:", err.message));
+  await ensurePickupCode(booking).catch((err) => console.error("❌ Pickup code failed:", err.message));
   notify.paymentSucceeded(booking, { method: req.body?.method || "Marked paid by admin" });
   res.json({ success: true, message: "Payment processed", booking });
 };

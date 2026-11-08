@@ -6,6 +6,7 @@ const Vehicle = require("../models/Vehicle");
 const { Booking } = require("../models/Booking");
 const { toPublicImages } = require("../utils/vehicleImages");
 const notify = require("../services/notify");
+const handover = require("../controllers/handoverController");
 const Payout = require("../models/Payout");
 const { DEFAULT_RATE, vendorBookings, summarise } = require("../utils/earnings");
 
@@ -308,6 +309,10 @@ router.post("/payouts", protect, authorize("admin"), async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 });
+
+// Disputes raised at or after handover.
+router.get("/disputes", protect, authorize("admin"), handover.listDisputes);
+router.put("/disputes/:disputeId", protect, authorize("admin"), handover.resolveDispute);
 
 // Platform reports: every number comes from the database, nothing is estimated.
 // ?days=7|30|90|365 limits the time-series and transaction window.

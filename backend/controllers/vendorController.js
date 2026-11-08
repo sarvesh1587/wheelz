@@ -301,7 +301,7 @@ exports.getEarnings = async (req, res) => {
       const d = new Date(now.getFullYear(), now.getMonth() - 5 + i, 1);
       const inMonth = bookings.filter((b) => {
         const t = new Date(b.startDate);
-        return ["upcoming", "ready", "paid_out"].includes(b.earningStage) && t.getFullYear() === d.getFullYear() && t.getMonth() === d.getMonth();
+        return ["upcoming", "on_hold", "ready", "paid_out"].includes(b.earningStage) && t.getFullYear() === d.getFullYear() && t.getMonth() === d.getMonth();
       });
       return {
         month: d.toLocaleString("en-IN", { month: "short" }),

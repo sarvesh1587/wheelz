@@ -165,7 +165,13 @@ exports.rideConfirmed = (b, vendor) => ({
         ["Owner", esc(vendor?.name || b.vendorDetails?.name || "")],
         ["Owner phone", esc(vendor?.phone || b.vendorDetails?.phone || "")],
       ]) +
-      note("Bring your <b>original driving licence</b> and a government ID. Check the vehicle and note any damage before you drive off."),
+      (b.pickupCode
+        ? `<p style="margin:6px 0 14px;padding:16px;border:1px dashed ${AMBER};border-radius:12px;text-align:center;">
+<span style="display:block;font-size:12px;color:${MUTED};letter-spacing:1px;text-transform:uppercase;">Pickup code</span>
+<span style="display:block;font-size:32px;font-weight:800;letter-spacing:8px;color:${INK};">${esc(b.pickupCode)}</span>
+<span style="display:block;font-size:12px;color:${MUTED};">Tell this to the owner only when you're with the vehicle. Never share it on a call.</span></p>`
+        : "") +
+      note("Bring your <b>original driving licence</b>; the owner will match it to your KYC. Walk around the vehicle with the owner and check their photos before you drive off."),
     cta: { label: "View trip details", href: `${APP_URL()}/dashboard` },
   }),
 });
@@ -320,3 +326,118 @@ exports.vendorPayout = (vendor, payout, bookings = []) => ({
     cta: { label: "View earnings", href: `${APP_URL()}/vendor/dashboard` },
   }),
 });
+
+
+// ── Handover ────────────────────────────────────────────────────────────────
+
+const reportRows = (r) => [
+  ["Recorded", dateTime(r?.at)],
+  ["Odometer", r?.odometer != null ? `${Number(r.odometer).toLocaleString("en-IN")} km` : ""],
+  ["Fuel", r?.fuelLevel != null ? `${r.fuelLevel}%` : ""],
+  ["Photos", r?.photos?.length ? `${r.photos.length}` : ""],
+  ["Notes", esc(r?.notes || "")],
+];
+
+exports.rideStarted = (b) => ({
+  subject: `Ride started - ${b.vehicle?.name || b.bookingRef}`,
+  html: layout({
+    preheader: "Check the pickup photos and confirm the vehicle's condition.",
+    title: "Your ride has started.",
+    intro: `The owner recorded the pickup of ${esc(b.vehicle?.name || "your vehicle")}. Please check their photos and readings. If anything is missing or wrong, report it now so you aren't charged for it later.`,
+    body: rows([["Booking ref", `<b>${esc(b.bookingRef)}</b>`], ...reportRows(b.pickupReport), ["Return by", dateTime(b.endDate)]]),
+    cta: { label: "Review pickup report", href: `${APP_URL()}/dashboard` },
+  }),
+});
+
+exports.rideReturned = (b, dispute, forVendor = false) => ({
+  subject: `Ride completed - ${b.bookingRef}`,
+  html: layout({
+    preheader: dispute ? "Damage was reported at return." : "Thanks for riding with Wheelz.",
+    title: "Ride completed.",
+    intro: forVendor
+      ? `The return of ${esc(b.vehicle?.name || "your vehicle")} is recorded. You can raise an issue for ${24} hours.`
+      : `${esc(b.vehicle?.name || "Your vehicle")} has been returned. Please check the return report.${dispute ? " The owner has reported damage; you can respond from your dashboard." : ""}`,
+    body:
+      rows([
+        ["Booking ref", `<b>${esc(b.bookingRef)}</b>`],
+        ...reportRows(b.returnReport),
+        ["Distance driven", b.returnReport?.kmDriven != null ? `${b.returnReport.kmDriven} km` : ""],
+        ["Returned late by", b.returnReport?.lateMinutes > 0 ? `${Math.round(b.returnReport.lateMinutes / 60)} h ${b.returnReport.lateMinutes % 60} min` : ""],
+      ]) + (dispute ? note(`<b>Damage reported:</b> ${esc(dispute.description)}${dispute.amountClaimed ? ` (claimed ${inr(dispute.amountClaimed)})` : ""}`) : ""),
+    cta: { label: forVendor ? "Open vendor dashboard" : "Review return report", href: `${APP_URL()}/${forVendor ? "vendor/dashboard" : "dashboard"}` },
+  }),
+});
+
+const DISPUTE_TYPES = {
+  damage: "Damage",
+  fuel: "Fuel",
+  late_return: "Late return",
+  extra_km: "Extra distance",
+  cleanliness: "Cleanliness",
+  not_as_described: "Report disputed",
+  theft: "Theft / not returned",
+  other: "Other",
+};
+
+exports.disputeOpened = (b, d, audience) => ({
+  subject: `${audience === "admin" ? "New dispute" : "An issue was raised"} - ${b.bookingRef}`,
+  html: layout({
+    preheader: `${DISPUTE_TYPES[d.type] || "Issue"} on ${b.vehicle?.name || "a booking"}.`,
+    title: audience === "admin" ? "New dispute to review." : "An issue was raised on your booking.",
+    intro:
+      audience === "admin"
+        ? `The ${esc(d.raisedByRole)} raised an issue on booking <b>${esc(b.bookingRef)}</b>.`
+        : `The ${d.raisedByRole === "customer" ? "renter" : "owner"} raised an issue on booking <b>${esc(b.bookingRef)}</b>. You can add your side from your dashboard; our team decides within 2 working days.`,
+    body: rows([
+      ["Type", DISPUTE_TYPES[d.type] || d.type],
+      ["Details", esc(d.description)],
+      ["Amount claimed", d.amountClaimed ? inr(d.amountClaimed) : ""],
+      ["Photos", d.photos?.length ? `${d.photos.length}` : ""],
+    ]),
+    cta: {
+      label: audience === "admin" ? "Review dispute" : "Respond",
+      href: `${APP_URL()}/${audience === "admin" ? "admin/disputes" : audience === "vendor" ? "vendor/dashboard" : "dashboard"}`,
+    },
+  }),
+});
+
+exports.disputeResolved = (b, d) => ({
+  subject: `Dispute ${d.status === "resolved" ? "decided" : "closed"} - ${b.bookingRef}`,
+  html: layout({
+    preheader: d.resolution?.note || "",
+    title: d.status === "resolved" ? "We've decided the dispute." : "The dispute was closed.",
+    intro: `Our team reviewed the ${esc((DISPUTE_TYPES[d.type] || "issue").toLowerCase())} raised on booking <b>${esc(b.bookingRef)}</b>.`,
+    body: rows([
+      ["Decision", d.status === "resolved" ? "Upheld" : "Rejected"],
+      ["Amount", d.status === "resolved" && d.resolution?.amountAwarded ? inr(d.resolution.amountAwarded) : ""],
+      ["Reason", esc(d.resolution?.note || "")],
+    ]),
+  }),
+});
+
+// Tiered overdue alerts: level 1 to renter and owner, level 2 to admins.
+exports.overdue = (b, level, audience) => {
+  const late = Math.max(1, Math.round((Date.now() - new Date(b.endDate)) / 3600000));
+  const toRenter = audience === "customer";
+  return {
+    subject: `${level >= 2 ? "URGENT: " : ""}Vehicle not returned - ${b.bookingRef}`,
+    html: layout({
+      preheader: `${b.vehicle?.name || "The vehicle"} is ${late} hour${late === 1 ? "" : "s"} past its return time.`,
+      title: toRenter ? "Your rental is overdue." : `${esc(b.vehicle?.name || "Vehicle")} is overdue.`,
+      intro: toRenter
+        ? `${esc(b.vehicle?.name || "Your vehicle")} was due back on ${dateTime(b.endDate)}. Please return it now or call the owner. Late returns are charged, and a vehicle not returned may be reported to the police.`
+        : level >= 2
+          ? `Booking <b>${esc(b.bookingRef)}</b> is ${late} hours overdue with no return recorded. Call the renter, and if they can't be reached, treat it as a possible theft: share the KYC details with the police and file an FIR.`
+          : `Booking <b>${esc(b.bookingRef)}</b> was due back ${late} hour${late === 1 ? "" : "s"} ago. Contact the renter. If you already have the vehicle, record the return so this stops.`,
+      body: rows([
+        ["Booking ref", `<b>${esc(b.bookingRef)}</b>`],
+        ["Vehicle", esc(b.vehicle?.name || "")],
+        ["Due back", dateTime(b.endDate)],
+        ["Renter", toRenter ? "" : `${esc(b.customerDetails?.name || "")} · ${esc(b.customerDetails?.phone || "")}`],
+        ["Owner", esc(b.vendorDetails?.name || "")],
+        ["Owner phone", esc(b.vendorDetails?.phone || "")],
+      ]),
+      cta: { label: toRenter ? "View booking" : "Open bookings", href: `${APP_URL()}/${toRenter ? "dashboard" : audience === "admin" ? "admin/disputes" : "vendor/dashboard"}` },
+    }),
+  };
+};

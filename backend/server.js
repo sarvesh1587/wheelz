@@ -129,6 +129,7 @@ mongoose
     app.listen(PORT, () => {
       console.log(`🚀 Wheelz API running on port ${PORT}`);
     });
+    require("./utils/overdueWatcher").startOverdueWatcher();
   })
   .catch((err) => {
     console.error("❌ MongoDB connection failed:", err.message);

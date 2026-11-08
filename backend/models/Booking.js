@@ -5,6 +5,30 @@
 
 const mongoose = require("mongoose");
 
+// Vehicle condition recorded by the owner at pickup or return, with the
+// customer's agreement or objection.
+const HandoverReport = new mongoose.Schema(
+  {
+    at: Date,
+    by: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    odometer: Number,
+    fuelLevel: Number, // percent, 0–100
+    photos: [{ url: String, label: String }],
+    notes: String,
+    location: { lat: Number, lng: Number, accuracy: Number },
+    // Return only
+    kmDriven: Number,
+    lateMinutes: Number,
+    damageReported: Boolean,
+    customerAck: {
+      status: { type: String, enum: ["pending", "agreed", "disputed"], default: "pending" },
+      note: String,
+      at: Date,
+    },
+  },
+  { _id: false },
+);
+
 const BookingSchema = new mongoose.Schema(
   {
     user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
@@ -72,6 +96,13 @@ const BookingSchema = new mongoose.Schema(
     commissionAmount: Number,
     vendorEarning: Number,
     payout: { type: mongoose.Schema.Types.ObjectId, ref: "Payout", default: null },
+    // Handover (see controllers/handoverController.js). The customer shows
+    // this code at pickup; only they and admins can read it.
+    pickupCode: { type: String, select: false },
+    pickupReport: HandoverReport,
+    returnReport: HandoverReport,
+    // Overdue return alerts already sent: 1 = customer and vendor, 2 = admin.
+    overdueLevel: { type: Number, default: 0 },
     paidAt: Date,
 
     fraudFlags: [String],

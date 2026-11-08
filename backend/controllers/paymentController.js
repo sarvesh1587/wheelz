@@ -2,6 +2,7 @@ const Razorpay = require("razorpay");
 const crypto = require("crypto");
 const { Booking } = require("../models/Booking");
 const notify = require("../services/notify");
+const { ensurePickupCode } = require("./handoverController");
 const { settle } = require("../utils/earnings");
 const { blocksPayment } = require("../utils/availability");
 
@@ -94,6 +95,7 @@ exports.verifyPayment = async (req, res) => {
     }
 
     await settle(booking).catch((err) => console.error("❌ Earnings split failed:", err.message));
+    await ensurePickupCode(booking).catch((err) => console.error("❌ Pickup code failed:", err.message));
     notify.paymentSucceeded(booking, { paymentId: razorpayPaymentId, method: "Razorpay" });
 
     res.json({ success: true, message: "Payment verified!", booking });

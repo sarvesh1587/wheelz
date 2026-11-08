@@ -78,4 +78,47 @@ exports.payoutSent = safely("payoutSent", (vendor, payout, bookings) =>
   send(vendor.email, tpl.vendorPayout(vendor, payout, bookings)),
 );
 
+async function customerEmail(b) {
+  return b.customerDetails?.email || (await User.findById(b.user).select("email").lean())?.email;
+}
+
+exports.rideStarted = safely("rideStarted", async (booking) => {
+  const { b } = await loadBooking(booking);
+  await send(await customerEmail(b), tpl.rideStarted(b));
+});
+
+exports.rideReturned = safely("rideReturned", async (booking, dispute) => {
+  const { b, vendor } = await loadBooking(booking);
+  await Promise.all([
+    send(await customerEmail(b), tpl.rideReturned(b, dispute)),
+    vendor && send(vendor.email, tpl.rideReturned(b, dispute, true)),
+  ]);
+});
+
+// To the other side of the booking, and always to the admins who decide it.
+exports.disputeOpened = safely("disputeOpened", async (booking, dispute) => {
+  const { b, vendor } = await loadBooking(booking);
+  const sends = [send(await adminEmails(), tpl.disputeOpened(b, dispute, "admin"))];
+  if (dispute.raisedByRole === "customer") {
+    if (vendor) sends.push(send(vendor.email, tpl.disputeOpened(b, dispute, "vendor")));
+  } else {
+    sends.push(send(await customerEmail(b), tpl.disputeOpened(b, dispute, "customer")));
+  }
+  await Promise.all(sends);
+});
+
+exports.disputeResolved = safely("disputeResolved", async (booking, dispute) => {
+  const { b, vendor } = await loadBooking(booking);
+  await Promise.all([send(await customerEmail(b), tpl.disputeResolved(b, dispute)), vendor && send(vendor.email, tpl.disputeResolved(b, dispute))]);
+});
+
+exports.overdue = safely("overdue", async (booking, level) => {
+  const { b, vendor } = await loadBooking(booking);
+  await Promise.all([
+    send(await customerEmail(b), tpl.overdue(b, level, "customer")),
+    vendor && send(vendor.email, tpl.overdue(b, level, "vendor")),
+    level >= 2 && send(await adminEmails(), tpl.overdue(b, level, "admin")),
+  ]);
+});
+
 exports.adminEmails = adminEmails;
