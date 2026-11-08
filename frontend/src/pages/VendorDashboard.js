@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { vehicleAPI, bookingAPI } from "../services/api";
+import { vehicleAPI, bookingAPI, vendorAPI } from "../services/api";
+import EarningsTab from "../components/vendor/EarningsTab";
 import toast from "react-hot-toast";
 import {
   Truck as TruckIcon,
@@ -45,6 +46,7 @@ export default function VendorDashboard() {
   const [vehicles, setVehicles] = useState([]);
   const [bookings, setBookings] = useState([]);
   const [stats, setStats] = useState(null);
+  const [earnings, setEarnings] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("vehicles");
   const [selectedBooking, setSelectedBooking] = useState(null);
@@ -56,16 +58,15 @@ export default function VendorDashboard() {
 
   const fetchVendorData = async () => {
     try {
-      const [vehiclesRes, bookingsRes] = await Promise.all([
+      const [vehiclesRes, bookingsRes, earningsRes] = await Promise.all([
         vehicleAPI.getVendorVehicles(),
         bookingAPI.getVendorBookings(),
+        vendorAPI.getEarnings().catch(() => null),
       ]);
 
       const vendorVehicles = vehiclesRes.data.vehicles || [];
       const vendorBookings = bookingsRes.data.bookings || [];
-
-      console.log("Vendor Vehicles:", vendorVehicles);
-      console.log("Vendor Bookings:", vendorBookings);
+      setEarnings(earningsRes?.data || null);
 
       setVehicles(vendorVehicles);
       setBookings(vendorBookings);
@@ -78,21 +79,12 @@ export default function VendorDashboard() {
       const completedBookings = vendorBookings.filter(
         (b) => b.status === "completed",
       ).length;
-      const totalRevenue = vendorBookings.reduce(
-        (sum, b) => sum + (b.totalAmount || 0),
-        0,
-      );
-      const pendingAmount = vendorBookings
-        .filter((b) => b.status === "pending")
-        .reduce((sum, b) => sum + (b.totalAmount || 0), 0);
 
       setStats({
         totalVehicles,
         availableVehicles,
         totalBookings,
         completedBookings,
-        totalRevenue,
-        pendingAmount,
       });
     } catch (error) {
       console.error("Error fetching vendor data:", error);
@@ -337,35 +329,22 @@ export default function VendorDashboard() {
       color: "",
     },
     {
-      label: "Total Revenue",
-      value: `₹${(stats?.totalRevenue || 0).toLocaleString()}`,
+      // Net of Wheelz's commission, paid bookings only.
+      label: "Your earnings",
+      value: `₹${Math.round(earnings?.summary.net || 0).toLocaleString("en-IN")}`,
       icon: CurrencyRupeeIcon,
       color: "",
     },
     {
-      label: "Pending Payout",
-      value: `₹${(stats?.pendingAmount || 0).toLocaleString()}`,
+      label: "Ready for payout",
+      value: `₹${Math.round(earnings?.summary.ready || 0).toLocaleString("en-IN")}`,
       icon: ClockIcon,
       color: "",
     },
   ];
 
-  // Paid revenue per month for the last six months, from this vendor's bookings.
-  const revenueData = (() => {
-    const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    const now = new Date();
-    return Array.from({ length: 6 }, (_, i) => {
-      const d = new Date(now.getFullYear(), now.getMonth() - 5 + i, 1);
-      const revenue = bookings
-        .filter((b) => b.paymentStatus === "paid")
-        .filter((b) => {
-          const t = new Date(b.createdAt);
-          return t.getFullYear() === d.getFullYear() && t.getMonth() === d.getMonth();
-        })
-        .reduce((sum, b) => sum + (b.finalAmount || b.totalAmount || 0), 0);
-      return { month: MONTHS[d.getMonth()], revenue };
-    });
-  })();
+  // Net earnings per month for the last six months, worked out by the API.
+  const revenueData = earnings?.monthly || [];
 
   const getStatusBadge = (status) => {
     const badges = {
@@ -414,7 +393,7 @@ export default function VendorDashboard() {
         </div>
 
         {/* Revenue Chart */}
-        <Panel index="02" title="Revenue · last 6 months" className="mb-14">
+        <Panel index="02" title="Your earnings · last 6 months" className="mb-14">
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={revenueData}>
               <CartesianGrid stroke={colors.lineA(0.08)} vertical={false} />
@@ -423,7 +402,7 @@ export default function VendorDashboard() {
               <Tooltip
                 contentStyle={{ background: "rgb(var(--surface))", border: "1px solid rgb(var(--line) / 0.1)", borderRadius: 16, color: "rgb(var(--ink))" }}
               />
-              <Line type="monotone" dataKey="revenue" stroke={colors.accent} strokeWidth={2} dot={false} />
+              <Line type="monotone" dataKey="earning" name="Earnings (₹)" stroke={colors.accent} strokeWidth={2} dot={false} />
             </LineChart>
           </ResponsiveContainer>
         </Panel>
@@ -433,6 +412,7 @@ export default function VendorDashboard() {
           {[
             { id: "vehicles", label: "My vehicles", count: vehicles.length },
             { id: "bookings", label: "Bookings", count: bookings.length },
+            { id: "earnings", label: "Earnings", count: earnings?.payouts?.length || 0 },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -554,6 +534,12 @@ export default function VendorDashboard() {
                 </motion.div>
               ))
             )}
+          </motion.div>
+        )}
+
+        {activeTab === "earnings" && (
+          <motion.div animate={{ opacity: 1 }}>
+            <EarningsTab data={earnings} />
           </motion.div>
         )}
 

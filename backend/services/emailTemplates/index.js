@@ -296,3 +296,27 @@ exports.adminPayment = (b, payment = {}) => ({
     cta: { label: "Open admin", href: `${APP_URL()}/admin/reports` },
   }),
 });
+
+exports.vendorPayout = (vendor, payout, bookings = []) => ({
+  subject: `Payout sent - Rs. ${Number(payout.amount || 0).toLocaleString("en-IN")}`,
+  html: layout({
+    preheader: `${inr(payout.amount)} for ${bookings.length} booking${bookings.length === 1 ? "" : "s"}.`,
+    title: `${inr(payout.amount)} paid out.`,
+    intro: `Hi ${esc(vendor.name)}, we've sent your earnings for ${bookings.length} finished booking${bookings.length === 1 ? "" : "s"}.`,
+    body:
+      rows([
+        ["Paid on", dateTime(payout.paidAt)],
+        ["Method", esc(String(payout.method || "").replace("_", " "))],
+        ["Reference", esc(payout.reference || "")],
+        ["Note", esc(payout.note || "")],
+      ]) +
+      rows(
+        bookings.map((b) => [
+          `${esc(b.bookingRef)} · ${esc(b.vehicle?.name || "")}`,
+          `${inr(b.finalAmount)} − ${b.commissionRate}% = <b>${inr(b.vendorEarning)}</b>`,
+        ]),
+        { total: ["Total", inr(payout.amount)] },
+      ),
+    cta: { label: "View earnings", href: `${APP_URL()}/vendor/dashboard` },
+  }),
+});

@@ -6,6 +6,8 @@ const Vehicle = require("../models/Vehicle");
 const { Booking } = require("../models/Booking");
 const { toPublicImages } = require("../utils/vehicleImages");
 const notify = require("../services/notify");
+const Payout = require("../models/Payout");
+const { DEFAULT_RATE, vendorBookings, summarise } = require("../utils/earnings");
 
 // Get dashboard stats
 router.get("/dashboard", protect, authorize("admin"), async (req, res) => {
@@ -226,6 +228,82 @@ router.put("/vendors/:id/status", protect, authorize("admin"), async (req, res) 
       message: `${vendor.name} ${approved ? "approved" : "set to pending"}`,
       vendor,
     });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Payouts: what each vendor is owed for finished, paid rentals, with the bank
+// details needed to send it, plus recent payouts.
+router.get("/payouts", protect, authorize("admin"), async (req, res) => {
+  try {
+    const vendors = await User.find({ role: "vendor" }).sort({ name: 1 });
+    const rows = await Promise.all(
+      vendors.map(async (v) => {
+        const summary = summarise(await vendorBookings(v._id, v.commissionRate ?? DEFAULT_RATE));
+        return {
+          _id: v._id,
+          name: v.name,
+          email: v.email,
+          phone: v.phone,
+          businessName: v.businessDetails?.businessName || "",
+          commissionRate: v.commissionRate ?? DEFAULT_RATE,
+          summary,
+          bank: {
+            accountHolderName: v.bankDetails?.accountHolderName || "",
+            bankName: v.bankDetails?.bankName || "",
+            ifscCode: v.bankDetails?.ifscCode || "",
+            accountNumber: v.getDecryptedPII().accountNumber || "",
+          },
+        };
+      }),
+    );
+    const payouts = await Payout.find().sort({ paidAt: -1 }).limit(50).populate("vendor", "name email").lean();
+    res.json({ success: true, vendors: rows, payouts });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Record that a vendor was paid: bundles all their ready bookings into one payout.
+router.post("/payouts", protect, authorize("admin"), async (req, res) => {
+  try {
+    const { vendorId, method = "bank_transfer", reference = "", note = "" } = req.body;
+    const vendor = await User.findById(vendorId);
+    if (!vendor || vendor.role !== "vendor")
+      return res.status(404).json({ success: false, message: "Vendor not found" });
+
+    const ready = (await vendorBookings(vendor._id, vendor.commissionRate ?? DEFAULT_RATE)).filter((b) => b.earningStage === "ready");
+    if (!ready.length) return res.status(400).json({ success: false, message: "Nothing is ready to pay out for this vendor" });
+
+    const amount = Math.round(ready.reduce((t, b) => t + (b.vendorEarning || 0), 0) * 100) / 100;
+    const payout = await Payout.create({
+      vendor: vendor._id,
+      amount,
+      bookings: ready.map((b) => b._id),
+      method,
+      reference,
+      note,
+      createdBy: req.user._id,
+    });
+    // Freeze each booking's split and link it to the payout. The payout: null
+    // filter stops a booking from being paid out twice by concurrent requests.
+    await Booking.bulkWrite(
+      ready.map((b) => ({
+        updateOne: {
+          filter: { _id: b._id, payout: null },
+          update: {
+            vendor: vendor._id,
+            commissionRate: b.commissionRate,
+            commissionAmount: b.commissionAmount,
+            vendorEarning: b.vendorEarning,
+            payout: payout._id,
+          },
+        },
+      })),
+    );
+    notify.payoutSent(vendor, payout, ready);
+    res.status(201).json({ success: true, message: `Payout of ₹${amount.toLocaleString("en-IN")} recorded for ${vendor.name}`, payout });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

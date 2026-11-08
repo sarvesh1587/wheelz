@@ -2,6 +2,7 @@ const { Booking } = require("../models/Booking");
 const Vehicle = require("../models/Vehicle");
 const User = require("../models/User");
 const notify = require("../services/notify");
+const { settle } = require("../utils/earnings");
 
 const calcDays = (start, end) =>
   Math.max(
@@ -146,6 +147,7 @@ exports.processPayment = async (req, res) => {
   booking.status = "confirmed";
   booking.paidAt = new Date();
   await booking.save();
+  await settle(booking).catch((err) => console.error("❌ Earnings split failed:", err.message));
   notify.paymentSucceeded(booking, { method: req.body?.method || "Marked paid by admin" });
   res.json({ success: true, message: "Payment processed", booking });
 };

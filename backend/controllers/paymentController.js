@@ -2,6 +2,7 @@ const Razorpay = require("razorpay");
 const crypto = require("crypto");
 const { Booking } = require("../models/Booking");
 const notify = require("../services/notify");
+const { settle } = require("../utils/earnings");
 
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
@@ -84,6 +85,7 @@ exports.verifyPayment = async (req, res) => {
       return res.json({ success: true, message: "Payment already verified", booking: existing });
     }
 
+    await settle(booking).catch((err) => console.error("❌ Earnings split failed:", err.message));
     notify.paymentSucceeded(booking, { paymentId: razorpayPaymentId, method: "Razorpay" });
 
     res.json({ success: true, message: "Payment verified!", booking });

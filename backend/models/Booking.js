@@ -66,6 +66,12 @@ const BookingSchema = new mongoose.Schema(
     razorpayPaymentId: String,
     rentalType: { type: String, enum: ["daily", "hourly"], default: "daily" },
     hours: Number,
+    // Split fixed when the booking is paid (see utils/earnings.js).
+    vendor: { type: mongoose.Schema.Types.ObjectId, ref: "User", index: true },
+    commissionRate: Number,
+    commissionAmount: Number,
+    vendorEarning: Number,
+    payout: { type: mongoose.Schema.Types.ObjectId, ref: "Payout", default: null },
     paidAt: Date,
 
     fraudFlags: [String],

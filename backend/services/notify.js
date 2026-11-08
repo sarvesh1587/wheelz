@@ -74,4 +74,8 @@ exports.vendorStatusChanged = safely("vendorStatusChanged", (vendor, approved) =
   send(vendor.email, approved ? tpl.vendorApproved(vendor) : tpl.vendorRevoked(vendor)),
 );
 
+exports.payoutSent = safely("payoutSent", (vendor, payout, bookings) =>
+  send(vendor.email, tpl.vendorPayout(vendor, payout, bookings)),
+);
+
 exports.adminEmails = adminEmails;

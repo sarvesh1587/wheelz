@@ -193,6 +193,12 @@ export const adminAPI = {
     api.put(`/admin/vendors/${id}/status`, { approved: status }),
   getRevenueBreakdown: () => api.get("/admin/revenue/breakdown"),
   getReports: (params) => api.get("/admin/reports", { params }),
+  getPayouts: () => api.get("/admin/payouts"),
+  createPayout: (data) => api.post("/admin/payouts", data),
+};
+
+export const vendorAPI = {
+  getEarnings: () => api.get("/vendor/earnings"),
 };
 
 export const reviewAPI = {

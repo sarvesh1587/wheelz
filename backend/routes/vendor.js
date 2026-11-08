@@ -10,11 +10,14 @@ const {
   getCategoryStats,
 } = require("../controllers/vehicleController");
 const { protect, authorize, optionalAuth } = require("../middleware/auth");
-const { registerVendor } = require("../controllers/vendorController");
+const { registerVendor, getEarnings } = require("../controllers/vendorController");
 
 // Vendor sign-up from /vendor/register (approved later by an admin). Signed-in
 // customers can send their token to convert their own account.
 router.post("/register", optionalAuth, registerVendor);
+
+// Vendor's own earnings and payouts. Must stay above "/:id".
+router.get("/earnings", protect, authorize("vendor"), getEarnings);
 
 // Public routes (no authentication needed)
 router.get("/", optionalAuth, getVehicles);

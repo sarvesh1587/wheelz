@@ -1,6 +1,8 @@
 const User = require("../models/User");
 const Vehicle = require("../models/Vehicle");
 const notify = require("../services/notify");
+const Payout = require("../models/Payout");
+const { DEFAULT_RATE, vendorBookings, summarise } = require("../utils/earnings");
 const { createNotification } = require("../utils/notificationHelper");
 
 // Vendor registration from /vendor/register. Creates a vendor account that
@@ -25,6 +27,8 @@ exports.registerVendor = async (req, res) => {
     const vendorFields = {
       role: "vendor",
       vendorType,
+      // What the sign-up page promises: 15% for individuals, 10% for businesses.
+      commissionRate: vendorType === "business" ? 10 : 15,
       isVendorApproved: false,
       vendorSince: new Date(),
       individualDetails: vendorType === "individual" ? pick(individualDetails, ["aadharNumber", "panNumber", "address"]) : undefined,
@@ -279,6 +283,64 @@ exports.getVendorStats = async (req, res) => {
       },
     });
   } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// Vendor: earnings, commission and payouts for the signed-in vendor.
+exports.getEarnings = async (req, res) => {
+  try {
+    const vendor = await User.findById(req.user._id);
+    const rate = vendor.commissionRate ?? DEFAULT_RATE;
+    const bookings = await vendorBookings(vendor._id, rate);
+    const payouts = await Payout.find({ vendor: vendor._id }).sort({ paidAt: -1 }).lean();
+
+    // Net earnings per month (by rental start) for the last six months.
+    const now = new Date();
+    const monthly = Array.from({ length: 6 }, (_, i) => {
+      const d = new Date(now.getFullYear(), now.getMonth() - 5 + i, 1);
+      const inMonth = bookings.filter((b) => {
+        const t = new Date(b.startDate);
+        return ["upcoming", "ready", "paid_out"].includes(b.earningStage) && t.getFullYear() === d.getFullYear() && t.getMonth() === d.getMonth();
+      });
+      return {
+        month: d.toLocaleString("en-IN", { month: "short" }),
+        earning: Math.round(inMonth.reduce((t, b) => t + (b.vendorEarning || 0), 0)),
+      };
+    });
+
+    const account = vendor.getDecryptedPII().accountNumber || "";
+    res.json({
+      success: true,
+      commissionRate: rate,
+      summary: summarise(bookings),
+      monthly,
+      bookings: bookings.map((b) => ({
+        _id: b._id,
+        bookingRef: b.bookingRef,
+        vehicle: b.vehicle,
+        customerName: b.customerDetails?.name,
+        startDate: b.startDate,
+        endDate: b.endDate,
+        status: b.status,
+        paymentStatus: b.paymentStatus,
+        finalAmount: b.finalAmount,
+        commissionRate: b.commissionRate,
+        commissionAmount: b.commissionAmount,
+        vendorEarning: b.vendorEarning,
+        earningStage: b.earningStage,
+        payout: b.payout,
+      })),
+      payouts,
+      bank: {
+        accountHolderName: vendor.bankDetails?.accountHolderName || "",
+        bankName: vendor.bankDetails?.bankName || "",
+        ifscCode: vendor.bankDetails?.ifscCode || "",
+        accountLast4: account ? account.slice(-4) : "",
+      },
+    });
+  } catch (error) {
+    console.error("Vendor earnings error:", error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
