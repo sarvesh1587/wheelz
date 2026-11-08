@@ -3,6 +3,7 @@ const crypto = require("crypto");
 const { Booking } = require("../models/Booking");
 const notify = require("../services/notify");
 const { settle } = require("../utils/earnings");
+const { blocksPayment } = require("../utils/availability");
 
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
@@ -23,6 +24,13 @@ exports.createOrder = async (req, res) => {
       return res.status(400).json({ success: false, message: "Booking is already paid" });
     if (booking.status === "cancelled")
       return res.status(400).json({ success: false, message: "Booking is cancelled" });
+    // The 30-minute hold may have run out and someone else booked these dates.
+    if (await blocksPayment(booking))
+      return res.status(409).json({
+        success: false,
+        code: "NOT_AVAILABLE",
+        message: "These dates were booked by someone else while this booking was unpaid. Please cancel it and pick other dates.",
+      });
     const amountInPaise = Math.round(booking.finalAmount * 100);
     const order = await razorpay.orders.create({
       amount: amountInPaise,

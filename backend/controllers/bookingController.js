@@ -3,6 +3,7 @@ const Vehicle = require("../models/Vehicle");
 const User = require("../models/User");
 const notify = require("../services/notify");
 const { settle } = require("../utils/earnings");
+const { rentalRange, findConflict } = require("../utils/availability");
 
 const calcDays = (start, end) =>
   Math.max(
@@ -46,6 +47,27 @@ exports.createBooking = async (req, res) => {
       return res
         .status(404)
         .json({ success: false, message: "Vehicle not found" });
+    if (vehicle.isAvailable === false)
+      return res.status(409).json({ success: false, message: "This vehicle is not taking bookings right now" });
+
+    if (rentalType === "hourly" && !(parseInt(hours) > 0))
+      return res.status(400).json({ success: false, message: "Choose how many hours" });
+    const { start, end } = rentalRange({ startDate, endDate, rentalType, hours });
+    if (isNaN(start) || isNaN(end))
+      return res.status(400).json({ success: false, message: "Invalid dates" });
+    if (rentalType === "daily" && !(new Date(endDate) > new Date(startDate)))
+      return res.status(400).json({ success: false, message: "Return date must be after pickup date" });
+    // Allow today (the date picker sends local midnight), not earlier.
+    if (start < new Date(Date.now() - 24 * 3600 * 1000))
+      return res.status(400).json({ success: false, message: "Pickup date is in the past" });
+
+    const clash = await findConflict(vehicle._id, start, end);
+    if (clash)
+      return res.status(409).json({
+        success: false,
+        code: "NOT_AVAILABLE",
+        message: "This vehicle is already booked for some of these dates. Please pick other dates.",
+      });
 
     const pricePerDay = vehicle.calculateDynamicPrice();
     const hourlyRate = Math.ceil(pricePerDay / 4);
@@ -65,8 +87,8 @@ exports.createBooking = async (req, res) => {
     const booking = await Booking.create({
       user: req.user._id,
       vehicle: vehicleId,
-      startDate: new Date(startDate),
-      endDate: new Date(endDate || startDate),
+      startDate: start,
+      endDate: end,
       pickupLocation,
       totalDays,
       pricePerDay,
@@ -90,6 +112,21 @@ exports.createBooking = async (req, res) => {
           }
         : {},
     });
+
+    // Two requests for the same dates can both pass the check above; the one
+    // created first keeps the slot and the other is removed.
+    const earlier = await findConflict(vehicle._id, start, end, {
+      excludeId: booking._id,
+      createdBefore: booking.createdAt,
+    });
+    if (earlier) {
+      await Booking.deleteOne({ _id: booking._id });
+      return res.status(409).json({
+        success: false,
+        code: "NOT_AVAILABLE",
+        message: "Someone just booked this vehicle for these dates. Please pick other dates.",
+      });
+    }
 
     notify.bookingCreated(booking);
 

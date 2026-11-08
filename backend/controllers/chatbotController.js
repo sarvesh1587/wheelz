@@ -1,6 +1,7 @@
 const Vehicle = require("../models/Vehicle");
 const { Booking } = require("../models/Booking"); // ✅ CORRECT - Booking is a named export
 const User = require("../models/User");
+const { findConflict } = require("../utils/availability");
 
 // Conversation context storage
 const conversationContext = new Map();
@@ -296,8 +297,16 @@ exports.chat = async (req, res) => {
         const endDate = new Date(startDate);
         endDate.setDate(endDate.getDate() + context.bookingData.days);
 
-        // ✅ CORRECT - Booking.create is now a function
-        // ✅ CORRECT - Send both totalAmount AND finalAmount
+        const clash = await findConflict(context.selectedVehicle._id, startDate, endDate);
+        if (clash) {
+          context.step = "asking_days";
+          conversationContext.set(sessionId || userId, context);
+          return res.json({
+            success: true,
+            reply: "Sorry, this vehicle is already booked for some of those days. Try fewer days, or type 'search' to pick another vehicle.",
+          });
+        }
+
         const booking = await Booking.create({
           user: userId,
           vehicle: context.selectedVehicle._id,

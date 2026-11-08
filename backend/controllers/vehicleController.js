@@ -4,6 +4,7 @@
  */
 
 const Vehicle = require("../models/Vehicle");
+const { rentalRange, findConflict, bookedRanges } = require("../utils/availability");
 const { restoreImages, decodeDataUri } = require("../utils/vehicleImages");
 
 exports.getVehicles = async (req, res, next) => {
@@ -249,19 +250,25 @@ exports.deleteVehicle = async (req, res, next) => {
 
 exports.checkAvailability = async (req, res, next) => {
   try {
-    const { startDate, endDate } = req.query;
+    const { startDate, endDate, rentalType, hours } = req.query;
     const vehicle = await Vehicle.findById(req.params.id);
     if (!vehicle)
       return res
         .status(404)
         .json({ success: false, message: "Vehicle not found" });
 
-    const available = vehicle.isAvailableForDates(startDate, endDate);
+    // Checked against real bookings; Vehicle.bookedDates is never filled in.
+    let available = vehicle.isAvailable !== false;
+    if (available && startDate) {
+      const { start, end } = rentalRange({ startDate, endDate, rentalType, hours });
+      if (!isNaN(start) && !isNaN(end)) available = !(await findConflict(vehicle._id, start, end));
+    }
     const dynamicPrice = vehicle.calculateDynamicPrice();
 
     res.json({
       success: true,
       isAvailable: available,
+      bookedRanges: await bookedRanges(vehicle._id),
       pricePerDay: dynamicPrice,
       priceMultiplier: vehicle.priceMultiplier,
       basePrice: vehicle.basePrice,

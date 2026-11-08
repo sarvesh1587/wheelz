@@ -30,6 +30,8 @@ export default function Booking() {
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
   const [availability, setAvailability] = useState(null);
+  // Dates other bookings already hold, greyed out in the calendars.
+  const [bookedRanges, setBookedRanges] = useState([]);
   const [extras, setExtras] = useState({
     insurance: false,
     gps: false,
@@ -59,6 +61,16 @@ export default function Booking() {
       .finally(() => setLoading(false));
   }, [id, navigate]);
 
+  const loadBookedRanges = () =>
+    vehicleAPI
+      .checkAvailability(id, {})
+      .then((res) => setBookedRanges(res.data.bookedRanges || []))
+      .catch(() => {});
+
+  useEffect(() => {
+    loadBookedRanges();
+  }, [id]);
+
   const checkAvailability = async () => {
     if (!startDate) return;
     // For hourly, only startDate needed
@@ -66,17 +78,15 @@ export default function Booking() {
 
     setCheckingAvailability(true);
     try {
-      const formattedStartDate = startDate.toISOString().split("T")[0];
-      const formattedEndDate =
-        rentalType === "hourly"
-          ? formattedStartDate
-          : endDate.toISOString().split("T")[0];
-
+      // Same values the booking is created with, so the check matches it.
       const res = await vehicleAPI.checkAvailability(id, {
-        startDate: formattedStartDate,
-        endDate: formattedEndDate,
+        startDate: startDate.toISOString(),
+        endDate: (rentalType === "hourly" ? startDate : endDate).toISOString(),
+        rentalType,
+        hours: rentalType === "hourly" ? selectedHours : undefined,
       });
       setAvailability(res.data);
+      if (res.data.bookedRanges) setBookedRanges(res.data.bookedRanges);
 
       if (!res.data.isAvailable) {
         toast.error("Vehicle not available for selected dates");
@@ -94,7 +104,7 @@ export default function Booking() {
     } else if (rentalType === "daily" && startDate && endDate) {
       checkAvailability();
     }
-  }, [startDate, endDate, rentalType]);
+  }, [startDate, endDate, rentalType, selectedHours]);
 
   // Reset endDate when switching to hourly
   useEffect(() => {
@@ -219,12 +229,29 @@ export default function Booking() {
       } else {
         toast.error(err.response?.data?.message || "Booking failed");
         setCreatingBooking(false);
+        // Someone else got these dates: show them as booked.
+        if (err.response?.data?.code === "NOT_AVAILABLE") {
+          setAvailability({ isAvailable: false });
+          loadBookedRanges();
+        }
       }
     }
   };
 
   if (loading) return <LoadingSpinner />;
   if (!vehicle) return null;
+
+  // Whole days another booking holds. A booking's return day stays free, since
+  // a new rental can start the day the last one ends.
+  const DAY = 24 * 60 * 60 * 1000;
+  const toDay = (d) => {
+    const x = new Date(d);
+    return new Date(x.getFullYear(), x.getMonth(), x.getDate());
+  };
+  const excludeDateIntervals = bookedRanges
+    .map((r) => ({ start: toDay(r.startDate), end: new Date(toDay(r.endDate).getTime() - DAY) }))
+    .filter((r) => r.end >= r.start);
+  const fmt = (d) => new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "short" });
 
   const canConfirm = !(
     creatingBooking ||
@@ -326,6 +353,7 @@ export default function Booking() {
                   startDate={startDate}
                   endDate={rentalType === "daily" ? endDate : null}
                   minDate={new Date()}
+                  excludeDateIntervals={excludeDateIntervals}
                   className={dateField}
                   dateFormat="dd/MM/yyyy"
                   placeholderText="Select pickup date"
@@ -342,6 +370,7 @@ export default function Booking() {
                     startDate={startDate}
                     endDate={endDate}
                     minDate={startDate || new Date()}
+                    excludeDateIntervals={excludeDateIntervals}
                     className={dateField}
                     dateFormat="dd/MM/yyyy"
                     placeholderText="Select return date"
@@ -349,6 +378,17 @@ export default function Booking() {
                 </div>
               )}
             </div>
+
+            {bookedRanges.length > 0 && (
+              <p className="mt-4 text-xs text-muted">
+                Already booked:{" "}
+                {bookedRanges
+                  .slice(0, 4)
+                  .map((r) => `${fmt(r.startDate)} – ${fmt(r.endDate)}`)
+                  .join(", ")}
+                {bookedRanges.length > 4 ? ` and ${bookedRanges.length - 4} more` : ""}. Those dates are greyed out.
+              </p>
+            )}
 
             {checkingAvailability && (
               <p className="mt-6 flex items-center gap-2 text-sm text-muted">
