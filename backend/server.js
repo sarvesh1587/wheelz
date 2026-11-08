@@ -15,12 +15,6 @@ const app = express();
 // without it every user shared one rate-limit bucket. Measured Nov 2026.
 app.set("trust proxy", Number(process.env.TRUST_PROXY_HOPS) || 3);
 
-// TEMP: shows the caller's own IP as Express sees it, to confirm the hop
-// count above. Remove once checked.
-app.get("/api/_whoami", (req, res) =>
-  res.json({ ip: req.ip, xff: req.headers["x-forwarded-for"] || null }),
-);
-
 // ─── Security Middleware ────────────────────────────────────────────────────
 app.use(helmet());
 
