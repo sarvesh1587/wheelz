@@ -31,6 +31,7 @@ const COLUMNS = [
     links: [
       { label: "About", to: "/about" },
       { label: "Contact", to: "/contact" },
+      { label: "Privacy", to: "/privacy" },
       { label: "List your vehicle", to: "/vendor/register" },
     ],
   },

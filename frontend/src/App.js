@@ -19,6 +19,7 @@ import SmoothScroll from "./components/motion/SmoothScroll";
 // Lazy load pages
 const About = lazy(() => import("./pages/About"));
 const Contact = lazy(() => import("./pages/Contact"));
+const Privacy = lazy(() => import("./pages/Privacy"));
 const Offers = lazy(() => import("./pages/Offers"));
 const Login = lazy(() => import("./pages/Login"));
 const Register = lazy(() => import("./pages/Register"));
@@ -116,6 +117,7 @@ function AppRoutes() {
             <Route path="/vehicles/:id" element={<VehicleDetail />} />
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
+            <Route path="/privacy" element={<Privacy />} />
             <Route path="/offers" element={<Offers />} />
             {/* Auth Routes */}
             <Route
