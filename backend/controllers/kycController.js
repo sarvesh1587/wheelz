@@ -1,6 +1,18 @@
 const KYC = require("../models/KYC");
 const User = require("../models/User");
 
+// Uploads go to Cloudinary, which stores a full https URL. Older records may
+// hold a local "uploads/..." path served by this API. A PDF is shown as a JPG
+// of its first page, which Cloudinary renders from the same URL.
+function documentUrl(stored) {
+  if (!stored) return null;
+  if (/^https?:\/\//.test(stored)) {
+    return /res\.cloudinary\.com/.test(stored) ? stored.replace(/\.pdf$/i, ".jpg") : stored;
+  }
+  const base = process.env.RENDER_EXTERNAL_URL || "https://wheelz-ldq2.onrender.com";
+  return `${base}/${stored.replace(/\\/g, "/").replace(/^\/+/, "")}`;
+}
+
 // Submit KYC
 exports.submitKYC = async (req, res) => {
   try {
@@ -106,21 +118,12 @@ exports.getAllKYC = async (req, res) => {
       .populate("user", "name email phone")
       .sort({ createdAt: -1 });
 
-    const baseUrl =
-      process.env.RENDER_EXTERNAL_URL || "https://wheelz-ldq2.onrender.com";
-
     const kycsWithUrls = kycs.map((kyc) => ({
       ...kyc.toObject(),
-      drivingLicenseFrontUrl: kyc.drivingLicenseFront
-        ? `${baseUrl}${kyc.drivingLicenseFront}`
-        : null,
-      drivingLicenseBackUrl: kyc.drivingLicenseBack
-        ? `${baseUrl}${kyc.drivingLicenseBack}`
-        : null,
-      aadhaarFrontUrl: kyc.aadhaarFront
-        ? `${baseUrl}${kyc.aadhaarFront}`
-        : null,
-      aadhaarBackUrl: kyc.aadhaarBack ? `${baseUrl}${kyc.aadhaarBack}` : null,
+      drivingLicenseFrontUrl: documentUrl(kyc.drivingLicenseFront),
+      drivingLicenseBackUrl: documentUrl(kyc.drivingLicenseBack),
+      aadhaarFrontUrl: documentUrl(kyc.aadhaarFront),
+      aadhaarBackUrl: documentUrl(kyc.aadhaarBack),
     }));
 
     res.json({ success: true, kycs: kycsWithUrls });
