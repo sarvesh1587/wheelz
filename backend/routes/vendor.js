@@ -10,6 +10,10 @@ const {
   getCategoryStats,
 } = require("../controllers/vehicleController");
 const { protect, authorize, optionalAuth } = require("../middleware/auth");
+const { registerVendor } = require("../controllers/vendorController");
+
+// Public: vendor sign-up from /vendor/register (approved later by an admin).
+router.post("/register", registerVendor);
 
 // Public routes (no authentication needed)
 router.get("/", optionalAuth, getVehicles);

@@ -8,7 +8,7 @@ import {
   kycAPI,
 } from "../services/api";
 import { useAuth } from "../context/AuthContext";
-import LoadingSpinner from "../components/common/LoadingSpinner";
+import { VehicleDetailSkeleton } from "../components/common/Skeleton";
 import ReviewModal from "../components/ReviewModal";
 import {
   MapPin,
@@ -201,7 +201,7 @@ export default function VehicleDetail() {
       setIsBookingLoading(false);
     }
   };
-  if (loading) return <LoadingSpinner />;
+  if (loading) return <VehicleDetailSkeleton />;
   if (!vehicle) return null;
 
   const inWishlist = isInWishlist(id);

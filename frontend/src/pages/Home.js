@@ -5,6 +5,7 @@ import { ArrowUpRight } from "lucide-react";
 import ReviewSection from "../components/ReviewSection";
 import { vehicleAPI, aiAPI } from "../services/api";
 import VehicleCard from "../components/vehicle/VehicleCard";
+import { VehicleGridSkeleton } from "../components/common/Skeleton";
 import AnimatedHero from "../components/home/AnimatedHero";
 import { Reveal, SplitText, Magnetic, Marquee, Eyebrow, EASE } from "../components/motion";
 import usePlatformStats from "../hooks/usePlatformStats";
@@ -122,15 +123,10 @@ export default function Home() {
         </SectionHeader>
 
         {loadingFeatured ? (
-          <div className="grid grid-cols-1 gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-4">
-            {[...Array(4)].map((_, i) => (
-              <div key={i}>
-                <div className="shimmer aspect-[4/5] rounded-[20px]" />
-                <div className="shimmer mt-4 h-5 w-2/3 rounded" />
-                <div className="shimmer mt-2 h-3 w-1/3 rounded" />
-              </div>
-            ))}
-          </div>
+          <VehicleGridSkeleton
+            count={4}
+            className="grid grid-cols-1 gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-4"
+          />
         ) : discountedVehicles.length ? (
           <div className="grid grid-cols-1 gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-4">
             {discountedVehicles.map((v, i) => (

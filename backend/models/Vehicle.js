@@ -4,6 +4,7 @@
  */
 
 const mongoose = require("mongoose");
+const { toPublicImages } = require("../utils/vehicleImages");
 
 const VehicleSchema = new mongoose.Schema(
   {
@@ -93,7 +94,17 @@ const VehicleSchema = new mongoose.Schema(
     },
     isActive: { type: Boolean, default: true },
   },
-  { timestamps: true, toJSON: { virtuals: true } },
+  {
+    timestamps: true,
+    toJSON: {
+      virtuals: true,
+      // Never ship inline base64 photos in JSON; see utils/vehicleImages.js.
+      transform: (doc, ret) => {
+        if (ret.images) ret.images = toPublicImages(ret._id, ret.images);
+        return ret;
+      },
+    },
+  },
 );
 
 VehicleSchema.index({ location: "2dsphere" });

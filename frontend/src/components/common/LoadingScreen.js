@@ -4,8 +4,8 @@ import { EASE } from "../motion";
 
 const WORD = "Wheelz";
 const TAGS = ["Cars", "Bikes", "Rideshare", "Trip planner"];
-const MIN_MS = 1400;
-const MAX_MS = 4500;
+const MIN_MS = 900;
+const MAX_MS = 1800;
 
 // Spoked wheel that rolls along the road as loading progresses.
 function Wheel({ spin }) {
@@ -38,9 +38,10 @@ function Wheel({ spin }) {
   );
 }
 
-// Branded intro. Progress follows real readiness (web fonts and the window
-// load event) with a short minimum so it never just blinks, then the panel
-// lifts away. Calls onDone once the exit can start.
+// Branded intro. Progress follows web-font readiness with a short minimum so
+// it never just blinks, then the panel lifts away. It does not wait for the
+// window load event: images can keep loading behind the page. Calls onDone
+// once the exit can start.
 export default function LoadingScreen({ onDone }) {
   const reduce = useReducedMotion();
   const [progress, setProgress] = useState(0);
@@ -50,11 +51,7 @@ export default function LoadingScreen({ onDone }) {
 
   useEffect(() => {
     const fonts = document.fonts?.ready || Promise.resolve();
-    const loaded =
-      document.readyState === "complete"
-        ? Promise.resolve()
-        : new Promise((r) => window.addEventListener("load", r, { once: true }));
-    Promise.all([fonts, loaded]).then(() => {
+    fonts.then(() => {
       ready.current = true;
     });
     const cap = setTimeout(() => {

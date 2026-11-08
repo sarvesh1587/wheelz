@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 const helmet = require("helmet");
 const morgan = require("morgan");
+const compression = require("compression");
 const path = require("path");
 const fs = require("fs");
 require("dotenv").config();
@@ -21,6 +22,9 @@ app.use(
     allowedHeaders: ["Content-Type", "Authorization"],
   }),
 );
+
+// Gzip JSON responses; vehicle lists shrink several times over the wire.
+app.use(compression());
 
 // ─── Body Parsing ───────────────────────────────────────────────────────────
 app.use(express.json({ limit: "10mb" }));

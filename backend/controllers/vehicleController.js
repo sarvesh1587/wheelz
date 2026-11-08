@@ -4,6 +4,7 @@
  */
 
 const Vehicle = require("../models/Vehicle");
+const { restoreImages, decodeDataUri } = require("../utils/vehicleImages");
 
 exports.getVehicles = async (req, res, next) => {
   try {
@@ -181,6 +182,10 @@ exports.updateVehicle = async (req, res, next) => {
   try {
     // Update current price when base price changes
     const updateData = { ...req.body };
+    if (Array.isArray(updateData.images)) {
+      const existing = await Vehicle.findById(req.params.id).select("images");
+      updateData.images = restoreImages(req.params.id, existing?.images, updateData.images);
+    }
     if (req.body.basePrice) {
       updateData.currentPrice = req.body.basePrice;
     }
@@ -205,6 +210,28 @@ exports.updateVehicle = async (req, res, next) => {
     next(err);
   }
 };
+// Streams one stored photo as binary. URLs carry a content version, so the
+// response can be cached for a year.
+exports.getVehicleImage = async (req, res, next) => {
+  try {
+    const vehicle = await Vehicle.findById(req.params.id).select("images").lean();
+    const img = vehicle?.images?.[Number(req.params.index)];
+    if (!img) return res.status(404).json({ success: false, message: "Image not found" });
+    if (!img.startsWith("data:")) return res.redirect(img);
+    const decoded = decodeDataUri(img);
+    if (!decoded) return res.status(404).json({ success: false, message: "Image not found" });
+    res.set({
+      "Content-Type": decoded.type,
+      "Content-Length": decoded.body.length,
+      "Cache-Control": "public, max-age=31536000, immutable",
+      "Cross-Origin-Resource-Policy": "cross-origin",
+    });
+    res.send(decoded.body);
+  } catch (err) {
+    next(err);
+  }
+};
+
 exports.deleteVehicle = async (req, res, next) => {
   try {
     const vehicle = await Vehicle.findById(req.params.id);

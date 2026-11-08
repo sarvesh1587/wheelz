@@ -1,7 +1,7 @@
 const Razorpay = require("razorpay");
 const crypto = require("crypto");
 const { Booking } = require("../models/Booking");
-const sendEmail = require("../services/emailService");
+const notify = require("../services/notify");
 
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
@@ -16,6 +16,12 @@ exports.createOrder = async (req, res) => {
       return res
         .status(404)
         .json({ success: false, message: "Booking not found" });
+    if (!booking.user.equals(req.user._id))
+      return res.status(403).json({ success: false, message: "Not your booking" });
+    if (booking.paymentStatus === "paid")
+      return res.status(400).json({ success: false, message: "Booking is already paid" });
+    if (booking.status === "cancelled")
+      return res.status(400).json({ success: false, message: "Booking is cancelled" });
     const amountInPaise = Math.round(booking.finalAmount * 100);
     const order = await razorpay.orders.create({
       amount: amountInPaise,
@@ -53,23 +59,32 @@ exports.verifyPayment = async (req, res) => {
         .status(400)
         .json({ success: false, message: "Invalid signature" });
 
-    const booking = await Booking.findByIdAndUpdate(
-      bookingId,
+    // The order must have been created for this booking, by this user.
+    const order = await razorpay.orders.fetch(razorpayOrderId);
+    if (order.notes?.bookingId !== String(bookingId) || order.notes?.userId !== String(req.user._id))
+      return res.status(400).json({ success: false, message: "Order does not match this booking" });
+
+    // Only the first verify flips the booking to paid, so a retry or double
+    // click doesn't send the emails twice.
+    const booking = await Booking.findOneAndUpdate(
+      { _id: bookingId, paymentStatus: { $ne: "paid" } },
       {
         paymentStatus: "paid",
+        razorpayOrderId,
         razorpayPaymentId,
         paidAt: new Date(),
         status: "confirmed",
       },
       { new: true },
-    ).populate("vehicle user");
+    );
+    if (!booking) {
+      const existing = await Booking.findById(bookingId);
+      if (!existing)
+        return res.status(404).json({ success: false, message: "Booking not found" });
+      return res.json({ success: true, message: "Payment already verified", booking: existing });
+    }
 
-    // Payment receipt email
-    sendEmail({
-      to: booking.user?.email,
-      subject: `💰 Payment Successful - ${booking.bookingRef}`,
-      html: `<h1>Payment Received!</h1><p>Amount: ₹${booking.finalAmount?.toLocaleString()}</p><p>Vehicle: ${booking.vehicle?.name}</p><p>Ref: ${booking.bookingRef}</p><p>Transaction: ${razorpayPaymentId}</p>`,
-    }).catch(() => {});
+    notify.paymentSucceeded(booking, { paymentId: razorpayPaymentId, method: "Razorpay" });
 
     res.json({ success: true, message: "Payment verified!", booking });
   } catch (error) {

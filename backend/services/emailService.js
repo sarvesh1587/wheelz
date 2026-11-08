@@ -1,50 +1,70 @@
 // backend/services/emailService.js
-// At the TOP of emailService.js, add:
-console.log("📧 Email Config Check:");
-console.log("  HOST:", process.env.EMAIL_HOST || "NOT SET");
-console.log("  PORT:", process.env.EMAIL_PORT || "NOT SET");
-console.log("  USER:", process.env.EMAIL_USER || "NOT SET");
-console.log("  PASS:", process.env.EMAIL_PASS ? "SET" : "NOT SET");
+//
+// Render's free plan blocks outbound SMTP (ports 25/465/587), so in production
+// mail goes out through the Gmail API over HTTPS, sent as the Gmail account
+// that authorised the refresh token. SMTP is kept as a fallback for local dev.
+//
+// Gmail API env: GMAIL_CLIENT_ID, GMAIL_CLIENT_SECRET, GMAIL_REFRESH_TOKEN
+// SMTP env:      EMAIL_HOST, EMAIL_PORT, EMAIL_USER, EMAIL_PASS
+// Sender:        EMAIL_FROM (defaults to EMAIL_USER)
 const nodemailer = require("nodemailer");
+const MailComposer = require("nodemailer/lib/mail-composer");
+const { OAuth2Client } = require("google-auth-library");
 
-const transporter = nodemailer.createTransport({
-  host: process.env.EMAIL_HOST || "smtp.gmail.com",
-  port: process.env.EMAIL_PORT || 587,
-  secure: false, // true for 465, false for other ports
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
+const FROM_ADDRESS = process.env.EMAIL_FROM || process.env.EMAIL_USER;
+const FROM = FROM_ADDRESS ? `"Wheelz" <${FROM_ADDRESS}>` : undefined;
 
-// Verify connection on startup
-transporter
-  .verify()
-  .then(() => console.log("✅ Email service ready"))
-  .catch((err) => console.error("❌ Email config error:", err.message));
+let gmail = null;
+if (process.env.GMAIL_CLIENT_ID && process.env.GMAIL_CLIENT_SECRET && process.env.GMAIL_REFRESH_TOKEN) {
+  gmail = new OAuth2Client(process.env.GMAIL_CLIENT_ID, process.env.GMAIL_CLIENT_SECRET);
+  gmail.setCredentials({ refresh_token: process.env.GMAIL_REFRESH_TOKEN });
+}
 
-const sendEmail = async ({ to, subject, html }) => {
-  if (!to) {
-    console.log("⚠️ No recipient email provided");
-    return;
+let smtp = null;
+if (!gmail && process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+  const port = Number(process.env.EMAIL_PORT) || 587;
+  smtp = nodemailer.createTransport({
+    host: process.env.EMAIL_HOST || "smtp.gmail.com",
+    port,
+    secure: port === 465,
+    auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
+    connectionTimeout: 10000,
+  });
+}
+
+if (gmail) console.log(`📧 Email: Gmail API as ${FROM_ADDRESS}`);
+else if (smtp) console.log(`📧 Email: SMTP as ${FROM_ADDRESS}`);
+else console.warn("⚠️ Email: not configured, emails will be skipped");
+
+async function sendViaGmail(mail) {
+  const raw = await new MailComposer(mail).compile().build();
+  const res = await gmail.request({
+    url: "https://gmail.googleapis.com/gmail/v1/users/me/messages/send",
+    method: "POST",
+    data: { raw: raw.toString("base64url") },
+  });
+  return { messageId: res.data.id };
+}
+
+// Never throws: a failed email must not fail the request that triggered it.
+const sendEmail = async ({ to, subject, html, text, attachments }) => {
+  const recipients = [].concat(to || []).filter(Boolean);
+  if (!recipients.length) return null;
+  if (!gmail && !smtp) {
+    console.warn(`⚠️ Email skipped (not configured): "${subject}"`);
+    return null;
   }
-
+  const mail = { from: FROM, to: recipients.join(", "), subject, html, text, attachments };
   try {
-    const mailOptions = {
-      from: `"Wheelz" <${process.env.EMAIL_USER}>`,
-      to,
-      subject,
-      html,
-    };
-
-    const info = await transporter.sendMail(mailOptions);
-    console.log("✅ Email sent:", info.messageId);
+    const info = gmail ? await sendViaGmail(mail) : await smtp.sendMail(mail);
+    console.log(`✅ Email sent: "${subject}" → ${mail.to}`);
     return info;
   } catch (error) {
-    console.error("❌ Email send failed:", error.message);
-    // Don't throw - just log, so app doesn't crash
+    const detail = error.response?.data?.error?.message || error.message;
+    console.error(`❌ Email failed: "${subject}" → ${mail.to}: ${detail}`);
     return null;
   }
 };
 
 module.exports = sendEmail;
+module.exports.sendEmail = sendEmail;

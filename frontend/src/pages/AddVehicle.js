@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { vehicleAPI } from "../services/api";
+import compressImage from "../utils/compressImage";
 import {
   Image as PhotoIcon,
   X as XMarkIcon,
@@ -53,7 +54,7 @@ export default function AddVehicle() {
       toast.error("Failed to read image");
       setUploadingImage(false);
     };
-    reader.readAsDataURL(file);
+    reader.readAsDataURL(await compressImage(file));
   };
 
   const removeImage = (indexToRemove) => {

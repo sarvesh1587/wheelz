@@ -5,7 +5,6 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
-import AIChatbot from "./components/AIChatbot";
 import { Toaster } from "react-hot-toast";
 import { AnimatePresence } from "framer-motion";
 import { AuthProvider, useAuth } from "./context/AuthContext";
@@ -14,23 +13,24 @@ import Navbar from "./components/common/Navbar";
 import Footer from "./components/common/Footer";
 import LoadingSpinner from "./components/common/LoadingSpinner";
 import LoadingScreen, { RouteProgress } from "./components/common/LoadingScreen";
+import { PageSkeleton } from "./components/common/Skeleton";
 import SmoothScroll from "./components/motion/SmoothScroll";
 
-// Pages
-import About from "./pages/About";
-import Contact from "./pages/Contact";
-import Offers from "./pages/Offers";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import ForgotPassword from "./pages/ForgotPassword";
-import ResetPassword from "./pages/ResetPassword";
-import NotFound from "./pages/NotFound";
-import KYCUpload from "./pages/KYCUpload";
-import TripRequests from "./pages/TripRequests";
-import MyTrips from "./pages/MyTrips";
-import RideShareDetail from "./pages/RideShareDetail";
-
 // Lazy load pages
+const About = lazy(() => import("./pages/About"));
+const Contact = lazy(() => import("./pages/Contact"));
+const Privacy = lazy(() => import("./pages/Privacy"));
+const Offers = lazy(() => import("./pages/Offers"));
+const Login = lazy(() => import("./pages/Login"));
+const Register = lazy(() => import("./pages/Register"));
+const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const KYCUpload = lazy(() => import("./pages/KYCUpload"));
+const TripRequests = lazy(() => import("./pages/TripRequests"));
+const MyTrips = lazy(() => import("./pages/MyTrips"));
+const RideShareDetail = lazy(() => import("./pages/RideShareDetail"));
+const AIChatbot = lazy(() => import("./components/AIChatbot"));
 const Home = lazy(() => import("./pages/Home"));
 const Vehicles = lazy(() => import("./pages/Vehicles"));
 const VehicleDetail = lazy(() => import("./pages/VehicleDetail"));
@@ -62,6 +62,13 @@ const VendorEditVehicle = lazy(() => import("./pages/VendorEditVehicle"));
 const VendorBookings = lazy(() => import("./pages/VendorBookings"));
 const VendorRegister = lazy(() => import("./pages/VendorRegister"));
 const VendorPending = lazy(() => import("./pages/VendorPending"));
+
+const PageFallback = () => (
+  <>
+    <RouteProgress />
+    <PageSkeleton />
+  </>
+);
 
 // ========== ROUTE GUARDS ==========
 
@@ -102,7 +109,7 @@ function AppRoutes() {
       <SmoothScroll />
       <Navbar />
       <main className="flex-grow">
-        <Suspense fallback={<RouteProgress />}>
+        <Suspense fallback={<PageFallback />}>
           <Routes>
             {/* Public Routes */}
             <Route path="/" element={<Home />} />
@@ -110,6 +117,7 @@ function AppRoutes() {
             <Route path="/vehicles/:id" element={<VehicleDetail />} />
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
+            <Route path="/privacy" element={<Privacy />} />
             <Route path="/offers" element={<Offers />} />
             {/* Auth Routes */}
             <Route
@@ -337,7 +345,9 @@ function AppRoutes() {
         </Suspense>
       </main>
       <Footer />
-      <AIChatbot />
+      <Suspense fallback={null}>
+        <AIChatbot />
+      </Suspense>
       <Toaster
         position="bottom-center"
         toastOptions={{

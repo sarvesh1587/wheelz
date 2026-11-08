@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { SplitText, Magnetic, EASE } from "../motion";
 import { aiAPI } from "../../services/api";
-import SpinGarage from "./SpinGarage";
+import WeekendEscapes from "./WeekendEscapes";
 import usePlatformStats from "../../hooks/usePlatformStats";
 
 const BASE_TAGS = [
@@ -157,7 +157,7 @@ export default function AnimatedHero() {
         </div>
       </div>
 
-      <SpinGarage />
+      <WeekendEscapes />
     </section>
   );
 }

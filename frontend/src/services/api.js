@@ -7,6 +7,10 @@ const API_BASE =
 
 console.log("API Base URL:", API_BASE);
 
+// The free-tier backend sleeps when idle and takes up to a minute to wake.
+// Ping it the moment the bundle loads so it is waking while the intro plays.
+fetch(`${API_BASE}/health`, { mode: "cors" }).catch(() => {});
+
 const api = axios.create({
   baseURL: API_BASE,
   timeout: 120000,

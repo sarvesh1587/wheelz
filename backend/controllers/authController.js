@@ -3,6 +3,7 @@ const jwt = require("jsonwebtoken");
 const { OAuth2Client } = require("google-auth-library");
 const User = require("../models/User");
 const sendEmail = require("../services/emailService");
+const notify = require("../services/notify");
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const sendTokenResponse = (user, statusCode, res) => {
@@ -49,12 +50,7 @@ exports.register = async (req, res) => {
       role: "customer",
     });
 
-    // Welcome email
-    sendEmail({
-      to: user.email,
-      subject: "🎉 Welcome to Wheelz!",
-      html: `<h1>Welcome ${user.name}!</h1><p>Start renting vehicles or sharing rides today!</p>`,
-    }).catch((err) => console.log("Welcome email failed:", err.message));
+    notify.welcome(user);
 
     sendTokenResponse(user, 201, res);
   } catch (error) {
@@ -114,6 +110,7 @@ exports.googleLogin = async (req, res) => {
         emailVerifiedAt: new Date(),
         avatar: picture || "",
       });
+      notify.welcome(user);
     }
     user.lastLogin = new Date();
     await user.save({ validateBeforeSave: false });
