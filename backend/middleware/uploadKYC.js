@@ -2,11 +2,15 @@ const multer = require("multer");
 const { CloudinaryStorage } = require("multer-storage-cloudinary");
 const cloudinary = require("cloudinary").v2;
 
-// ✅ Your Cloudinary configuration - CORRECTED
+// Credentials come from the environment, never from source control.
+const { CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET } = process.env;
+if (!CLOUDINARY_CLOUD_NAME || !CLOUDINARY_API_KEY || !CLOUDINARY_API_SECRET) {
+  console.warn("⚠️ Cloudinary: CLOUDINARY_* env vars not set, KYC uploads will fail");
+}
 cloudinary.config({
-  cloud_name: "ds9xyb8dk", // ✅ Cloud Name
-  api_key: "563879755855487", // ✅ API Key
-  api_secret: "NtVwMWB7aD5OoImsqw7_CooDE2g", // ✅ API Secret
+  cloud_name: CLOUDINARY_CLOUD_NAME,
+  api_key: CLOUDINARY_API_KEY,
+  api_secret: CLOUDINARY_API_SECRET,
 });
 
 // Cloudinary storage
