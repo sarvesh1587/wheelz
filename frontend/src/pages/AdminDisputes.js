@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { adminAPI } from "../services/api";
 import { PageHeader, Panel, Row, StatusPill, Segmented, Spinner, Empty, PageLoader } from "../components/ui";
-import { DISPUTE_TYPES, PhotoGrid } from "../components/handover/TripPanel";
+import { DISPUTE_TYPES, PhotoGrid, lateText } from "../components/handover/TripPanel";
 
 const inr = (n) => `₹${Math.round(n || 0).toLocaleString("en-IN")}`;
 const dt = (d) => (d ? new Date(d).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }) : "—");
@@ -21,7 +21,7 @@ function Report({ title, r }) {
       <p className="text-xs text-muted">
         {dt(r.at)} · {Number(r.odometer).toLocaleString("en-IN")} km · fuel {r.fuelLevel}%
         {r.kmDriven != null ? ` · ${r.kmDriven} km driven` : ""}
-        {r.lateMinutes > 0 ? ` · ${Math.round(r.lateMinutes / 60)} h late` : ""}
+        {r.lateMinutes > 0 ? ` · ${lateText(r.lateMinutes)} late` : ""}
       </p>
       <PhotoGrid photos={r.photos} />
     </div>

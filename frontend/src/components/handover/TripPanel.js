@@ -7,6 +7,7 @@ import PhotoSlots, { appendPhotos } from "./PhotoSlots";
 
 const dt = (d) => (d ? new Date(d).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }) : "—");
 const inr = (n) => `₹${Math.round(n || 0).toLocaleString("en-IN")}`;
+export const lateText = (m) => (m >= 60 ? `${Math.floor(m / 60)} h ${m % 60} min` : `${m} min`);
 
 export const DISPUTE_TYPES = {
   damage: "Damage",
@@ -48,7 +49,7 @@ export function ReportView({ title, report }) {
         <Row label="Odometer">{Number(report.odometer).toLocaleString("en-IN")} km</Row>
         <Row label="Fuel / charge">{report.fuelLevel}%</Row>
         {report.kmDriven != null && <Row label="Distance driven">{report.kmDriven} km</Row>}
-        {report.lateMinutes > 0 && <Row label="Returned late">{Math.floor(report.lateMinutes / 60)} h {report.lateMinutes % 60} min</Row>}
+        {report.lateMinutes > 0 && <Row label="Returned late">{lateText(report.lateMinutes)}</Row>}
         {report.notes && <Row label="Notes">{report.notes}</Row>}
         {report.location?.lat && (
           <Row label="Location">
