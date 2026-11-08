@@ -7,6 +7,7 @@ const date = (d) => (d ? new Date(d).toLocaleDateString("en-IN", { day: "numeric
 
 export const STAGES = {
   upcoming: { label: "Upcoming", tone: "pending" },
+  on_hold: { label: "On hold (issue open)", tone: "negative" },
   ready: { label: "Ready for payout", tone: "positive" },
   paid_out: { label: "Paid out", tone: "neutral" },
   unpaid: { label: "Awaiting payment", tone: "neutral" },
@@ -19,14 +20,14 @@ export default function EarningsTab({ data }) {
   if (!data) return <Empty title="Earnings unavailable.">We couldn't load your earnings. Try refreshing the page.</Empty>;
 
   const { summary, commissionRate, bookings, payouts, bank } = data;
-  const earning = bookings.filter((b) => ["upcoming", "ready", "paid_out"].includes(b.earningStage));
+  const earning = bookings.filter((b) => ["upcoming", "on_hold", "ready", "paid_out"].includes(b.earningStage));
 
   return (
     <div className="space-y-10">
       <div className="grid grid-cols-2 gap-x-6 gap-y-10 md:grid-cols-4">
         <Stat label="Your earnings" value={inr(summary.net)} hint={`${summary.paidBookings} paid booking${summary.paidBookings === 1 ? "" : "s"}`} />
         <Stat label="Ready for payout" value={inr(summary.ready)} hint={`${summary.readyCount} finished ride${summary.readyCount === 1 ? "" : "s"}`} />
-        <Stat label="Upcoming" value={inr(summary.upcoming)} hint="Rides not finished yet" />
+        <Stat label="Upcoming" value={inr(summary.upcoming + (summary.onHold || 0))} hint={summary.onHold ? `${inr(summary.onHold)} on hold for an open issue` : "Rides not finished yet"} />
         <Stat label="Paid out" value={inr(summary.paidOut)} hint={`${payouts.length} payout${payouts.length === 1 ? "" : "s"}`} />
       </div>
 
@@ -37,8 +38,8 @@ export default function EarningsTab({ data }) {
           <Row label="Your earnings" strong>{inr(summary.net)}</Row>
           <p className="mt-4 flex gap-2 text-xs leading-relaxed text-muted">
             <Info size={14} className="mt-0.5 shrink-0" />
-            Earnings become ready for payout once a paid ride ends. Wheelz sends them to your bank account and emails you
-            the details.
+            Earnings become ready for payout 24 hours after you record the return (3 days after the end date if you
+            don't), and wait while an issue is open. Wheelz sends them to your bank account and emails you the details.
           </p>
         </Panel>
 

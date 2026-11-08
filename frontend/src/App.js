@@ -51,6 +51,7 @@ const AdminVehicles = lazy(() => import("./pages/AdminVehicles"));
 const AdminVendors = lazy(() => import("./pages/AdminVendors"));
 const AdminReports = lazy(() => import("./pages/AdminReports"));
 const AdminPayouts = lazy(() => import("./pages/AdminPayouts"));
+const AdminDisputes = lazy(() => import("./pages/AdminDisputes"));
 const AdminVendorDetails = lazy(() => import("./pages/AdminVendorDetails"));
 const AddVehicle = lazy(() => import("./pages/AddVehicle"));
 const EditVehicle = lazy(() => import("./pages/EditVehicle"));
@@ -321,6 +322,14 @@ function AppRoutes() {
               element={
                 <AdminRoute>
                   <AdminVendorDetails />
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="/admin/disputes"
+              element={
+                <AdminRoute>
+                  <AdminDisputes />
                 </AdminRoute>
               }
             />

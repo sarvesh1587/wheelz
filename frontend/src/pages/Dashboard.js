@@ -40,6 +40,7 @@ import { useConfetti } from "../hooks/useConfetti";
 import { DashboardSkeleton } from "../components/common/Skeleton";
 import TrackingMap from "../components/TrackingMap";
 import KYCStatusBanner from "../components/KYCStatusBanner";
+import TripPanel from "../components/handover/TripPanel";
 
 // ─── City Coordinates Map (22 Indian Cities) ────────────────────────────────
 const CITY_COORDS = {
@@ -115,6 +116,7 @@ export default function Dashboard() {
   const [submittingReport, setSubmittingReport] = useState(false);
   const [showReceipt, setShowReceipt] = useState(false);
   const [receiptBooking, setReceiptBooking] = useState(null);
+  const [tripBookingId, setTripBookingId] = useState(null);
   const [trackingRide, setTrackingRide] = useState(null);
   const [driverCoords, setDriverCoords] = useState(null);
   const [pickupCoords, setPickupCoords] = useState(null);
@@ -413,7 +415,7 @@ export default function Dashboard() {
 
       {activeTab === "bookings" && (
         <motion.div variants={containerVariants} className="border-t border-line/10">
-          {bookings.length === 0 ? <EmptyState title="No bookings yet." description="Start your first adventure with Wheelz." action="Browse vehicles" onAction={() => navigate("/vehicles")} /> : bookings.map((booking) => (<BookingCard key={booking._id} booking={booking} user={user} onViewDetails={viewBookingDetails} onProcessPayment={processPayment} onCancelBooking={cancelBooking} processingPayment={processingPayment} setReceiptBooking={setReceiptBooking} setShowReceipt={setShowReceipt} />))}
+          {bookings.length === 0 ? <EmptyState title="No bookings yet." description="Start your first adventure with Wheelz." action="Browse vehicles" onAction={() => navigate("/vehicles")} /> : bookings.map((booking) => (<BookingCard key={booking._id} booking={booking} user={user} onViewDetails={viewBookingDetails} onProcessPayment={processPayment} onCancelBooking={cancelBooking} processingPayment={processingPayment} setReceiptBooking={setReceiptBooking} setShowReceipt={setShowReceipt} onOpenTrip={setTripBookingId} />))}
         </motion.div>
       )}
 
@@ -580,6 +582,9 @@ export default function Dashboard() {
 
       {/* RECEIPT MODAL */}
       {showReceipt && receiptBooking && (<PaymentReceipt booking={receiptBooking} onClose={() => { setShowReceipt(false); setReceiptBooking(null); }} />)}
+      <Modal open={!!tripBookingId} onClose={() => setTripBookingId(null)} size="lg" eyebrow="Your ride" title="Pickup & return">
+        {tripBookingId && <TripPanel bookingId={tripBookingId} onChanged={fetchDashboardData} />}
+      </Modal>
 
       {/* TRACKING MODAL */}
       <Modal open={!!trackingRide} onClose={closeTracking} eyebrow="Live" title="Tracking" size="lg">
@@ -617,7 +622,10 @@ function EmptyState({ title, description, action, onAction }) {
   );
 }
 
-function BookingCard({ booking, onViewDetails, onProcessPayment, onCancelBooking, processingPayment, setReceiptBooking, setShowReceipt }) {
+// Label for the handover button, by where the ride is.
+const TRIP_LABEL = { confirmed: "Pickup code", active: "Trip", completed: "Trip & issues" };
+
+function BookingCard({ booking, onViewDetails, onProcessPayment, onCancelBooking, processingPayment, setReceiptBooking, setShowReceipt, onOpenTrip }) {
   return (
     <motion.article variants={itemVariants} className="group grid gap-5 border-b border-line/10 py-6 sm:grid-cols-[8rem_1fr_auto] sm:items-center sm:gap-8">
       <img src={booking.vehicle?.images?.[0]} alt={booking.vehicle?.name} className="aspect-[4/3] w-full rounded-2xl bg-raised object-cover sm:w-32" />
@@ -642,6 +650,9 @@ function BookingCard({ booking, onViewDetails, onProcessPayment, onCancelBooking
             <button onClick={() => { setReceiptBooking(booking); setShowReceipt(true); }} className="chip"><FileDown size={13} /> Receipt</button>
           )}
           <Link to={`/bookings/${booking._id}`} onClick={() => onViewDetails(booking)} className="chip"><Eye size={13} /> View</Link>
+          {booking.paymentStatus === "paid" && TRIP_LABEL[booking.status] && (
+            <button onClick={() => onOpenTrip(booking._id)} className={booking.status === "confirmed" ? "btn-primary !px-4 !py-2 !text-xs" : "chip"}>{TRIP_LABEL[booking.status]}</button>
+          )}
         </div>
         {booking.status === "pending" && booking.paymentStatus !== "paid" && (
           <button onClick={() => onCancelBooking(booking._id)} className="link-underline text-xs text-muted hover:text-red-500">Cancel booking</button>

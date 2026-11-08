@@ -195,6 +195,18 @@ export const adminAPI = {
   getReports: (params) => api.get("/admin/reports", { params }),
   getPayouts: () => api.get("/admin/payouts"),
   createPayout: (data) => api.post("/admin/payouts", data),
+  getDisputes: (status) => api.get("/admin/disputes", { params: { status } }),
+  resolveDispute: (id, data) => api.put(`/admin/disputes/${id}`, data),
+};
+
+// Pickup/return handover and disputes. Photo uploads go as FormData.
+export const handoverAPI = {
+  get: (bookingId) => api.get(`/bookings/${bookingId}/handover`),
+  pickup: (bookingId, form) => api.post(`/bookings/${bookingId}/pickup`, form, { timeout: 120000 }),
+  return: (bookingId, form) => api.post(`/bookings/${bookingId}/return`, form, { timeout: 120000 }),
+  acknowledge: (bookingId, form) => api.post(`/bookings/${bookingId}/acknowledge`, form, { timeout: 120000 }),
+  raise: (bookingId, form) => api.post(`/bookings/${bookingId}/disputes`, form, { timeout: 120000 }),
+  respond: (bookingId, disputeId, form) => api.post(`/bookings/${bookingId}/disputes/${disputeId}/respond`, form, { timeout: 120000 }),
 };
 
 export const vendorAPI = {

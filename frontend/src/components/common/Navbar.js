@@ -26,6 +26,7 @@ const ADMIN_NAV = [
   { to: "/admin/users", label: "Users" },
   { to: "/admin/vendors", label: "Vendors" },
   { to: "/admin/payouts", label: "Payouts" },
+  { to: "/admin/disputes", label: "Disputes" },
   { to: "/admin/reports", label: "Reports" },
 ];
 

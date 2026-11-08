@@ -3,6 +3,8 @@ import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { vehicleAPI, bookingAPI, vendorAPI } from "../services/api";
 import EarningsTab from "../components/vendor/EarningsTab";
+import CheckInModal from "../components/handover/CheckInModal";
+import TripPanel from "../components/handover/TripPanel";
 import toast from "react-hot-toast";
 import {
   Truck as TruckIcon,
@@ -26,7 +28,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Reveal } from "../components/motion";
-import { PageHeader, Panel, Stat, PageLoader, useThemeColors } from "../components/ui";
+import { PageHeader, Panel, Stat, PageLoader, Modal, useThemeColors } from "../components/ui";
 import {
   LineChart,
   Line,
@@ -47,6 +49,8 @@ export default function VendorDashboard() {
   const [bookings, setBookings] = useState([]);
   const [stats, setStats] = useState(null);
   const [earnings, setEarnings] = useState(null);
+  const [checkIn, setCheckIn] = useState(null); // { id, mode: "pickup" | "return" }
+  const [tripId, setTripId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("vehicles");
   const [selectedBooking, setSelectedBooking] = useState(null);
@@ -543,6 +547,19 @@ export default function VendorDashboard() {
           </motion.div>
         )}
 
+        {checkIn && (
+          <CheckInModal
+            open
+            bookingId={checkIn.id}
+            mode={checkIn.mode}
+            onClose={() => setCheckIn(null)}
+            onDone={fetchVendorData}
+          />
+        )}
+        <Modal open={!!tripId} onClose={() => setTripId(null)} size="lg" eyebrow="Booking" title="Trip & issues">
+          {tripId && <TripPanel bookingId={tripId} onChanged={fetchVendorData} />}
+        </Modal>
+
         {/* Bookings Tab */}
         {activeTab === "bookings" && (
           <motion.div
@@ -619,6 +636,23 @@ export default function VendorDashboard() {
                         "Guest"}
                     </div>
                   </div>
+                  {booking.paymentStatus === "paid" && booking.status !== "cancelled" && (
+                    <div className="mt-4 flex flex-wrap gap-2 border-t border-line/10 pt-4" onClick={(e) => e.stopPropagation()}>
+                      {booking.status === "confirmed" && (
+                        <button type="button" onClick={() => setCheckIn({ id: booking._id, mode: "pickup" })} className="btn-primary !px-4 !py-2 text-xs">
+                          Start ride (hand over)
+                        </button>
+                      )}
+                      {booking.status === "active" && (
+                        <button type="button" onClick={() => setCheckIn({ id: booking._id, mode: "return" })} className="btn-primary !px-4 !py-2 text-xs">
+                          End ride (take back)
+                        </button>
+                      )}
+                      <button type="button" onClick={() => setTripId(booking._id)} className="chip text-xs">
+                        Trip &amp; issues
+                      </button>
+                    </div>
+                  )}
                 </motion.div>
               ))
             )}
