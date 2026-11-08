@@ -6,13 +6,11 @@ import { authAPI } from "../services/api";
 import toast from "react-hot-toast";
 import AuthShell from "../components/auth/AuthShell";
 import usePlatformStats, { joinCities } from "../hooks/usePlatformStats";
-import { useGoogleReCaptcha } from "@google-recaptcha/react"; // ADD THIS
 
 export default function Register() {
   const platform = usePlatformStats();
   const navigate = useNavigate();
   const { login } = useAuth();
-  const googleReCaptcha = useGoogleReCaptcha(); // ADD THIS
 
   const [formData, setFormData] = useState({
     name: "",
@@ -45,29 +43,11 @@ export default function Register() {
     setLoading(true);
 
     try {
-      // CHECK: Is reCAPTCHA loaded?
-      if (!googleReCaptcha) {
-        toast.error("Security check not loaded. Please refresh the page.");
-        setLoading(false);
-        return;
-      }
-
-      // EXECUTE: Get reCAPTCHA token (invisible to user)
-      const token = await googleReCaptcha.executeV3("register");
-
-      if (!token) {
-        toast.error("Security verification failed. Please try again.");
-        setLoading(false);
-        return;
-      }
-
-      // SEND: Include token with registration data
       const res = await authAPI.register({
         name: formData.name,
         email: formData.email,
         phone: formData.phone,
         password: formData.password,
-        recaptchaToken: token, // ADD THIS - sends token to backend
       });
 
       // Auto login after registration
@@ -78,9 +58,7 @@ export default function Register() {
       console.error("Registration error:", error);
 
       // Handle specific error cases
-      if (error.response?.data?.message === "reCAPTCHA verification failed") {
-        toast.error("Security verification failed. Please try again.");
-      } else if (error.response?.data?.message?.includes("already exists")) {
+      if (error.response?.data?.message?.includes("already exists")) {
         toast.error("Email already registered. Please login.");
         navigate("/login");
       } else {
