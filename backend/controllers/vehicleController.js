@@ -153,7 +153,7 @@ exports.createVehicle = async (req, res, next) => {
       },
     };
 
-    console.log("Creating vehicle with data:", vehicleData);
+    console.log(`🚗 Creating vehicle "${vehicleData.name}" in ${vehicleData.city} with ${vehicleData.images?.length || 0} image(s)`);
 
     const vehicle = await Vehicle.create(vehicleData);
     res.status(201).json({ success: true, vehicle });
