@@ -140,7 +140,6 @@ function validate(schema) {
     const result = schema.safeParse(req.body);
 
     if (!result.success) {
-      // Return generic 400 — don't leak which field failed in production
       const isDev = process.env.NODE_ENV === "development";
       const details = isDev
         ? result.error.errors.map((e) => ({
@@ -149,9 +148,11 @@ function validate(schema) {
           }))
         : undefined;
 
+      // The first rule message ("Password must contain a number") is safe to
+      // show and tells the user what to fix; field-level details stay dev-only.
       return res.status(400).json({
         success: false,
-        message: "Invalid request data",
+        message: result.error.errors[0]?.message || "Invalid request data",
         ...(isDev && { details }),
       });
     }

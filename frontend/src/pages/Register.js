@@ -7,6 +7,14 @@ import toast from "react-hot-toast";
 import AuthShell from "../components/auth/AuthShell";
 import usePlatformStats, { joinCities } from "../hooks/usePlatformStats";
 
+// Same rules as the backend's RegisterSchema, checked before submitting.
+const PASSWORD_RULES = [
+  [(p) => p.length >= 8, "8+ characters"],
+  [(p) => /[A-Z]/.test(p), "an uppercase letter"],
+  [(p) => /[0-9]/.test(p), "a number"],
+  [(p) => /[^A-Za-z0-9]/.test(p), "a special character"],
+];
+
 export default function Register() {
   const platform = usePlatformStats();
   const navigate = useNavigate();
@@ -27,6 +35,17 @@ export default function Register() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!/^[a-zA-Z\s'-]{2,50}$/.test(formData.name.trim())) {
+      toast.error("Name can only have letters, spaces, ' and -");
+      return;
+    }
+
+    const missing = PASSWORD_RULES.filter(([ok]) => !ok(formData.password)).map(([, label]) => label);
+    if (missing.length) {
+      toast.error(`Password needs ${missing.join(", ")}`);
+      return;
+    }
 
     // Validate passwords match
     if (formData.password !== formData.confirmPassword) {
@@ -137,6 +156,13 @@ export default function Register() {
                 className="field"
                 placeholder="••••••••"
               />
+              <p className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted">
+                {PASSWORD_RULES.map(([ok, label]) => (
+                  <span key={label} className={formData.password && ok(formData.password) ? "text-ink" : ""}>
+                    {formData.password && ok(formData.password) ? "✓" : "·"} {label}
+                  </span>
+                ))}
+              </p>
             </div>
 
             <div>
@@ -154,9 +180,6 @@ export default function Register() {
               />
             </div>
 
-            <div className="eyebrow">
-              Protected by reCAPTCHA
-            </div>
 
             <button
               type="submit"
