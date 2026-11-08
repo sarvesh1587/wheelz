@@ -5,38 +5,28 @@ const { createNotification } = require("../utils/notificationHelper");
 
 // Vendor registration from /vendor/register. Creates a vendor account that
 // waits for admin approval, then emails the applicant and the admins.
+// An existing customer can turn their own account into a vendor account,
+// either signed in (req.user via optionalAuth) or by giving its password.
 exports.registerVendor = async (req, res) => {
   try {
     const { vendorType, name, email, password, phone, individualDetails = {}, businessDetails = {}, bankDetails = {} } = req.body;
 
     if (!["individual", "business"].includes(vendorType))
       return res.status(400).json({ success: false, message: "Choose individual or business" });
-    if (!name || !email || !password || !phone)
+    const signedIn = req.user && req.user.email === String(email || "").toLowerCase().trim();
+    if (!name || !email || !phone || (!signedIn && !password))
       return res.status(400).json({ success: false, message: "Name, email, phone and password are required" });
-    if (String(password).length < 6)
-      return res.status(400).json({ success: false, message: "Password must be at least 6 characters" });
     if (vendorType === "business" && !businessDetails.businessName)
       return res.status(400).json({ success: false, message: "Business name is required" });
     if (!bankDetails.accountNumber || !bankDetails.ifscCode)
       return res.status(400).json({ success: false, message: "Bank account and IFSC are required" });
 
-    const existingUser = await User.findOne({ email: String(email).toLowerCase().trim() });
-    if (existingUser) {
-      return res.status(400).json({
-        success: false,
-        message: "An account with this email already exists",
-      });
-    }
-
     const pick = (obj, keys) => Object.fromEntries(keys.map((k) => [k, String(obj[k] || "").trim()]));
-    const vendor = await User.create({
-      name,
-      email,
-      password,
-      phone,
+    const vendorFields = {
       role: "vendor",
       vendorType,
       isVendorApproved: false,
+      vendorSince: new Date(),
       individualDetails: vendorType === "individual" ? pick(individualDetails, ["aadharNumber", "panNumber", "address"]) : undefined,
       businessDetails:
         vendorType === "business"
@@ -46,7 +36,40 @@ exports.registerVendor = async (req, res) => {
         ...pick(bankDetails, ["accountHolderName", "accountNumber", "bankName"]),
         ifscCode: String(bankDetails.ifscCode).toUpperCase().trim(),
       },
-    });
+    };
+
+    const existingUser = await User.findOne({ email: String(email).toLowerCase().trim() }).select("+password");
+    let vendor;
+    let upgraded = false;
+    if (existingUser) {
+      if (existingUser.role === "vendor")
+        return res.status(409).json({
+          success: false,
+          code: "ALREADY_VENDOR",
+          message: "This email already has a vendor account. Log in to see its status.",
+        });
+      if (existingUser.role !== "customer")
+        return res.status(409).json({ success: false, message: "This account can't be registered as a vendor." });
+
+      // Only the owner can convert the account: signed in as it, or knows its password.
+      const owns = (req.user && req.user._id.equals(existingUser._id)) || (password && (await existingUser.matchPassword(password)));
+      if (!owns)
+        return res.status(409).json({
+          success: false,
+          code: "ACCOUNT_EXISTS",
+          message:
+            "This email already has a Wheelz customer account. Log in to it (or enter that account's password here) to turn it into a vendor account.",
+        });
+
+      existingUser.set(vendorFields);
+      if (!existingUser.phone) existingUser.phone = phone;
+      vendor = await existingUser.save();
+      upgraded = true;
+    } else {
+      if (String(password).length < 6)
+        return res.status(400).json({ success: false, message: "Password must be at least 6 characters" });
+      vendor = await User.create({ name, email, password, phone, ...vendorFields });
+    }
 
     const admins = await User.find({ role: "admin" }).select("_id");
     await Promise.all(
@@ -62,10 +85,21 @@ exports.registerVendor = async (req, res) => {
     );
     notify.vendorApplied(vendor);
 
-    res.status(201).json({
+    res.status(upgraded ? 200 : 201).json({
       success: true,
-      message: "Registration submitted. We'll email you once you're approved.",
-      vendor: { _id: vendor._id, name: vendor.name, email: vendor.email, isVendorApproved: false },
+      upgraded,
+      message: upgraded
+        ? "Your account is now a vendor account, pending approval. We'll email you once you're approved."
+        : "Registration submitted. We'll email you once you're approved.",
+      vendor: {
+        _id: vendor._id,
+        name: vendor.name,
+        email: vendor.email,
+        phone: vendor.phone,
+        avatar: vendor.avatar,
+        role: vendor.role,
+        isVendorApproved: false,
+      },
     });
   } catch (error) {
     if (error.code === 11000)

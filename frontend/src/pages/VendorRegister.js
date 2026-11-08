@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import {
@@ -19,9 +19,17 @@ import {
   IdCard as IdentificationIcon,
 } from "lucide-react";
 import { PageHeader } from "../components/ui";
+import { useAuth } from "../context/AuthContext";
 
 export default function VendorRegister() {
   const navigate = useNavigate();
+  const { user, login } = useAuth();
+  // A signed-in customer turns their own account into a vendor account,
+  // so their name and email come from the account and no password is asked.
+  const signedIn = user?.role === "customer";
+  // Set when the email already belongs to a customer account: the password
+  // field then asks for that account's password instead of a new one.
+  const [accountExists, setAccountExists] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1);
@@ -60,7 +68,18 @@ export default function VendorRegister() {
     bankName: "",
   });
 
+  useEffect(() => {
+    if (!signedIn) return;
+    setCommonInfo((c) => ({
+      ...c,
+      name: c.name || user.name || "",
+      email: user.email || "",
+      phone: c.phone || user.phone || "",
+    }));
+  }, [signedIn, user]);
+
   const handleCommonChange = (e) => {
+    if (e.target.name === "email") setAccountExists(false);
     setCommonInfo({ ...commonInfo, [e.target.name]: e.target.value });
   };
 
@@ -100,10 +119,12 @@ export default function VendorRegister() {
       toast.error("Please enter a valid 10-digit phone number");
       return false;
     }
+    if (signedIn) return true;
     if (!commonInfo.password) {
-      toast.error("Please enter a password");
+      toast.error(accountExists ? "Enter your existing account password" : "Please enter a password");
       return false;
     }
+    if (accountExists) return true;
     if (commonInfo.password.length < 6) {
       toast.error("Password must be at least 6 characters");
       return false;
@@ -222,19 +243,31 @@ export default function VendorRegister() {
       bankDetails,
     };
 
+    const token = localStorage.getItem("wheelz_token");
     try {
       const response = await fetch(
         `${process.env.REACT_APP_API_URL || "https://wheelz-ldq2.onrender.com/api"}/vendor/register`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            ...(signedIn && token ? { Authorization: `Bearer ${token}` } : {}),
+          },
           body: JSON.stringify(vendorData),
         },
       );
       const data = await response.json();
       if (data.success) {
+        // The account is now a vendor: keep the session but with the new role.
+        if (data.upgraded && token) login(token, { ...user, ...data.vendor });
         toast.success(data.message || "Registration submitted for approval!");
         navigate("/vendor-pending");
+      } else if (data.code === "ACCOUNT_EXISTS") {
+        // Back to step 1 (everything typed is kept) to enter that account's password.
+        setAccountExists(true);
+        setCommonInfo((c) => ({ ...c, password: "", confirmPassword: "" }));
+        setStep(1);
+        toast.error(data.message, { duration: 6000 });
       } else {
         toast.error(data.message || "Registration failed");
       }
@@ -255,6 +288,32 @@ export default function VendorRegister() {
   };
 
   const prevStep = () => setStep(step - 1);
+
+  if (user && user.role !== "customer") {
+    const isVendor = user.role === "vendor";
+    return (
+      <div className="container-x pb-24 pt-28 md:pt-32">
+        <div className="mx-auto max-w-xl">
+          <PageHeader
+            index="01"
+            eyebrow="List your vehicle"
+            title={[isVendor ? "You're a vendor." : "Admin account."]}
+            size="md"
+            lede={
+              isVendor
+                ? "This account is already registered as a vendor."
+                : "Admin accounts can't register as vendors. Log in with a different account to apply."
+            }
+          />
+          {isVendor && (
+            <Link to={user.isVendorApproved ? "/vendor/dashboard" : "/vendor-pending"} className="btn-primary">
+              {user.isVendorApproved ? "Go to vendor dashboard" : "Check approval status"} <ArrowRightIcon className="h-4 w-4" />
+            </Link>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   // Vendor Type Selection Screen
   if (!vendorType) {
@@ -364,6 +423,22 @@ export default function VendorRegister() {
           {/* Step 1: Common Info */}
           {step === 1 && (
             <div className="space-y-4">
+              {signedIn && (
+                <p className="rounded-xl border border-line/10 bg-surface p-4 text-sm text-muted">
+                  You're signed in as <b className="text-ink">{user.email}</b>. We'll turn this account into a vendor
+                  account; your bookings and login stay the same.
+                </p>
+              )}
+              {accountExists && !signedIn && (
+                <p className="rounded-xl border border-accent/40 bg-accent/10 p-4 text-sm">
+                  <b>{commonInfo.email}</b> already has a Wheelz account. Enter that account's password below to turn it
+                  into a vendor account, or{" "}
+                  <Link to="/login?redirect=/vendor/register" className="font-medium underline">
+                    log in first
+                  </Link>
+                  .
+                </p>
+              )}
               <div>
                 <label className="block text-sm font-medium text-ink/80 mb-1">
                   Full Name *
@@ -392,6 +467,7 @@ export default function VendorRegister() {
                     name="email"
                     value={commonInfo.email}
                     onChange={handleCommonChange}
+                    readOnly={signedIn}
                     className="w-full pl-10 pr-4 py-3 rounded-xl border border-line/10 bg-surface focus:ring-2 focus:ring-green-500"
                     placeholder="vendor@example.com"
                     required
@@ -415,54 +491,62 @@ export default function VendorRegister() {
                   />
                 </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  Password *
-                </label>
-                <div className="relative">
-                  <LockClosedIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted" />
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    name="password"
-                    value={commonInfo.password}
-                    onChange={handleCommonChange}
-                    className="w-full pl-10 pr-12 py-3 rounded-xl border border-line/10 bg-surface focus:ring-2 focus:ring-green-500"
-                    placeholder="••••••"
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2"
-                  >
-                    {showPassword ? (
-                      <EyeSlashIcon className="w-5 h-5 text-muted" />
-                    ) : (
-                      <EyeIcon className="w-5 h-5 text-muted" />
+              {!signedIn && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">
+                      {accountExists ? "Your existing account password *" : "Password *"}
+                    </label>
+                    <div className="relative">
+                      <LockClosedIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted" />
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        name="password"
+                        value={commonInfo.password}
+                        onChange={handleCommonChange}
+                        className="w-full pl-10 pr-12 py-3 rounded-xl border border-line/10 bg-surface focus:ring-2 focus:ring-green-500"
+                        placeholder="••••••"
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2"
+                      >
+                        {showPassword ? (
+                          <EyeSlashIcon className="w-5 h-5 text-muted" />
+                        ) : (
+                          <EyeIcon className="w-5 h-5 text-muted" />
+                        )}
+                      </button>
+                    </div>
+                    {!accountExists && (
+                      <p className="text-xs text-muted mt-1">
+                        Minimum 6 characters
+                      </p>
                     )}
-                  </button>
-                </div>
-                <p className="text-xs text-muted mt-1">
-                  Minimum 6 characters
-                </p>
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  Confirm Password *
-                </label>
-                <div className="relative">
-                  <LockClosedIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted" />
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    name="confirmPassword"
-                    value={commonInfo.confirmPassword}
-                    onChange={handleCommonChange}
-                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-line/10 bg-surface focus:ring-2 focus:ring-green-500"
-                    placeholder="••••••"
-                    required
-                  />
-                </div>
-              </div>
+                  </div>
+                  {!accountExists && (
+                    <div>
+                      <label className="block text-sm font-medium mb-1">
+                        Confirm Password *
+                      </label>
+                      <div className="relative">
+                        <LockClosedIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted" />
+                        <input
+                          type={showPassword ? "text" : "password"}
+                          name="confirmPassword"
+                          value={commonInfo.confirmPassword}
+                          onChange={handleCommonChange}
+                          className="w-full pl-10 pr-4 py-3 rounded-xl border border-line/10 bg-surface focus:ring-2 focus:ring-green-500"
+                          placeholder="••••••"
+                          required
+                        />
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
             </div>
           )}
 

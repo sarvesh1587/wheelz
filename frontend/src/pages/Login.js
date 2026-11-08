@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { authAPI } from "../services/api";
 import { GoogleLogin } from "@react-oauth/google";
@@ -10,6 +10,9 @@ import AuthShell from "../components/auth/AuthShell";
 export default function Login() {
   const navigate = useNavigate();
   const { login } = useAuth();
+  const [params] = useSearchParams();
+  // Only same-site paths, so ?redirect= can't send people to another site.
+  const redirect = /^\/(?!\/)/.test(params.get("redirect") || "") ? params.get("redirect") : "/";
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
 
@@ -25,7 +28,7 @@ export default function Login() {
       if (res.data.token && res.data.user) {
         login(res.data.token, res.data.user);
         toast.success("Login successful!");
-        navigate("/");
+        navigate(redirect);
       } else {
         throw new Error("Invalid response from server");
       }
@@ -57,7 +60,7 @@ export default function Login() {
       });
       login(res.data.token, res.data.user);
       toast.success("Google login successful!");
-      navigate("/");
+      navigate(redirect);
     } catch (error) {
       console.error("Google login error:", error);
       console.error("Error response:", error.response?.data);
